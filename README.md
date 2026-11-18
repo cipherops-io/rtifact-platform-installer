@@ -1,32 +1,21 @@
-# azure-platform-installer
+# rtifact-platform-installer
 
-Customer-agnostic Azure infrastructure installer: a Go binary that embeds OpenTofu, provider mirrors, workload profiles, and composable IaC stacks.
+Go CLI that embeds OpenTofu and deploys layered Azure platform stacks from customer YAML.
 
-**Contributors / agents:** read [AGENTS.md](AGENTS.md) first.
-
-Customers supply an external `config.yaml` (never committed to this repo). See [docs/customer-runbook.md](docs/customer-runbook.md).
-
-## Quick start (developers)
-
-Requires the **OpenTofu** CLI (`tofu` on `PATH`, or embedded in release builds). IaC uses **`.tofu`** files only (see `AGENTS.md`), `default.auto.tofuvars.json`, and lock files; providers come from the [OpenTofu Registry](https://search.opentofu.org/providers) only (`opentofu/azurerm`, `opentofu/random`, `opentofu/tls`). Only the `opentofu/*` provider namespace on registry.opentofu.org.
+## Commands
 
 ```bash
-make deps
 make build-dev
-./dist/installer validate examples/ai-os-centralindia/config.yaml
+INSTALLER_CONTENT_ROOT=. ./dist/installer validate examples/sandbox.yaml --check-azure=false
+INSTALLER_CONTENT_ROOT=. ./dist/installer plan examples/sandbox.yaml --stack network --yes
+INSTALLER_CONTENT_ROOT=. ./dist/installer apply examples/sandbox.yaml --stack all
+INSTALLER_CONTENT_ROOT=. ./dist/installer bootstrap examples/sandbox.yaml --yes
+INSTALLER_CONTENT_ROOT=. ./dist/installer preflight examples/sandbox.yaml
+./dist/installer data backup config.yaml
 ```
 
-## Release build
+Layers: `bootstrap`, `network`, `data`, `cluster` (each with its own state file when using remote backend).
 
-```bash
-make embed        # fetch tofu + mirror providers (requires network)
-make release
-```
+Module: `github.com/cipherops-io/rtifact-platform-installer`
 
-## Layout
-
-- `cmd/installer` — CLI entrypoint
-- `profiles/` — workload defaults (e.g. `ai-os-aks`)
-- `infra/modules/` — reusable OpenTofu modules
-- `infra/stacks/` — composition roots (providers only in stack)
-- `build/embed/` — populated before release (gitignored)
+Generated from [`cipherops-io/boilerplates`](../boilerplates) `devops-templates/platform-installer`.

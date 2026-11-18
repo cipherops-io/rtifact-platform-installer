@@ -3,9 +3,26 @@
   "$id": "customer-config.schema.json",
   "title": "CustomerConfig",
   "type": "object",
-  "required": ["profile", "azure", "workload", "features"],
+  "required": ["profile", "azure", "workload"],
   "additionalProperties": false,
   "properties": {
+    "schema_version": { "type": "integer", "minimum": 1 },
+    "tier": { "type": "string", "minLength": 1 },
+    "customer": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "code": { "type": "string", "pattern": "^[a-z][a-z0-9]{1,5}$" }
+      }
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "backend": { "type": "string", "enum": ["local", "azurerm"] },
+        "bootstrap": { "type": "boolean" }
+      }
+    },
+    "overrides": { "type": "object" },
     "profile": {
       "type": "string",
       "minLength": 1
@@ -43,8 +60,9 @@
     "workload": {
       "type": "object",
       "required": ["name_prefix"],
-      "additionalProperties": false,
+      "additionalProperties": true,
       "properties": {
+        "name": { "type": "string", "minLength": 1 },
         "name_prefix": {
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]{1,20}[a-z0-9]$"
