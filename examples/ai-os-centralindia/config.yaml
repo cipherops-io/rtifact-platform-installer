@@ -1,0 +1,30 @@
+profile: ai-os-aks
+
+azure:
+  subscription_id: "00000000-0000-0000-0000-000000000000"
+  region: centralindia
+  environment: public
+  auth:
+    use_msi: true
+
+workload:
+  name_prefix: aios-uat
+  environment: uat
+
+features:
+  resource_group: true
+  virtual_network: true
+  key_vault: true
+  key_vault_private_endpoint: true
+  postgresql_flexible_server: true
+  container_registry: true
+  storage_account: true
+  redis_cache: false
+  kubernetes_cluster: true
+  azure_bastion: true
+  private_dns_zones: true
+
+kubernetes_cluster:
+  node_pools:
+    user_microservices:
+      node_count: 4

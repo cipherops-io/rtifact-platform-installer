@@ -1,0 +1,31 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: go mod download
+      - run: chmod +x build/scripts/*.sh && make package-content
+      - run: go test ./...
+      - run: make build-dev
+      - run: ./dist/installer validate examples/ai-os-centralindia/config.yaml
+
+  tofu-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: "1.9.0"
+      - run: tofu fmt -recursive -check infra/
+      - run: cd infra/stacks/ai-os-aks && tofu init -backend=false -input=false && tofu validate
+      - run: chmod +x build/scripts/*.sh && TOFU_BIN=tofu make mirror-tofu

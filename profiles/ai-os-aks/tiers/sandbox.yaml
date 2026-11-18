@@ -1,0 +1,36 @@
+features:
+  resource_group: true
+  virtual_network: true
+  key_vault: true
+  key_vault_private_endpoint: true
+  postgresql_flexible_server: true
+  container_registry: true
+  storage_account: true
+  redis_cache: false
+  kubernetes_cluster: true
+  azure_bastion: true
+  private_dns_zones: true
+
+kubernetes_cluster:
+  kubernetes_version: "1.29"
+  availability_zones: []
+  node_pools:
+    system:
+      name: system
+      vm_size: Standard_D2ds_v5
+      node_count: 1
+
+postgresql_flexible_server:
+  sku_name: GP_Standard_D2ds_v5
+  version: "16"
+  storage_mb: 32768
+
+storage_account:
+  corpus_gb: 50
+  backup_gb: 50
+
+container_registry:
+  sku: Basic
+
+key_vault:
+  sku: standard

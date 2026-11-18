@@ -1,0 +1,1 @@
+Integration tests run against a sandbox subscription in CI with secrets configured. Not enabled by default locally.

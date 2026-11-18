@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "customer-config.schema.json",
+  "title": "CustomerConfig",
+  "type": "object",
+  "required": ["profile", "azure", "workload", "features"],
+  "additionalProperties": false,
+  "properties": {
+    "profile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "azure": {
+      "type": "object",
+      "required": ["subscription_id", "region"],
+      "additionalProperties": false,
+      "properties": {
+        "subscription_id": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F-]{36}$"
+        },
+        "tenant_id": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F-]{36}$"
+        },
+        "region": {
+          "type": "string",
+          "minLength": 1
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["public", "usgovernment", "china"]
+        },
+        "auth": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "use_msi": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "workload": {
+      "type": "object",
+      "required": ["name_prefix"],
+      "additionalProperties": false,
+      "properties": {
+        "name_prefix": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{1,20}[a-z0-9]$"
+        },
+        "environment": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "resource_group": {
+          "type": "boolean",
+          "description": "Create the workload resource group."
+        },
+        "virtual_network": {
+          "type": "boolean",
+          "description": "Deploy VNet, subnets, and NAT gateway."
+        },
+        "key_vault": {
+          "type": "boolean",
+          "description": "Deploy Azure Key Vault."
+        },
+        "key_vault_private_endpoint": {
+          "type": "boolean",
+          "description": "Private endpoint and DNS for Key Vault."
+        },
+        "postgresql_flexible_server": {
+          "type": "boolean",
+          "description": "PostgreSQL Flexible Server with private endpoint."
+        },
+        "container_registry": {
+          "type": "boolean",
+          "description": "Azure Container Registry with private endpoint."
+        },
+        "storage_account": {
+          "type": "boolean",
+          "description": "Premium ADLS storage accounts with private endpoint."
+        },
+        "redis_cache": {
+          "type": "boolean",
+          "description": "Legacy Redis cache (disabled until Managed Redis is supported in IaC)."
+        },
+        "kubernetes_cluster": {
+          "type": "boolean",
+          "description": "AKS private cluster and node pools."
+        },
+        "azure_bastion": {
+          "type": "boolean",
+          "description": "Azure Bastion in the management subnet."
+        },
+        "private_dns_zones": {
+          "type": "boolean",
+          "description": "Private DNS zones for PaaS private endpoints in the data module."
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "kubernetes_cluster": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "key_vault": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "postgresql_flexible_server": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "container_registry": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "storage_account": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "redis_cache": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "azure_bastion": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "private_dns": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "backend": {
+      "type": "object",
+      "required": [
+        "type",
+        "resource_group_name",
+        "storage_account_name",
+        "container_name",
+        "key"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "azurerm" },
+        "resource_group_name": { "type": "string" },
+        "storage_account_name": { "type": "string" },
+        "container_name": { "type": "string" },
+        "key": { "type": "string" }
+      }
+    }
+  }
+}

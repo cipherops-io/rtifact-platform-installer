@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProfileMeta",
+  "type": "object",
+  "required": ["stack_id", "version"],
+  "properties": {
+    "stack_id": { "type": "string" },
+    "version": { "type": "string" },
+    "checklist_id": { "type": "string" }
+  }
+}

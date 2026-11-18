@@ -1,0 +1,74 @@
+features:
+  resource_group: true
+  virtual_network: true
+  key_vault: true
+  key_vault_private_endpoint: true
+  postgresql_flexible_server: true
+  container_registry: true
+  storage_account: true
+  redis_cache: false
+  kubernetes_cluster: true
+  azure_bastion: true
+  private_dns_zones: true
+
+network:
+  vnet_cidr: "10.0.0.0/20"
+  node_subnet_cidr: "10.0.0.0/22"
+  load_balancer_subnet_cidr: "10.0.4.0/24"
+  private_endpoint_subnet_cidr: "10.0.5.0/24"
+  management_subnet_cidr: "10.0.6.0/27"
+  pod_cidr: "10.244.0.0/16"
+  service_cidr: "172.20.0.0/16"
+  dns_service_ip: "172.20.0.10"
+
+kubernetes_cluster:
+  kubernetes_version: "1.30"
+  availability_zones: ["1", "2", "3"]
+  node_pools:
+    user_microservices:
+      name: appa
+      vm_size: Standard_D16s_v5
+      node_count: 3
+    user_sandbox:
+      name: sandbox
+      vm_size: Standard_F8s_v2
+      node_count: 2
+    user_monitoring:
+      name: monitor
+      vm_size: Standard_D8s_v5
+      node_count: 2
+    user_jupyter:
+      name: jupyter
+      vm_size: Standard_D32s_v5
+      node_count: 2
+    user_database:
+      name: database
+      vm_size: Standard_E8s_v5
+      node_count: 3
+    system:
+      name: system
+      vm_size: Standard_D4s_v5
+      node_count: 3
+
+azure_bastion:
+  vm_size: Standard_D4s_v5
+  os_disk_size_gb: 100
+
+postgresql_flexible_server:
+  sku_name: GP_Standard_D8ds_v5
+  version: "16"
+  storage_mb: 1048576
+  iops: 40000
+
+redis_cache:
+  sku_name: Balanced_B5
+
+storage_account:
+  corpus_gb: 250
+  backup_gb: 250
+
+container_registry:
+  sku: Premium
+
+key_vault:
+  sku: premium

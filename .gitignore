@@ -1,0 +1,30 @@
+# Build artifacts
+/build/embed/tofu/
+/build/embed/mirror/
+/internal/packaged/build/embed/tofu/
+/internal/packaged/build/embed/mirror/
+**/installer.auto.tfvars.json
+/dist/
+/internal/packaged/profiles/
+/internal/packaged/infra/
+/internal/packaged/schemas/
+/internal/packaged/.packaged
+*.exe
+
+# OpenTofu (keep stack lock files committed)
+.terraform/
+**/stacks/**/.terraform/
+tofu.tfstate
+tofu.tfstate.*
+*.tfstate
+*.tfstate.*
+
+# Go
+/vendor/
+
+# IDE
+.idea/
+*.swp
+
+# Secrets
+config.local.yaml

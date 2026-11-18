@@ -1,0 +1,56 @@
+features:
+  resource_group: true
+  virtual_network: true
+  key_vault: true
+  key_vault_private_endpoint: true
+  postgresql_flexible_server: true
+  container_registry: true
+  storage_account: true
+  redis_cache: false
+  kubernetes_cluster: true
+  azure_bastion: true
+  private_dns_zones: true
+
+kubernetes_cluster:
+  availability_zones: []
+  node_pools:
+    system:
+      name: system
+      vm_size: Standard_D4s_v5
+      node_count: 3
+    user_microservices:
+      name: appa
+      vm_size: Standard_D16s_v5
+      node_count: 3
+    user_sandbox:
+      name: sandbox
+      vm_size: Standard_F8s_v2
+      node_count: 1
+    user_monitoring:
+      name: monitor
+      vm_size: Standard_D8s_v5
+      node_count: 2
+    user_jupyter:
+      name: jupyter
+      vm_size: Standard_D32s_v5
+      node_count: 2
+    user_database:
+      name: database
+      vm_size: Standard_E8s_v5
+      node_count: 3
+
+postgresql_flexible_server:
+  sku_name: GP_Standard_D8ds_v5
+  version: "16"
+  storage_mb: 1048576
+  iops: 40000
+
+storage_account:
+  corpus_gb: 250
+  backup_gb: 250
+
+container_registry:
+  sku: Premium
+
+key_vault:
+  sku: premium
