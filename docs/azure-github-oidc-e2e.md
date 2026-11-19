@@ -17,7 +17,9 @@ AWS/GCP deploy automation is **not enabled** in Actions yet; smoke tests remain 
 
 Apply order for `--stack all`: `core-network` → `data-platform` → `app-platform` → `network-edge` → `ai-integrations` (state-backend via bootstrap when using remote state). Destroy reverses that order.
 
-Default E2E config: [`examples/github-e2e-azure.yaml`](../examples/github-e2e-azure.yaml) (minimal sandbox: core network + Key Vault only). Extend features in that file for fuller stack tests.
+Default E2E config: [`examples/github-e2e-azure.yaml`](../examples/github-e2e-azure.yaml) (Commotion-shaped sandbox with isolated `10.21.0.0/20` CIDRs and `gh-rtifact-e2e-sbx` prefix). Subscription and tenant IDs are injected in CI via `scripts/github-e2e-prepare-config.sh`.
+
+Workflow **azure-e2e** (`workflow_dispatch` actions): **validate**, **plan**, **apply** (bootstrap + state-backend + stack), **bootstrap-apply-destroy** (full lifecycle), **destroy-all** (workloads then state-backend).
 
 ## Test locally (same as Actions)
 

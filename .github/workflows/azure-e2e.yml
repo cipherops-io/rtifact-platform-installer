@@ -1,5 +1,5 @@
-# Azure E2E: validate (quota) + plan only — no apply/destroy in this workflow.
-# OIDC auth; configure via env defaults or workflow_dispatch overrides.
+# Azure E2E: workflow_dispatch with plan / validate / apply / full lifecycle / destroy.
+# OIDC auth; config from examples/github-e2e-azure.yaml (Commotion-shaped, isolated CIDRs).
 
 name: azure-e2e
 
@@ -7,15 +7,23 @@ on:
   workflow_dispatch:
     inputs:
       rtifact_action:
-        description: What to run after Azure login
+        description: |
+          1 validate — schema + optional quota
+          2 plan — validate + OpenTofu plan
+          3 apply — bootstrap, state-backend, apply stack(s)
+          4 bootstrap-apply-destroy — full lifecycle then tear down workloads + tfstate
+          5 destroy-all — destroy --stack all then state-backend
         required: true
         type: choice
         default: plan
         options:
-          - plan
           - validate
+          - plan
+          - apply
+          - bootstrap-apply-destroy
+          - destroy-all
       stack:
-        description: OpenTofu stack layer for plan (apply order when all)
+        description: Stack for plan/apply (destroy-all always uses all + state-backend)
         required: true
         type: choice
         default: all
@@ -42,7 +50,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Repository defaults (plan-only E2E; override via workflow_dispatch)
   RTIFACT_ACTION: ${{ inputs.rtifact_action || 'plan' }}
   E2E_STACK: ${{ inputs.stack || 'all' }}
   CHECK_AZURE: ${{ inputs.check_azure == false && 'false' || 'true' }}
@@ -51,7 +58,7 @@ jobs:
   azure:
     runs-on: ubuntu-latest
     environment: azure-e2e
-    timeout-minutes: 120
+    timeout-minutes: 180
     env:
       PACKAGED_CLOUDS: azure
       INSTALLER_CONTENT_ROOT: .
@@ -93,8 +100,29 @@ jobs:
         run: make build-dev PACKAGED_CLOUDS=azure
 
       - name: rtifact azure validate
+        if: env.RTIFACT_ACTION != 'destroy-all'
         run: ./dist/rtifact azure validate "$E2E_AZURE_CONFIG" --check-quota=${{ env.CHECK_AZURE }}
 
       - name: rtifact azure plan
         if: env.RTIFACT_ACTION == 'plan'
         run: ./dist/rtifact azure plan "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
+
+      - name: rtifact azure bootstrap
+        if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
+        run: ./dist/rtifact azure bootstrap "$E2E_AZURE_CONFIG" --yes
+
+      - name: rtifact apply state-backend (blob RBAC)
+        if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
+        run: ./dist/rtifact azure apply "$E2E_AZURE_CONFIG" --stack state-backend --yes
+
+      - name: rtifact azure apply
+        if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
+        run: ./dist/rtifact azure apply "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
+
+      - name: rtifact azure destroy workloads
+        if: env.RTIFACT_ACTION == 'destroy-all' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
+        run: ./dist/rtifact azure destroy "$E2E_AZURE_CONFIG" --stack all --yes --allow-destroy-stateful
+
+      - name: rtifact destroy state-backend
+        if: env.RTIFACT_ACTION == 'destroy-all' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
+        run: ./dist/rtifact azure destroy "$E2E_AZURE_CONFIG" --stack state-backend --yes
