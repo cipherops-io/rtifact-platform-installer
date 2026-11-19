@@ -50,7 +50,7 @@ Release: `make release` (embeds OpenTofu + provider mirror).
 ## Scope
 
 - **This repo** — product installer, embedded IaC, Go CLI, profiles, customer contract schema.
-- **Templates** — [`cipherops-io/boilerplates`](https://github.com/cipherops-io/boilerplates) (`devops-templates/platform-installer`, `_installer-core`). See boilerplates `AGENTS.md` for template development.
+- **Templates** — canonical checkout `/Users/raghavendiran/cipherops-io/boilerplates` ([`cipherops-io/boilerplates`](https://github.com/cipherops-io/boilerplates) on GitHub): `devops-templates/platform-installer`, `_installer-core`. See boilerplates `AGENTS.md` and `docs/WORKSPACE-ROOTS.md`.
 
 ## Managed vs init-only files
 
