@@ -53,6 +53,12 @@ features:
 	if merged["location"] != "centralindia" {
 		t.Fatalf("location: %v", merged["location"])
 	}
+	if _, ok := merged["account_id"]; ok {
+		t.Fatalf("azure merge must not include account_id: %v", merged["account_id"])
+	}
+	if _, ok := merged["project_id"]; ok {
+		t.Fatalf("azure merge must not include project_id: %v", merged["project_id"])
+	}
 	features, _ := merged["features"].(map[string]any)
 	if features["key_vault"] != true {
 		t.Fatalf("features.key_vault: %v", features["key_vault"])

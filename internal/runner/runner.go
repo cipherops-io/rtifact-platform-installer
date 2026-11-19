@@ -113,6 +113,25 @@ func containsLayer(layers []stacks.Layer, want stacks.Layer) bool {
 	return false
 }
 
+// firstMissingUpstreamLocalState reports whether plan should skip layer because
+// an upstream local state file does not exist (common for plan-all before apply).
+func firstMissingUpstreamLocalState(provider cloud.Provider, spec cloud.StateSpec, layer stacks.Layer) (stacks.Layer, bool) {
+	for _, up := range stacks.Upstream(layer) {
+		ub, err := cloud.Backend(provider, layerSpec(spec, up), string(up))
+		if err != nil || ub.Type != "local" {
+			continue
+		}
+		path := ub.Settings["path"]
+		if path == "" {
+			continue
+		}
+		if _, err := os.Stat(path); err != nil {
+			return up, true
+		}
+	}
+	return "", false
+}
+
 // layerSpec returns the state spec used for layer. state-backend always uses
 // local state: it creates the storage the other layers keep their state in.
 func layerSpec(spec cloud.StateSpec, layer stacks.Layer) cloud.StateSpec {
@@ -134,6 +153,15 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	stackSrc := filepath.Join(contentRoot, "infra", stackRel)
 	if st, err := os.Stat(stackSrc); err != nil || !st.IsDir() {
 		return fmt.Errorf("no stack for profile %q cloud %q layer %q (expected infra/%s)", meta.StackID, customer.Cloud, layer, filepath.ToSlash(stackRel))
+	}
+
+	if opts.Action == "plan" {
+		if up, skip := firstMissingUpstreamLocalState(provider, spec, layer); skip {
+			fmt.Fprintf(os.Stderr,
+				"Skipping plan for stack %q: upstream %q has no local state yet (apply upstream stacks first).\n",
+				layer, up)
+			return nil
+		}
 	}
 
 	work, err := os.MkdirTemp("", "installer-tofu-")

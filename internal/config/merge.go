@@ -228,13 +228,18 @@ func mergeSectionsInto(merged, src map[string]any) {
 }
 
 func applyCustomerScalars(merged map[string]any, customer *CustomerConfig) {
-	merged["subscription_id"] = customer.Account.SubscriptionID
-	merged["account_id"] = customer.Account.AccountID
-	merged["project_id"] = customer.Account.ProjectID
 	merged["location"] = customer.Account.Region
-	merged["azure_environment"] = customer.Account.Environment
-	merged["use_msi"] = customer.Account.Auth.UseMSI
 	merged["name_prefix"] = customer.NamePrefix()
+	switch customer.Cloud {
+	case "azure":
+		merged["subscription_id"] = customer.Account.SubscriptionID
+		merged["azure_environment"] = customer.Account.Environment
+		merged["use_msi"] = customer.Account.Auth.UseMSI
+	case "aws":
+		merged["account_id"] = customer.Account.AccountID
+	case "gcp":
+		merged["project_id"] = customer.Account.ProjectID
+	}
 	if customer.Account.TenantID != "" {
 		merged["tenant_id"] = customer.Account.TenantID
 	}

@@ -109,6 +109,8 @@ No `AZURE_CLIENT_SECRET` is required for OIDC.
 
 Defaults: **plan** (after **validate** with Azure quota check on), **stack = all**. This workflow does **not** run apply or destroy.
 
+On a greenfield subscription, **`plan --stack all`** plans **core-network** only; layers that depend on upstream OpenTofu state are **skipped** until those upstream stacks have been applied at least once.
+
 1. Use defaults or set **validate** only to skip plan
 2. Toggle **check_azure** off if you need validate without `az` quota API
 
