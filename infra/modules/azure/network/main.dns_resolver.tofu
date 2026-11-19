@@ -48,6 +48,18 @@ resource "azurerm_private_dns_resolver" "main" {
   location            = var.location
   virtual_network_id  = azurerm_virtual_network.main.id
   tags                = var.tags
+
+  depends_on = [
+    azurerm_subnet.node,
+    azurerm_subnet.load_balancer,
+    azurerm_subnet.private_endpoint,
+    azurerm_subnet.management,
+    azurerm_subnet.firewall,
+    azurerm_subnet.gateway,
+    azurerm_subnet.bastion,
+    azurerm_subnet.dns_resolver_inbound,
+    azurerm_subnet.dns_resolver_outbound,
+  ]
 }
 
 resource "azurerm_private_dns_resolver_inbound_endpoint" "main" {
