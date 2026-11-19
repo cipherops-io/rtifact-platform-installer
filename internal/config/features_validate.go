@@ -24,10 +24,26 @@ func validateMergedFeaturesFromRegistry(merged map[string]any, profileID string)
 	if err != nil {
 		return fmt.Errorf("load feature registry for profile %q: %w", profileID, err)
 	}
-	if err := reg.ValidateEnabled(featuresBoolMap(merged)); err != nil {
+	feat := featuresBoolMap(merged)
+	if err := reg.ValidateEnabled(feat); err != nil {
 		return usererr.Wrap(err,
 			"Feature flags are invalid for this profile.",
 			"See profiles/"+profileID+"/features.yaml for allowed features, dependencies, and unsupported items.")
+	}
+	if err := validateFeatureBusinessRules(merged, feat); err != nil {
+		return usererr.Wrap(err,
+			"Feature combination is not allowed.",
+			"Adjust features in your config or see profiles/"+profileID+"/features.yaml.")
+	}
+	return nil
+}
+
+func validateFeatureBusinessRules(merged map[string]any, feat map[string]bool) error {
+	if feat["redis_cache"] && feat["azure_managed_redis"] {
+		return fmt.Errorf("enable at most one of features.redis_cache and features.azure_managed_redis")
+	}
+	if feat["azure_vpn_gateway"] && feat["azure_express_route_gateway"] {
+		return fmt.Errorf("enable at most one of features.azure_vpn_gateway and features.azure_express_route_gateway")
 	}
 	return nil
 }

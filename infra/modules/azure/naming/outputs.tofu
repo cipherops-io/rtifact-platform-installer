@@ -1,11 +1,11 @@
 output "resource_group_name" {
-  value = azurerm_resource_group.main.name
+  value = local.resource_group_name
 }
 
 output "resource_group_id" {
-  value = azurerm_resource_group.main.id
+  value = local.resource_group_id
 }
 
 output "tags" {
-  value = local.tags
+  value = local.effective_tags
 }

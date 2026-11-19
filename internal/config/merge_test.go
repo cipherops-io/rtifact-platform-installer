@@ -11,9 +11,9 @@ func TestMergeBuildCustomerFields(t *testing.T) {
 	defaults := map[string]any{
 		"network": map[string]any{"vnet_cidr": "10.0.0.0/20"},
 		"features": map[string]any{
-			"resource_group": true,
+			"resource_group":  true,
 			"virtual_network": true,
-			"redis_cache": false,
+			"redis_cache":     false,
 		},
 	}
 	dir := t.TempDir()
@@ -73,7 +73,7 @@ func TestMergeReplaceNodePools(t *testing.T) {
 		},
 		"kubernetes_cluster": map[string]any{
 			"node_pools": map[string]any{
-				"system": map[string]any{"name": "system", "vm_size": "Standard_D4s_v5", "node_count": 3},
+				"system":             map[string]any{"name": "system", "vm_size": "Standard_D4s_v5", "node_count": 3},
 				"user_microservices": map[string]any{"name": "appa", "vm_size": "Standard_D16s_v5", "node_count": 3},
 			},
 		},
@@ -214,6 +214,15 @@ func TestValidateCustomerYAMLFeatureRegistry(t *testing.T) {
 	missingDep := v2Base + "features:\n  virtual_network: false\n  kubernetes_cluster: true\n"
 	if err := ValidateCustomerYAML(writeCfg(t, missingDep)); err == nil {
 		t.Fatal("missing requires not rejected")
+	}
+	bothRedis := v2Base + `features:
+  resource_group: true
+  virtual_network: true
+  redis_cache: true
+  azure_managed_redis: true
+`
+	if err := ValidateCustomerYAML(writeCfg(t, bothRedis)); err == nil {
+		t.Fatal("redis_cache + azure_managed_redis should be rejected")
 	}
 }
 

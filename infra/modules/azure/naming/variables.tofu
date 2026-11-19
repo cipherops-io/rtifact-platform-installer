@@ -13,3 +13,9 @@ variable "tags" {
   description = "Additional resource tags."
   default     = {}
 }
+
+variable "create_resource_group" {
+  type        = bool
+  description = "When false, adopt existing {prefix}-rg (e.g. after bootstrap)."
+  default     = true
+}

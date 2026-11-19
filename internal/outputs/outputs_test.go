@@ -14,7 +14,7 @@ func TestMaterializeCWD(t *testing.T) {
 		t.Fatal(err)
 	}
 	flat := map[string]any{
-		"kubeconfig_raw":             "apiVersion: v1\nkind: Config\n",
+		"kubeconfig_raw":              "apiVersion: v1\nkind: Config\n",
 		"bastion_ssh_private_key_pem": "-----BEGIN RSA PRIVATE KEY-----\nMIIB\n-----END RSA PRIVATE KEY-----\n",
 	}
 	written, err := MaterializeCWD("cm-test", flat, MaterializeOpts{})

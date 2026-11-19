@@ -12,6 +12,15 @@ features:
   kubernetes_cluster: true
   azure_bastion: true
   private_dns_zones: true
+  azure_firewall: false
+  azure_vpn_gateway: false
+  azure_express_route_gateway: false
+  private_dns_resolver: false
+  public_dns_zone: false
+  application_gateway: false
+  disk_encryption_set: false
+  azure_managed_redis: false
+  ai_foundry: false
 
 network:
   vnet_cidr: "10.0.0.0/20"
@@ -51,6 +60,12 @@ kubernetes_cluster:
       name: system
       vm_size: Standard_D4s_v5
       node_count: 3
+
+bastion:
+  managed: false
+  vm_size: Standard_D4s_v5
+  os_disk_size_gb: 100
+  os_disk_type: Premium_LRS
 
 azure_bastion:
   vm_size: Standard_D4s_v5

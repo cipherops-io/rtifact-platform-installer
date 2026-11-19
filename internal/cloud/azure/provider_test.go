@@ -20,7 +20,7 @@ func spec() cloud.StateSpec {
 }
 
 func TestStateNames(t *testing.T) {
-	if got := StateResourceGroupName("cm-aios-sbx"); got != "cm-aios-sbx-tfstate-rg" {
+	if got := SharedResourceGroupName(spec()); got != "cm-aios-sbx-rg" {
 		t.Fatalf("rg = %q", got)
 	}
 	if got := StateStorageAccountName("cm-aios-sbx"); got != "cmaiossbxtfstate" {
@@ -41,7 +41,7 @@ func TestBackendRemote(t *testing.T) {
 		t.Fatalf("type = %q", b.Type)
 	}
 	want := map[string]string{
-		"resource_group_name":  "cm-aios-sbx-tfstate-rg",
+		"resource_group_name":  "cm-aios-sbx-rg",
 		"storage_account_name": "cmaiossbxtfstate",
 		"container_name":       "tfstate",
 		"key":                  "ai-os-k8s/cm-aios-sbx/core-network.tfstate",

@@ -28,3 +28,8 @@ variable "os_disk_size_gb" {
   type    = number
   default = 100
 }
+
+variable "os_disk_type" {
+  type    = string
+  default = "Premium_LRS"
+}

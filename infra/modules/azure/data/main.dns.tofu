@@ -1,6 +1,6 @@
 locals {
   postgres_dns = var.features.private_dns_zones && var.features.postgresql_flexible_server
-  redis_dns    = var.features.private_dns_zones && var.features.redis_cache
+  redis_dns    = var.features.private_dns_zones && (var.features.redis_cache || var.features.azure_managed_redis)
   blob_dns     = var.features.private_dns_zones && var.features.storage_account
   acr_dns      = var.features.private_dns_zones && var.features.container_registry
   file_dns     = var.features.private_dns_zones && var.features.azure_files_share

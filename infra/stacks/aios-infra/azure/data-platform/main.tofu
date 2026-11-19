@@ -13,6 +13,7 @@ locals {
     var.features.container_registry ||
     var.features.storage_account ||
     var.features.redis_cache ||
+    var.features.azure_managed_redis ||
     var.features.azure_files_share
   )
 }
@@ -27,6 +28,9 @@ module "security" {
   tags                = local.core.tags
   sku                 = var.key_vault.sku
   tenant_id           = data.azurerm_client_config.current.tenant_id
+  features = {
+    disk_encryption_set = var.features.disk_encryption_set
+  }
 }
 
 module "data" {
@@ -42,9 +46,12 @@ module "data" {
     container_registry         = var.features.container_registry
     storage_account            = var.features.storage_account
     redis_cache                = var.features.redis_cache
+    azure_managed_redis        = var.features.azure_managed_redis
     private_dns_zones          = var.features.private_dns_zones
     azure_files_share          = var.features.azure_files_share
+    disk_encryption_set        = false
   }
+  managed_redis_sku_name           = var.azure_managed_redis.sku_name
   postgresql_version               = var.postgresql_flexible_server.version
   postgresql_sku_name              = var.postgresql_flexible_server.sku_name
   postgresql_storage_mb            = var.postgresql_flexible_server.storage_mb

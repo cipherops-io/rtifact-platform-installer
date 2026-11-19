@@ -24,7 +24,7 @@ resource "azurerm_private_endpoint" "postgres" {
 }
 
 resource "azurerm_private_endpoint" "redis" {
-  count = var.features.redis_cache ? 1 : 0
+  count = var.features.redis_cache && !var.features.azure_managed_redis ? 1 : 0
 
   name                = "${var.name_prefix}-redis-pe"
   location            = var.location
@@ -94,6 +94,31 @@ resource "azurerm_private_endpoint" "acr" {
     content {
       name                 = "default"
       private_dns_zone_ids = [azurerm_private_dns_zone.acr[0].id]
+    }
+  }
+}
+
+resource "azurerm_private_endpoint" "managed_redis" {
+  count = var.features.azure_managed_redis ? 1 : 0
+
+  name                = "${var.name_prefix}-mredis-pe"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  subnet_id           = var.private_endpoint_subnet_id
+  tags                = var.tags
+
+  private_service_connection {
+    name                           = "managed-redis"
+    private_connection_resource_id = azurerm_managed_redis.main[0].id
+    subresource_names              = ["redisEnterprise"]
+    is_manual_connection           = false
+  }
+
+  dynamic "private_dns_zone_group" {
+    for_each = local.redis_dns ? [1] : []
+    content {
+      name                 = "default"
+      private_dns_zone_ids = [azurerm_private_dns_zone.redis[0].id]
     }
   }
 }

@@ -31,7 +31,7 @@ resource "azurerm_linux_virtual_machine" "bastion" {
   os_disk {
     name                 = "${var.name_prefix}-bastion-os"
     caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
+    storage_account_type = var.os_disk_type
     disk_size_gb         = var.os_disk_size_gb
   }
 

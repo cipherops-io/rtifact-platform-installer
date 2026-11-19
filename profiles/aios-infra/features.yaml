@@ -24,7 +24,11 @@ features:
   redis_cache:
     status: stable
     requires: [virtual_network]
-    description: Azure Cache for Redis Premium (private endpoint); Managed Redis Balanced maps to Premium until native SKU ships
+    description: Azure Cache for Redis Premium (private endpoint)
+  azure_managed_redis:
+    status: stable
+    requires: [virtual_network, private_dns_zones]
+    description: Azure Managed Redis (Balanced SKUs) with private endpoint; mutually exclusive with redis_cache
   azure_files_share:
     status: stable
     requires: [virtual_network, private_dns_zones]
@@ -36,15 +40,40 @@ features:
   mongodb_atlas:
     status: unsupported
     reason: Atlas M30 project, peering or Private Link — configure outside rtifact (see checklist)
-  microsoft_foundry:
-    status: unsupported
-    reason: Foundry model deployments and quotas — configure in Azure AI Foundry portal
+  ai_foundry:
+    status: stable
+    requires: [key_vault, storage_account]
+    description: Microsoft Foundry Hub (azurerm_ai_foundry); model deployments remain manual
   kubernetes_cluster:
     status: stable
     requires: [virtual_network]
   azure_bastion:
     status: stable
     requires: [virtual_network]
+    description: Jump access — managed Azure Bastion (bastion.managed true) or Linux VM (false)
   private_dns_zones:
     status: stable
     requires: [resource_group]
+  azure_firewall:
+    status: stable
+    requires: [virtual_network, resource_group]
+  azure_vpn_gateway:
+    status: stable
+    requires: [virtual_network]
+    description: Route-based VPN gateway; mutually exclusive with azure_express_route_gateway
+  azure_express_route_gateway:
+    status: stable
+    requires: [virtual_network]
+    description: ExpressRoute virtual network gateway; mutually exclusive with azure_vpn_gateway
+  private_dns_resolver:
+    status: stable
+    requires: [virtual_network, private_dns_zones]
+  public_dns_zone:
+    status: stable
+    requires: [resource_group]
+  application_gateway:
+    status: stable
+    requires: [virtual_network]
+  disk_encryption_set:
+    status: stable
+    requires: [key_vault]

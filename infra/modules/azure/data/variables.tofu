@@ -21,9 +21,16 @@ variable "features" {
     container_registry         = bool
     storage_account            = bool
     redis_cache                = bool
+    azure_managed_redis        = optional(bool, false)
     private_dns_zones          = bool
     azure_files_share          = bool
+    disk_encryption_set        = optional(bool, false)
   })
+}
+
+variable "managed_redis_sku_name" {
+  type    = string
+  default = "Balanced_B3"
 }
 
 variable "postgresql_version" {

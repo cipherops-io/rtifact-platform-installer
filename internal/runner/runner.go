@@ -188,6 +188,9 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	if len(upstream) > 0 {
 		layerMerged["upstream_state"] = upstream
 	}
+	if err := injectAzureResourceGroupFlags(customer, provider, layerSpec(spec, layer), layer, layerMerged); err != nil {
+		return err
+	}
 	if err := config.WriteAutoTofuVarsJSON(stackWork, layerMerged); err != nil {
 		return err
 	}

@@ -35,10 +35,18 @@ Use `<customer>-<environment>-<purpose>.yaml` (any path). Example: `tata-digital
 | `postgresql_flexible_server` | PostgreSQL Flexible Server + PE |
 | `container_registry` | ACR + PE |
 | `storage_account` | Premium ADLS storage + PE |
-| `redis_cache` | **Unsupported** in IaC (keep `false`) |
+| `redis_cache` | Azure Cache for Redis Premium + PE (mutually exclusive with `azure_managed_redis`) |
+| `azure_managed_redis` | Azure Managed Redis + PE |
 | `kubernetes_cluster` | Private AKS + node pools in `kubernetes_cluster.node_pools` |
-| `azure_bastion` | Bastion host |
+| `azure_bastion` | Jump access: `bastion.managed: true` → Azure Bastion host; `false` → Linux VM on `app-platform` |
 | `private_dns_zones` | Private DNS zones for data-layer PEs |
+| `azure_firewall` | Azure Firewall + baseline policy (`core-network`) |
+| `azure_vpn_gateway` / `azure_express_route_gateway` | VPN or ExpressRoute gateway (one at a time) |
+| `private_dns_resolver` | Private DNS resolver + endpoints |
+| `public_dns_zone` | Public DNS zones (`network-edge`) |
+| `application_gateway` | Application Gateway WAF_v2 placeholder (`network-edge`) |
+| `disk_encryption_set` | CMK disk encryption set (`data-platform`) |
+| `ai_foundry` | `azurerm_ai_foundry` Hub (`ai-integrations`) |
 
 Setting a feature to `false` creates **no** resources for that block. `features` is a free-form map: keys are validated against `profiles/<profile>/features.yaml` (unknown keys, unsupported features and missing `requires` are rejected).
 
@@ -48,12 +56,12 @@ Setting a feature to `false` creates **no** resources for that block. `features`
 
 | Layer | Contents |
 |-------|----------|
-| `state-backend` | Remote state storage (applied by `installer bootstrap`, local state) |
+| `state-backend` | Remote state storage in the **same** resource group as the workload (`<name_prefix>-rg`; applied by `bootstrap`, local state) |
 | `core-network` | Naming/resource group, VNet and subnets (only layer that creates the resource group) |
 | `data-platform` | Key Vault, PostgreSQL, ACR, storage, private DNS (reads `core-network` via remote state) |
 | `app-platform` | AKS, bastion (reads `core-network` via remote state) |
-| `network-edge` | Placeholder |
-| `ai-integrations` | Placeholder |
+| `network-edge` | Application Gateway + public DNS (optional) |
+| `ai-integrations` | Communication Services email + AI Foundry hub (optional) |
 
 Stack sources live under `infra/stacks/<profile>/<cloud>/<layer>/`.
 
@@ -90,7 +98,9 @@ state:
   air_gapped: true
 ```
 
-Run `installer bootstrap config.yaml` once: it checks (with the `az` CLI) for the state resource group, storage account and `tfstate` container, and applies the `state-backend` layer if they are missing. Each layer then keeps its state at `<profile>/<name_prefix>/<layer>.tfstate`.
+Run `installer bootstrap config.yaml` once: it checks (with the `az` CLI) for the state resource group, storage account and `tfstate` container, and applies the `state-backend` layer if they are missing. The `state-backend` layer grants the identity running bootstrap **Storage Blob Data Contributor** on the tfstate account (required because OpenTofu uses `use_azuread_auth` on theazurerm backend). Each layer then keeps its state at `<profile>/<name_prefix>/<layer>.tfstate`.
+
+If plan/apply fails with `AuthorizationPermissionMismatch` on the tfstate account, re-run `rtifact apply config.yaml --stack state-backend --yes` (while signed in as the same principal), or assign **Storage Blob Data Contributor** on that storage account to your user or service principal.
 
 To use a pre-created backend instead, add:
 

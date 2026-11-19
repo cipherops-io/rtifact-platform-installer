@@ -24,7 +24,7 @@ flowchart LR
 ## State
 
 - `state.backend: local` → `backend "local"` under `~/.rtifact/<prefix>/state/<layer>.tfstate`
-- `state.backend: azurerm|s3|gcs` → cloud `Provider.Backend()`; `rtifact bootstrap` applies the `state-backend` layer first
+- `state.backend: azurerm|s3|gcs` → cloud `Provider.Backend()`; `rtifact bootstrap` applies the `state-backend` layer first (tfstate storage in `<name_prefix>-rg`, same as workload)
 - Cross-layer inputs: `terraform_remote_state` via `upstream_state` (see [layer-contracts.md](layer-contracts.md))
 
 ## Cloud capability matrix

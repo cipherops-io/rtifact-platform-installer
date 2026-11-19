@@ -49,3 +49,8 @@ variable "availability_zones" {
   description = "AKS node pool AZs (centralindia supports 1 and 2 only)."
   default     = ["1", "2", "3"]
 }
+
+variable "os_disk_type" {
+  type    = string
+  default = "Premium_LRS"
+}

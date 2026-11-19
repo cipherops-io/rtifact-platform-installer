@@ -25,6 +25,7 @@ type CustomerConfig struct {
 	StorageAccount           map[string]any   `yaml:"storage_account,omitempty"`
 	RedisCache               map[string]any   `yaml:"redis_cache,omitempty"`
 	AzureBastion             map[string]any   `yaml:"azure_bastion,omitempty"`
+	Bastion                  map[string]any   `yaml:"bastion,omitempty"`
 	PrivateDNS               map[string]any   `yaml:"private_dns,omitempty"`
 	Backend                  *BackendBlock    `yaml:"backend,omitempty"`
 }

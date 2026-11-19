@@ -24,3 +24,10 @@ variable "sku" {
 variable "tenant_id" {
   type = string
 }
+
+variable "features" {
+  type = object({
+    disk_encryption_set = optional(bool, false)
+  })
+  default = { disk_encryption_set = false }
+}

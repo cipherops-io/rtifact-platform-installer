@@ -39,11 +39,6 @@ func execRun(ctx context.Context, name string, args ...string) ([]byte, error) {
 // Name implements cloud.Provider.
 func (*Provider) Name() string { return CloudName }
 
-// StateResourceGroupName is the resource group created by the state-backend layer.
-func StateResourceGroupName(namePrefix string) string {
-	return namePrefix + StateResourceGroupSuffix
-}
-
 // StateStorageAccountName is the storage account created by the state-backend layer.
 // It must match infra/modules/state-backend.
 func StateStorageAccountName(namePrefix string) string {
@@ -57,7 +52,7 @@ func StateStorageAccountName(namePrefix string) string {
 
 func stateBackendNames(spec cloud.StateSpec) cloud.StateBackendInfo {
 	info := cloud.StateBackendInfo{
-		ResourceGroupName:  StateResourceGroupName(spec.NamePrefix),
+		ResourceGroupName:  SharedResourceGroupName(spec),
 		StorageAccountName: StateStorageAccountName(spec.NamePrefix),
 		ContainerName:      StateContainerName,
 	}

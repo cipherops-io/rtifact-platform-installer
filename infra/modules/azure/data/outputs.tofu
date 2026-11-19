@@ -14,6 +14,10 @@ output "redis_id" {
   value = try(azurerm_redis_cache.main[0].id, null)
 }
 
+output "managed_redis_id" {
+  value = try(azurerm_managed_redis.main[0].id, null)
+}
+
 output "azure_files_storage_account_id" {
   value = try(azurerm_storage_account.files[0].id, null)
 }

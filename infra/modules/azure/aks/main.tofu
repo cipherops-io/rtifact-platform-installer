@@ -28,6 +28,7 @@ resource "azurerm_kubernetes_cluster" "main" {
     node_count      = local.system_pool.node_count
     vnet_subnet_id  = var.node_subnet_id
     os_disk_size_gb = 128
+    os_disk_type    = var.os_disk_type
     zones           = local.node_pool_zones
   }
 
@@ -61,6 +62,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user" {
   node_count            = each.value.node_count
   vnet_subnet_id        = var.node_subnet_id
   os_disk_size_gb       = 128
+  os_disk_type          = var.os_disk_type
   mode                  = "User"
   zones                 = local.node_pool_zones
 }

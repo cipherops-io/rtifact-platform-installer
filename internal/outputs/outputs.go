@@ -18,7 +18,7 @@ type MaterializeOpts struct {
 
 // File names written under the process working directory after apply.
 func kubeconfigFile(prefix string) string { return prefix + "-kubeconfig.yaml" }
-func bastionKeyFile(prefix string) string  { return prefix + "-bastion.pem" }
+func bastionKeyFile(prefix string) string { return prefix + "-bastion.pem" }
 
 // MaterializeFromArtifacts reads saved layer outputs and writes kubeconfig / bastion PEM into cwd.
 func MaterializeFromArtifacts(prefix string, opts MaterializeOpts) ([]string, error) {
