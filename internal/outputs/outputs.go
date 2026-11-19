@@ -18,7 +18,7 @@ type MaterializeOpts struct {
 
 // File names written under the process working directory after apply.
 func kubeconfigFile(prefix string) string { return prefix + "-kubeconfig.yaml" }
-func bastionKeyFile(prefix string) string { return prefix + "-bastion.pem" }
+func bastionKeyFile(prefix string) string  { return prefix + "-bastion.pem" }
 
 // MaterializeFromArtifacts reads saved layer outputs and writes kubeconfig / bastion PEM into cwd.
 func MaterializeFromArtifacts(prefix string, opts MaterializeOpts) ([]string, error) {
@@ -121,9 +121,7 @@ func Print(configPath string) error {
 	addFromLayer(stacks.LayerCoreNetwork,
 		"resource_group_name", "vnet_id")
 	addFromLayer(stacks.LayerDataPlatform,
-		"key_vault_uri", "acr_id", "postgresql_id", "storage_account_id", "azure_files_share_name")
-	addFromLayer(stacks.LayerAIIntegration,
-		"communication_service_id", "email_communication_service_id")
+		"key_vault_uri", "acr_id", "postgresql_id", "storage_account_id")
 	addFromLayer(stacks.LayerAppPlatform,
 		"cluster_name", "aks_name", "bastion_private_ip", "oidc_issuer_url")
 

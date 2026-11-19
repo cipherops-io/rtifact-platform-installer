@@ -8,5 +8,3 @@ locals {
   core = data.terraform_remote_state.core_network.outputs
 }
 
-# communication_email resources: main.communication.tofu
-

@@ -19,8 +19,8 @@ func TestFeatureRegistryLoad(t *testing.T) {
 	}
 	merged := map[string]any{
 		"features": map[string]any{
-			"resource_group":     true,
-			"virtual_network":    true,
+			"resource_group":    true,
+			"virtual_network":   true,
 			"kubernetes_cluster": true,
 		},
 	}

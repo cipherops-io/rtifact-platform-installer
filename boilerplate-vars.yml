@@ -5,5 +5,35 @@ ProductName: rtifact-installer
 ProfileID: aios-infra
 AirGapped: true
 BoilerplatesRef: v1.1.0
+OpenTofuVersion: "1.13.9"
 Clouds:
   - azure
+  - aws
+  - gcp
+Layers:
+  - state-backend
+  - core-network
+  - data-platform
+  - app-platform
+  - network-edge
+  - ai-integrations
+ProviderSources:
+  azure: opentofu/azurerm
+  aws: opentofu/aws
+  gcp: opentofu/google
+ProviderVersions:
+  azure: "5.14.0"
+  aws: "6.73.0"
+  gcp: "8.12.0"
+CliNames:
+  azure: az
+  aws: aws
+  gcp: gcloud
+CliVersions:
+  azure: "2.93.0"
+  aws: "2.41.1"
+  gcp: "502.0.0"
+ExtraProviderVersions:
+  random: "3.9.1"
+  tls: "4.4.2"
+  azuread: "3.10.0"

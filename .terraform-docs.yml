@@ -1,0 +1,30 @@
+# Inject markers only. Module tables are generated via build/scripts/terraform-docs-module.sh + .terraform-docs.gen.yml.
+version: ">= 0.20.0"
+
+formatter: "markdown table"
+
+sort:
+  enabled: true
+  by: name
+
+output:
+  file: README.md
+  mode: inject
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    {{ "{{" }} .Content {{ "}}" }}
+    <!-- END_TF_DOCS -->
+
+sections:
+  show:
+    - requirements
+    - providers
+    - resources
+    - inputs
+    - outputs
+
+settings:
+  anchor: false
+  escape: false
+  hide-empty: false
+  read-comments: true

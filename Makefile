@@ -7,21 +7,10 @@ GOARCH ?= $(shell go env GOARCH)
 PACKAGED_CLOUDS ?= azure,aws,gcp
 LDFLAGS := -s -w -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Release=true -X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS)
 
-.PHONY: deps build build-dev embed mirror-tofu fetch-tofu release test fmt package-content tofu-fmt tofu-validate
+include boilerplate.mk
+
+.PHONY: deps build build-dev embed mirror-tofu fetch-tofu release test fmt package-content
 .PHONY: release-all release-azure release-aws release-gcp validate-examples e2e-sandbox e2e-azure-smoke e2e-azure-deploy
-
-tofu-fmt:
-	tofu fmt -recursive infra/
-
-tofu-validate:
-	@set -e; CLOUDS="$(PACKAGED_CLOUDS)"; IFS=','; \
-	for c in $$CLOUDS; do \
-	  c=$$(printf '%s' "$$c" | tr -d ' '); \
-	  for d in infra/stacks/aios-infra/$$c/*/; do \
-	    [ -f "$$d/providers.tofu" ] || continue; \
-	    echo "==> $$d"; (cd "$$d" && tofu init -backend=false -input=false && tofu validate); \
-	  done; \
-	done
 
 validate-examples:
 	@test -f $(DIST) || $(MAKE) build-dev
@@ -30,7 +19,6 @@ validate-examples:
 e2e-sandbox:
 	go test -tags=e2e -timeout=120m ./tests/e2e/ -run TestSandboxLifecycle
 
-# Azure-only E2E (requires E2E_AZURE_CONFIG + Azure auth). AWS/GCP: smoke tests only until enabled in CI.
 e2e-azure-smoke:
 	go test -tags=e2e -timeout=30m ./tests/e2e/ -run 'TestAzureSmoke'
 

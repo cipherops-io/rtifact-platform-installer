@@ -35,8 +35,7 @@ cp -R "$ROOT/infra/modules" "$WORK/infra/" 2>/dev/null || true
 
 IFS=',' read -ra CLOUDS <<< "$PACKAGED_CLOUDS"
 for c in "${CLOUDS[@]}"; do
-  c="${c#"${c%%[![:space:]]*}"}"
-  c="${c%"${c##*[![:space:]]}"}"
+  c="$(echo "$c" | xargs)"
   [ -n "$c" ] || continue
   src="$ROOT/infra/stacks/aios-infra/$c"
   [ -d "$src" ] || continue

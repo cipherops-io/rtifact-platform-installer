@@ -16,8 +16,6 @@ Required outputs (AWS/GCP alias their native IDs to these names):
 | `load_balancer_subnet_id` | Ingress/LB subnet |
 | `private_endpoint_subnet_id` | Private endpoints / PSC subnet |
 | `management_subnet_id` | Bastion / ops subnet |
-| `firewall_id` | Azure Firewall (optional) |
-| `bastion_host_id` | Managed Azure Bastion (when `bastion.managed`) |
 
 ## Other layers
 

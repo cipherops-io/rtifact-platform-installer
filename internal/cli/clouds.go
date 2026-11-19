@@ -9,9 +9,9 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/bootstrap"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/preflight"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/quota"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/runner"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/status"
@@ -171,8 +171,8 @@ func addCloudLifecycle(grp *cobra.Command, cloudName string) {
 	grp.AddCommand(validate)
 
 	grp.AddCommand(&cobra.Command{
-		Use:  "preflight [config.yaml]",
-		Args: cobra.ExactArgs(1),
+		Use:   "preflight [config.yaml]",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			cfg, err := config.LoadCustomer(args[0])
 			if err != nil {
@@ -186,8 +186,8 @@ func addCloudLifecycle(grp *cobra.Command, cloudName string) {
 	})
 
 	bootstrapCmd := &cobra.Command{
-		Use:  "bootstrap [config.yaml]",
-		Args: cobra.ExactArgs(1),
+		Use:   "bootstrap [config.yaml]",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg, err := config.LoadCustomer(args[0])
 			if err != nil {
@@ -204,8 +204,8 @@ func addCloudLifecycle(grp *cobra.Command, cloudName string) {
 	grp.AddCommand(bootstrapCmd)
 
 	grp.AddCommand(&cobra.Command{
-		Use:  "status [config.yaml]",
-		Args: cobra.ExactArgs(1),
+		Use:   "status [config.yaml]",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
 			cfg, err := config.LoadCustomer(args[0])
 			if err != nil {

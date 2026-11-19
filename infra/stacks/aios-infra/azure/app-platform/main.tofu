@@ -22,11 +22,10 @@ module "aks" {
   dns_service_ip      = var.network.dns_service_ip
   node_pools          = var.kubernetes_cluster.node_pools
   availability_zones  = var.kubernetes_cluster.availability_zones
-  os_disk_type        = try(var.kubernetes_cluster.os_disk_type, "Premium_LRS")
 }
 
 module "compute" {
-  count = var.features.azure_bastion && !var.bastion.managed ? 1 : 0
+  count = var.features.azure_bastion ? 1 : 0
 
   source              = "../../../../modules/azure/compute"
   resource_group_name = local.core.resource_group_name
@@ -34,7 +33,6 @@ module "compute" {
   name_prefix         = var.name_prefix
   tags                = local.core.tags
   subnet_id           = local.core.management_subnet_id
-  vm_size             = var.bastion.vm_size
-  os_disk_size_gb     = var.bastion.os_disk_size_gb
-  os_disk_type        = try(var.bastion.os_disk_type, "Premium_LRS")
+  vm_size             = var.azure_bastion.vm_size
+  os_disk_size_gb     = var.azure_bastion.os_disk_size_gb
 }

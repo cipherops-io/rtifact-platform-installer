@@ -14,8 +14,7 @@ rsync -a "$ROOT/profiles/aios-infra" "$PKG/profiles/"
 rsync -a "$ROOT/schemas" "$PKG/"
 mkdir -p "$PKG/infra/stacks/aios-infra" "$PKG/infra/modules"
 for c in "${CLOUDS[@]}"; do
-  c="${c#"${c%%[![:space:]]*}"}"
-  c="${c%"${c##*[![:space:]]}"}"
+  c="$(echo "$c" | xargs)"
   [ -n "$c" ] || continue
   if [ -d "$ROOT/infra/stacks/aios-infra/$c" ]; then
     rsync -a "$ROOT/infra/stacks/aios-infra/$c" "$PKG/infra/stacks/aios-infra/"

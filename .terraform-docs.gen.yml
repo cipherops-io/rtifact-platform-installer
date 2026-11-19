@@ -1,0 +1,26 @@
+# Used only by build/scripts/terraform-docs-module.sh (generation pass in a temp dir).
+version: ">= 0.20.0"
+
+formatter: "markdown table"
+
+sort:
+  enabled: true
+  by: name
+
+output:
+  file: _module_docs_fragment.md
+  mode: replace
+
+sections:
+  show:
+    - requirements
+    - providers
+    - resources
+    - inputs
+    - outputs
+
+settings:
+  anchor: false
+  escape: false
+  hide-empty: true
+  read-comments: true
