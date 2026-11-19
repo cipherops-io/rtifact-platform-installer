@@ -66,6 +66,10 @@ make e2e-azure-smoke
 
 Repeat for `refs/heads/main` and optionally `environment:azure-e2e` if you protect E2E with a GitHub Environment.
 
+**Environment jobs:** GitHub may emit a subject with numeric org/repo IDs, e.g.  
+`repo:cipherops-io@167057720/rtifact-platform-installer@1463839531:environment:azure-e2e`  
+—not the string form `repo:org/repo:environment:...`. Add a **second** federated credential whose subject matches the `subject claim` line in the `azure/login` log ([runbook](./azure-github-oidc-setup-commands.md)).
+
 ### 3. RBAC on subscription
 
 Assign the app **Contributor** (or a custom role) on the **target subscription** used for E2E (sandbox only):

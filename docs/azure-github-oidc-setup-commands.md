@@ -15,10 +15,24 @@ This runbook records the **exact commands** used to wire GitHub Actions (`azure-
 | App client ID (`AZURE_CLIENT_ID`) | `d6761651-136e-487d-9215-d5b06ad3b5cd` |
 | App object ID (for federated creds) | `66f443c2-1a98-4595-aa1c-747eb74cf0da` |
 
-Federated credential subjects:
+Federated credential subjects (Entra must match the **exact** `subject claim` from the Actions log):
 
 - `repo:cipherops-io/rtifact-platform-installer:ref:refs/heads/main`
 - `repo:cipherops-io/rtifact-platform-installer:environment:azure-e2e`
+- `repo:cipherops-io@167057720/rtifact-platform-installer@1463839531:environment:azure-e2e` (GitHub environment jobs use org/repo **numeric** IDs in the token subject)
+
+If `azure/login` fails with `AADSTS700213`, copy the `subject claim` line from the failed job and add it:
+
+```bash
+OBJECT_ID="66f443c2-1a98-4595-aa1c-747eb74cf0da"
+SUBJ='repo:cipherops-io@167057720/rtifact-platform-installer@1463839531:environment:azure-e2e'
+az ad app federated-credential create --id "$OBJECT_ID" --parameters "{
+  \"name\": \"github-env-azure-e2e-numeric-subject\",
+  \"issuer\": \"https://token.actions.githubusercontent.com\",
+  \"subject\": \"$SUBJ\",
+  \"audiences\": [\"api://AzureADTokenExchange\"]
+}"
+```
 
 RBAC: **Contributor** on `/subscriptions/0778eb6e-3c52-42b2-a0b2-89dbd4a176e0`.
 
