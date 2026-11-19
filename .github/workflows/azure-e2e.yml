@@ -1,0 +1,100 @@
+# Azure E2E: validate (quota) + plan only — no apply/destroy in this workflow.
+# OIDC auth; configure via env defaults or workflow_dispatch overrides.
+
+name: azure-e2e
+
+on:
+  workflow_dispatch:
+    inputs:
+      rtifact_action:
+        description: What to run after Azure login
+        required: true
+        type: choice
+        default: plan
+        options:
+          - plan
+          - validate
+      stack:
+        description: OpenTofu stack layer for plan (apply order when all)
+        required: true
+        type: choice
+        default: all
+        options:
+          - all
+          - state-backend
+          - core-network
+          - data-platform
+          - app-platform
+          - network-edge
+          - ai-integrations
+      check_azure:
+        description: Run Azure subscription quota check on validate (--check-quota)
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: azure-e2e-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # Repository defaults (plan-only E2E; override via workflow_dispatch)
+  RTIFACT_ACTION: ${{ inputs.rtifact_action || 'plan' }}
+  E2E_STACK: ${{ inputs.stack || 'all' }}
+  CHECK_AZURE: ${{ inputs.check_azure == false && 'false' || 'true' }}
+
+jobs:
+  azure:
+    runs-on: ubuntu-latest
+    environment: azure-e2e
+    timeout-minutes: 120
+    env:
+      PACKAGED_CLOUDS: azure
+      INSTALLER_CONTENT_ROOT: .
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-go@v7.1.0
+        with:
+          go-version: "1.22"
+
+      - uses: opentofu/setup-opentofu@v2.0.2
+        with:
+          tofu_version: "1.13.9"
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Provider auth env (OpenTofu ARM OIDC)
+        run: |
+          echo "ARM_USE_OIDC=true" >> "$GITHUB_ENV"
+          echo "ARM_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}" >> "$GITHUB_ENV"
+          echo "ARM_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}" >> "$GITHUB_ENV"
+          echo "ARM_SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" >> "$GITHUB_ENV"
+
+      - name: Prepare E2E config
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          chmod +x build/scripts/*.sh scripts/github-e2e-prepare-config.sh
+          ./scripts/github-e2e-prepare-config.sh examples/github-e2e-azure.yaml "$RUNNER_TEMP/e2e-config.yaml"
+          echo "E2E_AZURE_CONFIG=$RUNNER_TEMP/e2e-config.yaml" >> "$GITHUB_ENV"
+
+      - name: Build rtifact (azure only)
+        run: make build-dev PACKAGED_CLOUDS=azure
+
+      - name: rtifact azure validate
+        run: ./dist/rtifact azure validate "$E2E_AZURE_CONFIG" --check-quota=${{ env.CHECK_AZURE }}
+
+      - name: rtifact azure plan
+        if: env.RTIFACT_ACTION == 'plan'
+        run: ./dist/rtifact azure plan "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes

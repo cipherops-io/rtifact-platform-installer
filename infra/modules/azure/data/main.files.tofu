@@ -26,7 +26,7 @@ resource "azurerm_storage_share" "aios" {
   name               = var.azure_files_share_name
   storage_account_id = azurerm_storage_account.files[0].id
   quota              = var.azure_files_quota_gb
-  enabled_protocol     = "NFS"
+  enabled_protocol   = "NFS"
 }
 
 resource "azurerm_private_dns_zone" "file" {

@@ -1,0 +1,65 @@
+# GitHub Actions Azure E2E — replace placeholders in CI or edit locally.
+# Used by .github/workflows/azure-e2e.yml (workflow_dispatch only).
+
+schema_version: 1
+cloud: azure
+profile: aios-infra
+tier: sandbox
+
+customer:
+  name: GitHubE2E
+  code: ghe
+
+account:
+  subscription_id: "SUBSCRIPTION_ID_PLACEHOLDER"
+  tenant_id: "TENANT_ID_PLACEHOLDER"
+  region: centralindia
+  environment: public
+  auth:
+    use_msi: false
+
+workload:
+  name: aios
+  environment: e2e
+  name_prefix: gh-rtifact-e2e
+
+state:
+  backend: local
+  air_gapped: false
+
+features:
+  resource_group: true
+  virtual_network: true
+  key_vault: true
+  key_vault_private_endpoint: true
+  postgresql_flexible_server: false
+  container_registry: false
+  storage_account: false
+  redis_cache: false
+  azure_files_share: false
+  communication_email: false
+  kubernetes_cluster: false
+  azure_bastion: false
+  private_dns_zones: true
+
+network:
+  vnet_cidr: "10.42.0.0/20"
+  node_subnet_cidr: "10.42.0.0/22"
+  load_balancer_subnet_cidr: "10.42.4.0/24"
+  private_endpoint_subnet_cidr: "10.42.5.0/24"
+  management_subnet_cidr: "10.42.6.0/27"
+  pod_cidr: "10.246.0.0/16"
+  service_cidr: "172.22.0.0/16"
+  dns_service_ip: "172.22.0.10"
+
+kubernetes_cluster:
+  kubernetes_version: "1.30"
+  availability_zones: []
+  node_pools:
+    system:
+      name: system
+      vm_size: Standard_D2ds_v5
+      node_count: 1
+
+key_vault:
+  sku: standard

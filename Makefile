@@ -8,7 +8,7 @@ PACKAGED_CLOUDS ?= azure,aws,gcp
 LDFLAGS := -s -w -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Release=true -X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS)
 
 .PHONY: deps build build-dev embed mirror-tofu fetch-tofu release test fmt package-content tofu-fmt tofu-validate
-.PHONY: release-all release-azure release-aws release-gcp validate-examples e2e-sandbox
+.PHONY: release-all release-azure release-aws release-gcp validate-examples e2e-sandbox e2e-azure-smoke e2e-azure-deploy
 
 tofu-fmt:
 	tofu fmt -recursive infra/
@@ -28,7 +28,14 @@ validate-examples:
 	@INSTALLER_CONTENT_ROOT=. ./$(DIST) validate examples/sandbox.yaml --check-azure=false
 
 e2e-sandbox:
-	go test -tags=e2e -timeout=120m ./tests/e2e/...
+	go test -tags=e2e -timeout=120m ./tests/e2e/ -run TestSandboxLifecycle
+
+# Azure-only E2E (requires E2E_AZURE_CONFIG + Azure auth). AWS/GCP: smoke tests only until enabled in CI.
+e2e-azure-smoke:
+	go test -tags=e2e -timeout=30m ./tests/e2e/ -run 'TestAzureSmoke'
+
+e2e-azure-deploy:
+	go test -tags=e2e -timeout=180m ./tests/e2e/ -run 'TestAzureStackAction'
 
 package-content:
 	@PACKAGED_CLOUDS="$(PACKAGED_CLOUDS)" ./build/scripts/package-content.sh

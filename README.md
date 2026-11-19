@@ -24,6 +24,10 @@ Layers: `state-backend` (via `bootstrap`), then `core-network`, `data-platform`,
 
 All artifacts are named `dist/rtifact` with only the packaged cloud subcommands registered.
 
+## Azure E2E (GitHub Actions + OIDC)
+
+Live **validate + plan** in Azure uses [`.github/workflows/azure-e2e.yml`](.github/workflows/azure-e2e.yml) (manual dispatch; defaults: all stacks, quota check on). Setup: [docs/azure-github-oidc-e2e.md](docs/azure-github-oidc-e2e.md). Local apply/destroy: `make e2e-azure-deploy` with `E2E_AZURE_CONFIG`, `E2E_AZURE_ACTION`, `E2E_AZURE_STACK`.
+
 Module: `github.com/cipherops-io/rtifact-platform-installer`
 
 Generated from [`cipherops-io/boilerplates`](../boilerplates) `devops-templates/platform-installer`.

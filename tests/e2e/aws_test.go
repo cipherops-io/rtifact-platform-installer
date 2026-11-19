@@ -1,5 +1,7 @@
 //go:build e2e
 
+// AWS live deploy is not wired in GitHub Actions yet; smoke test only when E2E_AWS_CONFIG is set.
+
 package e2e_test
 
 import (
