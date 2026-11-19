@@ -111,10 +111,6 @@ jobs:
         if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
         run: ./dist/rtifact azure bootstrap "$E2E_AZURE_CONFIG" --yes
 
-      - name: rtifact apply state-backend (blob RBAC)
-        if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
-        run: ./dist/rtifact azure apply "$E2E_AZURE_CONFIG" --stack state-backend --yes
-
       - name: rtifact azure apply
         if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
         run: ./dist/rtifact azure apply "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
