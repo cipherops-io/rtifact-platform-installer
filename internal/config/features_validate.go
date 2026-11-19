@@ -6,29 +6,30 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/features"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 )
 
+// validateMergedFeaturesFromRegistry validates merged features (a free-form map)
+// against the profile feature registry: unknown keys, unsupported features and
+// `requires` dependencies.
 func validateMergedFeaturesFromRegistry(merged map[string]any, profileID string) error {
-	featuresMap, ok := merged["features"].(map[string]any)
-	if !ok {
+	if _, ok := merged["features"].(map[string]any); !ok {
 		return nil
 	}
-	bools := make(map[string]bool, len(featuresMap))
-	for k, v := range featuresMap {
-		b, _ := v.(bool)
-		bools[k] = b
-	}
 	root, _, err := assets.ContentRootOptional()
-	if err == nil && root != "" {
-		reg, err := features.LoadProfileRegistry(filepath.Join(root, "profiles"), profileID)
-		if err == nil {
-			if err := reg.ValidateEnabled(bools); err != nil {
-				return err
-			}
-			return nil
-		}
+	if err != nil {
+		return fmt.Errorf("locate profiles for feature registry: %w", err)
 	}
-	return validateMergedFeatures(merged)
+	reg, err := features.LoadProfileRegistry(filepath.Join(root, "profiles"), profileID)
+	if err != nil {
+		return fmt.Errorf("load feature registry for profile %q: %w", profileID, err)
+	}
+	if err := reg.ValidateEnabled(featuresBoolMap(merged)); err != nil {
+		return usererr.Wrap(err,
+			"Feature flags are invalid for this profile.",
+			"See profiles/"+profileID+"/features.yaml for allowed features, dependencies, and unsupported items.")
+	}
+	return nil
 }
 
 func featuresBoolMap(merged map[string]any) map[string]bool {

@@ -24,6 +24,7 @@ tofu.tfstate.*
 
 # IDE
 .idea/
+.cursor/
 *.swp
 
 # Secrets

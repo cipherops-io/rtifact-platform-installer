@@ -15,16 +15,16 @@ func TestSandboxLifecycle(t *testing.T) {
 		t.Skip("E2E_CONFIG not set")
 	}
 	root, _ := os.Getwd()
-	installer := filepath.Join(root, "..", "..", "dist", "installer")
-	if _, err := os.Stat(installer); err != nil {
-		t.Fatal("build installer first: make build-dev")
+	bin := filepath.Join(root, "..", "..", "dist", "rtifact")
+	if _, err := os.Stat(bin); err != nil {
+		t.Fatal("build rtifact first: make build-dev")
 	}
 	for _, args := range [][]string{
 		{"validate", cfg, "--check-azure=false"},
 		{"preflight", cfg},
-		{"plan", cfg, "--stack", "network", "--yes"},
+		{"plan", cfg, "--stack", "core-network", "--yes"},
 	} {
-		cmd := exec.Command(installer, args...)
+		cmd := exec.Command(bin, args...)
 		cmd.Env = append(os.Environ(), "INSTALLER_CONTENT_ROOT="+filepath.Join(root, "..", ".."))
 		out, err := cmd.CombinedOutput()
 		if err != nil {

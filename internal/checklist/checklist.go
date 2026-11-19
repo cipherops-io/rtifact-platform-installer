@@ -5,11 +5,11 @@ import (
 	"fmt"
 )
 
-//go:embed ai-os-aks.md
-var aiOSChecklist string
+//go:embed aios-infra.md
+var aiosInfraChecklist string
 
 var byID = map[string]string{
-	"ai-os-aks": aiOSChecklist,
+	"aios-infra": aiosInfraChecklist,
 }
 
 func Render(id string) (string, error) {

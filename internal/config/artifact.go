@@ -8,10 +8,7 @@ import (
 )
 
 func WriteMergedConfigArtifact(prefix, layer string, merged map[string]any) error {
-	dir := filepath.Join(os.Getenv("HOME"), ".rtifact-installer", prefix)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
+	dir := ArtifactsDir(prefix)
 	b, err := json.MarshalIndent(merged, "", "  ")
 	if err != nil {
 		return err

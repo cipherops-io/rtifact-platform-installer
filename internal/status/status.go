@@ -14,8 +14,8 @@ func Print(configPath string) error {
 	if err != nil {
 		return err
 	}
-	dir := filepath.Join(os.Getenv("HOME"), ".rtifact-installer", cfg.NamePrefix())
-	for _, layer := range stacks.ApplyOrder {
+	dir := config.ArtifactsDir(cfg.NamePrefix())
+	for _, layer := range stacks.AllLayers() {
 		path := filepath.Join(dir, fmt.Sprintf("%s-outputs.json", layer))
 		state := "not_started"
 		if _, err := os.Stat(path); err == nil {

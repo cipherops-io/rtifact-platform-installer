@@ -1,5 +1,8 @@
 package version
 
+// ProductName names per-user state directories (~/.rtifact).
+const ProductName = "rtifact"
+
 // Set via -ldflags at release.
 var (
 	Version   = "0.1.0-dev"

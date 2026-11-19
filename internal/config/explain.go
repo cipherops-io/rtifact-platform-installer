@@ -40,12 +40,13 @@ func PrintExplain(customerPath string) error {
 
 func WriteInitConfig(tier, customer, out string) error {
 	body := fmt.Sprintf(`schema_version: 1
-profile: ai-os-aks
+cloud: azure
+profile: ai-os-k8s
 tier: %s
 customer:
   name: %s
   code: %s
-azure:
+account:
   subscription_id: "00000000-0000-0000-0000-000000000000"
   tenant_id: "00000000-0000-0000-0000-000000000000"
   region: centralindia
@@ -64,6 +65,7 @@ network:
 state:
   backend: azurerm
   bootstrap: true
+  air_gapped: true
 `, tier, customer, customer)
 	return os.WriteFile(out, []byte(body), 0o644)
 }

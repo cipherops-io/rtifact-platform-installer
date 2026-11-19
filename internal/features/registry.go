@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"gopkg.in/yaml.v3"
 )
@@ -39,7 +40,18 @@ func (r *Registry) ValidateEnabled(features map[string]bool) error {
 	if r == nil {
 		return nil
 	}
-	for name, on := range features {
+	names := make([]string, 0, len(features))
+	for name := range features {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		if _, ok := r.Features[name]; !ok {
+			return fmt.Errorf("features.%s: unknown feature (not in registry)", name)
+		}
+	}
+	for _, name := range names {
+		on := features[name]
 		if !on {
 			continue
 		}

@@ -11,9 +11,13 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/checklist"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/guard"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 )
 
 type Options struct {
@@ -56,38 +60,80 @@ func Run(opts Options) error {
 		return err
 	}
 
-	targetLayers := stacks.ResolveLayers(opts.Stack)
-	if opts.Stack == "" {
-		targetLayers = []stacks.Layer{stacks.LayerNetwork}
+	if err := registry.EnsureOperational(customer.Cloud); err != nil {
+		return err
 	}
-	if opts.Action == "destroy" {
+	provider, err := registry.Get(customer.Cloud)
+	if err != nil {
+		return err
+	}
+	spec := config.CloudStateSpec(customer, meta.StackID)
+
+	stack := opts.Stack
+	if stack == "" {
+		stack = stacks.LayerAll
+	}
+	targetLayers := stacks.ResolveLayers(stack)
+	if opts.Action == "destroy" && stack == stacks.LayerAll {
 		targetLayers = stacks.DestroyOrder()
-		if opts.Stack != "" && opts.Stack != stacks.LayerAll {
-			targetLayers = []stacks.Layer{opts.Stack}
-		}
 	}
 
 	for _, layer := range targetLayers {
-		if err := runOneLayer(opts, customer, meta, contentRoot, merged, layer); err != nil {
-			return fmt.Errorf("stack %s: %w", layer, err)
+		if err := runOneLayer(opts, customer, meta, provider, spec, contentRoot, merged, layer); err != nil {
+			return usererr.Wrap(err,
+				fmt.Sprintf("OpenTofu %s failed on stack %q.", opts.Action, layer),
+				"Read the OpenTofu output above, fix the cause, then re-run with the same --stack.")
 		}
-		if opts.Action == "apply" && opts.PrintChecklist && layer == stacks.LayerCluster {
-			if meta.ChecklistID != "" {
-				if text, e := checklist.Render(meta.ChecklistID); e == nil {
-					fmt.Fprintln(os.Stderr, text)
-				}
-			}
+	}
+	if opts.Action == "apply" && opts.PrintChecklist && meta.ChecklistID != "" && containsLayer(targetLayers, stacks.LayerAppPlatform) {
+		if text, e := checklist.Render(meta.ChecklistID); e == nil {
+			fmt.Fprintln(os.Stderr, text)
+		}
+	}
+	if opts.Action == "apply" && containsLayer(targetLayers, stacks.LayerAppPlatform) {
+		written, err := outputs.MaterializeFromArtifacts(customer.NamePrefix(), outputs.MaterializeOpts{
+			AWSRegion: customer.Account.Region,
+		})
+		if err != nil {
+			return err
+		}
+		for _, p := range written {
+			fmt.Fprintf(os.Stderr, "Wrote %s\n", p)
 		}
 	}
 	return nil
 }
 
-func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.ProfileMeta, contentRoot string, merged map[string]any, layer stacks.Layer) error {
-	stackRel := filepath.Join("stacks", meta.StackID, string(layer))
-	stackSrc := filepath.Join(contentRoot, "infra", "stacks", meta.StackID, string(layer))
+func containsLayer(layers []stacks.Layer, want stacks.Layer) bool {
+	for _, l := range layers {
+		if l == want {
+			return true
+		}
+	}
+	return false
+}
+
+// layerSpec returns the state spec used for layer. state-backend always uses
+// local state: it creates the storage the other layers keep their state in.
+func layerSpec(spec cloud.StateSpec, layer stacks.Layer) cloud.StateSpec {
+	if layer == stacks.LayerStateBackend {
+		spec.Local = true
+		spec.LocalDir = filepath.Join(config.ArtifactsDir(spec.NamePrefix), "state")
+		_ = os.MkdirAll(spec.LocalDir, 0o755)
+	}
+	return spec
+}
+
+// stackRelDir is stacks/<profile>/<cloud>/<layer>, relative to the infra root.
+func stackRelDir(profileStackID, cloudName string, layer stacks.Layer) string {
+	return filepath.Join("stacks", profileStackID, cloudName, string(layer))
+}
+
+func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.ProfileMeta, provider cloud.Provider, spec cloud.StateSpec, contentRoot string, merged map[string]any, layer stacks.Layer) error {
+	stackRel := stackRelDir(meta.StackID, customer.Cloud, layer)
+	stackSrc := filepath.Join(contentRoot, "infra", stackRel)
 	if st, err := os.Stat(stackSrc); err != nil || !st.IsDir() {
-		stackSrc = filepath.Join(contentRoot, "infra", "stacks", meta.StackID)
-		stackRel = filepath.Join("stacks", meta.StackID)
+		return fmt.Errorf("no stack for profile %q cloud %q layer %q (expected infra/%s)", meta.StackID, customer.Cloud, layer, filepath.ToSlash(stackRel))
 	}
 
 	work, err := os.MkdirTemp("", "installer-tofu-")
@@ -103,22 +149,28 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	stackWork := filepath.Join(infraWork, stackRel)
 
 	layerMerged := deepCopyMap(merged)
-	if inputs, err := loadLayerInputs(customer.NamePrefix(), layer); err == nil && inputs != nil {
-		layerMerged["layer_inputs"] = inputs
+	upstream := map[string]any{}
+	for _, up := range stacks.Upstream(layer) {
+		ub, err := cloud.Backend(provider, spec, string(up))
+		if err != nil {
+			return fmt.Errorf("upstream backend %s: %w", up, err)
+		}
+		upstream[string(up)] = ub.RemoteState()
+	}
+	if len(upstream) > 0 {
+		layerMerged["upstream_state"] = upstream
 	}
 	if err := config.WriteAutoTofuVarsJSON(stackWork, layerMerged); err != nil {
 		return err
 	}
 	_ = config.WriteMergedConfigArtifact(customer.NamePrefix(), string(layer), layerMerged)
 
-	backend := config.EffectiveBackend(customer, meta.StackID, string(layer))
-	if backend != nil {
-		if backend.ResourceGroupName == "" || backend.StorageAccountName == "" {
-			return fmt.Errorf("remote backend requires storage account configuration; run installer bootstrap first")
-		}
-		if err := writeBackend(stackWork, backend, customer.Azure); err != nil {
-			return err
-		}
+	backend, err := cloud.Backend(provider, layerSpec(spec, layer), string(layer))
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(filepath.Join(stackWork, "backend.tofu"), []byte(backend.HCL()), 0o644); err != nil {
+		return err
 	}
 
 	tofuPath, mirrorDir, cleanup, err := resolveTofu(contentRoot)
@@ -142,16 +194,6 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 		env = append(env, "TF_PLUGIN_CACHE_DIR="+pc)
 	}
 
-	cwd, _ := os.Getwd()
-	var stateArgs []string
-	var extraInit []string
-	if backend == nil {
-		stateFile := filepath.Join(cwd, fmt.Sprintf("tofu-%s.tfstate", layer))
-		stateArgs = []string{"-state=" + stateFile}
-	} else {
-		extraInit = append(extraInit, "-reconfigure")
-	}
-
 	run := func(args ...string) error {
 		c := exec.Command(tofuPath, args...)
 		c.Dir = stackWork
@@ -168,7 +210,7 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	if _, err := os.Stat(filepath.Join(stackWork, ".terraform.lock.hcl")); err == nil {
 		initArgs = append(initArgs, "-lockfile=readonly")
 	}
-	initArgs = append(initArgs, extraInit...)
+	initArgs = append(initArgs, "-reconfigure")
 	if err := run(initArgs...); err != nil {
 		return err
 	}
@@ -179,11 +221,10 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 		if opts.PlanOut != "" {
 			args = append(args, "-out="+opts.PlanOut)
 		}
-		args = append(args, stateArgs...)
 		return run(args...)
 	case "apply":
 		planFile := filepath.Join(stackWork, "plan.bin")
-		if err := run(append([]string{"plan", "-input=false", "-out", planFile, varFileArg}, stateArgs...)...); err != nil {
+		if err := run("plan", "-input=false", "-out", planFile, varFileArg); err != nil {
 			return err
 		}
 		if !opts.AllowDestroyStateful {
@@ -200,24 +241,20 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 				return err
 			}
 		}
-		if err := run(append([]string{"apply", "-input=false", planFile}, stateArgs...)...); err != nil {
+		if err := run("apply", "-input=false", planFile); err != nil {
 			return err
 		}
-		return captureOutputs(tofuPath, stackWork, env, customer.NamePrefix(), layer, stateArgs)
+		return captureOutputs(tofuPath, stackWork, env, customer.NamePrefix(), layer, customer.Account.Region)
 	case "destroy":
 		if !opts.Yes {
 			if err := confirmDestroy(string(layer)); err != nil {
 				return err
 			}
 		}
-		args := []string{"destroy", "-input=false", varFileArg}
-		if opts.Yes {
-			args = append(args, "-auto-approve")
-		}
-		args = append(args, stateArgs...)
-		return run(args...)
+		// Confirmation (or --yes) happened above; -input=false needs -auto-approve.
+		return run("destroy", "-input=false", "-auto-approve", varFileArg)
 	case "output":
-		return run(append([]string{"output", "-json"}, stateArgs...)...)
+		return run("output", "-json")
 	default:
 		return fmt.Errorf("unknown action %q", opts.Action)
 	}
@@ -245,27 +282,8 @@ func readYesNo() error {
 	return nil
 }
 
-func layerArtifactsDir(prefix string) string {
-	dir := filepath.Join(os.Getenv("HOME"), ".rtifact-installer", prefix)
-	_ = os.MkdirAll(dir, 0o755)
-	return dir
-}
-
-func loadLayerInputs(prefix string, layer stacks.Layer) (map[string]any, error) {
-	path := filepath.Join(layerArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var m map[string]any
-	if err := json.Unmarshal(b, &m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
-func captureOutputs(tofuPath, stackWork string, env []string, prefix string, layer stacks.Layer, stateArgs []string) error {
-	c := exec.Command(tofuPath, append([]string{"output", "-json"}, stateArgs...)...)
+func captureOutputs(tofuPath, stackWork string, env []string, prefix string, layer stacks.Layer, awsRegion string) error {
+	c := exec.Command(tofuPath, "output", "-json")
 	c.Dir = stackWork
 	c.Env = env
 	out, err := c.Output()
@@ -283,8 +301,20 @@ func captureOutputs(tofuPath, stackWork string, env []string, prefix string, lay
 		}
 	}
 	b, _ := json.MarshalIndent(flat, "", "  ")
-	path := filepath.Join(layerArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
-	return os.WriteFile(path, b, 0o644)
+	path := filepath.Join(config.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
+	if err := os.WriteFile(path, b, 0o644); err != nil {
+		return err
+	}
+	if layer == stacks.LayerAppPlatform {
+		written, err := outputs.MaterializeCWD(prefix, flat, outputs.MaterializeOpts{AWSRegion: awsRegion})
+		if err != nil {
+			return err
+		}
+		for _, p := range written {
+			fmt.Fprintf(os.Stderr, "Wrote %s\n", p)
+		}
+	}
+	return nil
 }
 
 func tofuShowJSON(tofuPath, stackWork string, env []string, planFile string) ([]byte, error) {

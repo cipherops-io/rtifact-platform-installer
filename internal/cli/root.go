@@ -11,18 +11,22 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/dataops"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/preflight"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/quota"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/runner"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/status"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/version"
 	"github.com/spf13/cobra"
 )
 
 func NewRoot() *cobra.Command {
 	root := &cobra.Command{
-		Use:   "installer",
-		Short: "Rtifact Azure platform installer",
+		Use:   "rtifact",
+		Short: "Rtifact multicloud platform installer",
 	}
+	root.SilenceUsage = true
+	root.SilenceErrors = true
 
 	var stackFlag string
 	var yes bool
@@ -31,7 +35,7 @@ func NewRoot() *cobra.Command {
 	var allowDestroy bool
 
 	addStackFlags := func(cmd *cobra.Command) {
-		cmd.Flags().StringVar(&stackFlag, "stack", "all", "bootstrap|network|data|cluster|all")
+		cmd.Flags().StringVar(&stackFlag, "stack", "all", "state-backend|core-network|data-platform|app-platform|network-edge|ai-integrations|all")
 		cmd.Flags().BoolVar(&yes, "yes", false, "Skip interactive confirmation")
 		cmd.Flags().BoolVar(&allowDestroy, "allow-destroy-stateful", false, "Allow stateful resource replace/destroy")
 	}
@@ -39,15 +43,28 @@ func NewRoot() *cobra.Command {
 	plan := &cobra.Command{Use: "plan [config.yaml]", Args: cobra.ExactArgs(1)}
 	apply := &cobra.Command{Use: "apply [config.yaml]", Args: cobra.ExactArgs(1)}
 	destroy := &cobra.Command{Use: "destroy [config.yaml]", Args: cobra.ExactArgs(1)}
-	output := &cobra.Command{Use: "output [config.yaml]", Args: cobra.ExactArgs(1)}
-	for _, c := range []*cobra.Command{plan, apply, destroy, output} {
+	output := &cobra.Command{
+		Use:   "output [config.yaml]",
+		Short: "Show important deployment outputs (kubeconfig, bastion key, cluster IP, …)",
+		Args:  cobra.ExactArgs(1),
+	}
+	var outputTofu bool
+	output.Flags().BoolVar(&outputTofu, "tofu", false, "Run tofu output -json for --stack instead of the summary")
+	addStackFlags(output)
+	for _, c := range []*cobra.Command{plan, apply, destroy} {
 		addStackFlags(c)
 	}
 	plan.RunE = tofuRun("plan", &stackFlag, yes, allowDestroy, false)
 	apply.RunE = tofuRun("apply", &stackFlag, yes, allowDestroy, true)
 	destroy.RunE = tofuRun("destroy", &stackFlag, yes, allowDestroy, false)
-	output.RunE = tofuRun("output", &stackFlag, yes, allowDestroy, false)
+	output.RunE = func(cmd *cobra.Command, args []string) error {
+		if outputTofu {
+			return tofuRun("output", &stackFlag, yes, allowDestroy, false)(cmd, args)
+		}
+		return outputs.Print(args[0])
+	}
 	root.AddCommand(plan, apply, destroy, output)
+	addCloudGroups(root)
 
 	validate := &cobra.Command{
 		Use:   "validate [config.yaml]",
@@ -154,7 +171,7 @@ func NewRoot() *cobra.Command {
 		Use:   "version",
 		Short: "Print version",
 		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Printf("installer %s (%s)\n", version.Version, version.GitCommit)
+			fmt.Printf("rtifact %s (%s) clouds=%s\n", version.Version, version.GitCommit, version.PackagedClouds)
 		},
 	})
 
@@ -165,7 +182,11 @@ func tofuRun(action string, stackFlag *string, yes, allowDestroy, checklist bool
 	return func(_ *cobra.Command, args []string) error {
 		layer, ok := stacks.ParseLayer(*stackFlag)
 		if !ok {
-			return fmt.Errorf("unknown --stack %q", *stackFlag)
+			return usererr.WithHint(
+				"Unknown stack name.",
+				"Use --stack with: state-backend, core-network, data-platform, app-platform, network-edge, ai-integrations, or all.",
+				fmt.Sprintf("You passed --stack %q.", *stackFlag),
+			)
 		}
 		return runner.Run(runner.Options{
 			Action:               action,
@@ -180,7 +201,7 @@ func tofuRun(action string, stackFlag *string, yes, allowDestroy, checklist bool
 
 func Execute() {
 	if err := NewRoot().Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, usererr.Human(err))
 		os.Exit(1)
 	}
 }

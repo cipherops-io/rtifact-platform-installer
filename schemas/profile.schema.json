@@ -6,6 +6,7 @@
   "properties": {
     "stack_id": { "type": "string" },
     "version": { "type": "string" },
-    "checklist_id": { "type": "string" }
+    "checklist_id": { "type": "string" },
+    "clouds": { "type": "array", "items": { "type": "string" } }
   }
 }

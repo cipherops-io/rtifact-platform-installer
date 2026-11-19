@@ -1,30 +1,37 @@
 MODULE := github.com/cipherops-io/rtifact-platform-installer
-BINARY := installer
+BINARY := rtifact
 DIST := dist/$(BINARY)
-TOFU_VERSION ?= 1.9.0
+TOFU_VERSION ?= 1.13.9
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
+PACKAGED_CLOUDS ?= azure,aws,gcp
+LDFLAGS := -s -w -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Release=true -X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS)
 
 .PHONY: deps build build-dev embed mirror-tofu fetch-tofu release test fmt package-content tofu-fmt tofu-validate
+.PHONY: release-all release-azure release-aws release-gcp validate-examples e2e-sandbox
 
 tofu-fmt:
 	tofu fmt -recursive infra/
 
 tofu-validate:
-	@for d in infra/stacks/ai-os-aks infra/stacks/ai-os-aks/network infra/stacks/ai-os-aks/data infra/stacks/ai-os-aks/cluster infra/stacks/ai-os-aks/bootstrap; do \
-	  [ -f "$$d/providers.tofu" ] && (cd "$$d" && tofu init -backend=false -input=false && tofu validate) || true; \
+	@set -e; CLOUDS="$(PACKAGED_CLOUDS)"; IFS=','; \
+	for c in $$CLOUDS; do \
+	  c=$$(printf '%s' "$$c" | tr -d ' '); \
+	  for d in infra/stacks/aios-infra/$$c/*/; do \
+	    [ -f "$$d/providers.tofu" ] || continue; \
+	    echo "==> $$d"; (cd "$$d" && tofu init -backend=false -input=false && tofu validate); \
+	  done; \
 	done
 
 validate-examples:
-	@test -f dist/installer || $(MAKE) build-dev
-	@INSTALLER_CONTENT_ROOT=. ./dist/installer validate examples/sandbox.yaml --check-azure=false
+	@test -f $(DIST) || $(MAKE) build-dev
+	@INSTALLER_CONTENT_ROOT=. ./$(DIST) validate examples/sandbox.yaml --check-azure=false
 
-.PHONY: validate-examples e2e-sandbox
 e2e-sandbox:
 	go test -tags=e2e -timeout=120m ./tests/e2e/...
 
 package-content:
-	@./build/scripts/package-content.sh
+	@PACKAGED_CLOUDS="$(PACKAGED_CLOUDS)" ./build/scripts/package-content.sh
 
 deps:
 	go mod download
@@ -35,7 +42,7 @@ fmt:
 
 build-dev: package-content
 	@mkdir -p dist
-	go build -o $(DIST) ./cmd/installer
+	go build -ldflags "-X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS)" -o $(DIST) ./cmd/installer
 
 embed: fetch-tofu mirror-tofu
 	@echo "embed artifacts ready under build/embed/"
@@ -44,11 +51,23 @@ fetch-tofu:
 	@./build/scripts/fetch-tofu.sh $(TOFU_VERSION) $(GOOS) $(GOARCH)
 
 mirror-tofu:
-	@TOFU_BIN="$(TOFU_BIN)" ./build/scripts/mirror-providers.sh
+	@TOFU_BIN="$(TOFU_BIN)" PACKAGED_CLOUDS="$(PACKAGED_CLOUDS)" ./build/scripts/mirror-providers.sh
 
 release: package-content embed
 	@mkdir -p dist
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="-s -w -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Release=true" -o $(DIST) ./cmd/installer
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="$(LDFLAGS)" -o $(DIST) ./cmd/installer
+
+release-all:
+	$(MAKE) release PACKAGED_CLOUDS=azure,aws,gcp
+
+release-azure:
+	$(MAKE) release PACKAGED_CLOUDS=azure
+
+release-aws:
+	$(MAKE) release PACKAGED_CLOUDS=aws
+
+release-gcp:
+	$(MAKE) release PACKAGED_CLOUDS=gcp
 
 test:
 	go test ./...

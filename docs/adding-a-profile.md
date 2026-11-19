@@ -5,8 +5,8 @@
 
 2. **New topology**  
    - Add modules under `infra/modules/` if needed.
-   - Add `infra/stacks/<id>/` composition (`providers.tofu` + `*.tofu` only; see `AGENTS.md`).
-   - Point new `profiles/<id>/profile.yaml` `stack_id` at the stack.
+   - Add `infra/stacks/<id>/<cloud>/<layer>/` compositions for each layer (`providers.tofu` + `*.tofu` only; see `AGENTS.md`).
+   - Point new `profiles/<id>/profile.yaml` `stack_id` at the stack and list supported `clouds`.
 
 3. **Customer contract**  
    - Extend `schemas/customer-config.schema.json` only if new top-level keys are required.

@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -18,8 +19,10 @@ func TestMergeBuildCustomerFields(t *testing.T) {
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.yaml")
 	body := `
-profile: ai-os-aks
-azure:
+schema_version: 1
+cloud: azure
+profile: ai-os-k8s
+account:
   subscription_id: "11111111-1111-1111-1111-111111111111"
   region: centralindia
 workload:
@@ -72,8 +75,10 @@ func TestMergeReplaceNodePools(t *testing.T) {
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.yaml")
 	body := `
-profile: ai-os-aks
-azure:
+schema_version: 1
+cloud: azure
+profile: ai-os-k8s
+account:
   subscription_id: "11111111-1111-1111-1111-111111111111"
   region: centralindia
 workload:
@@ -111,5 +116,105 @@ kubernetes_cluster:
 	}
 	if pools["system"] == nil {
 		t.Fatal("expected system pool")
+	}
+}
+func writeCfg(t *testing.T, body string) string {
+	t.Helper()
+	p := filepath.Join(t.TempDir(), "config.yaml")
+	if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+const v2Base = `
+schema_version: 1
+cloud: azure
+profile: ai-os-k8s
+account:
+  subscription_id: "11111111-1111-1111-1111-111111111111"
+  region: centralindia
+workload:
+  name_prefix: demo
+`
+
+func TestLoadCustomerSchemaV2(t *testing.T) {
+	cfg, err := LoadCustomer(writeCfg(t, v2Base))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Cloud != "azure" || cfg.Account.Region != "centralindia" || cfg.Account.Environment != "public" {
+		t.Fatalf("cfg = %+v", cfg)
+	}
+	if !cfg.IsAirGapped() {
+		t.Fatal("state.air_gapped must default to true")
+	}
+	if !cfg.UsesLocalState() {
+		t.Fatal("no state block means local state")
+	}
+}
+
+func TestLoadCustomerRejectsUnsupportedSchemaVersion(t *testing.T) {
+	wrong := `
+schema_version: 2
+cloud: azure
+profile: aios-infra
+account:
+  subscription_id: "11111111-1111-1111-1111-111111111111"
+  region: centralindia
+workload:
+  name_prefix: demo
+`
+	if _, err := LoadCustomer(writeCfg(t, wrong)); err == nil {
+		t.Fatal("expected schema_version error")
+	}
+	noCloud := `
+schema_version: 1
+profile: aios-infra
+account:
+  subscription_id: "11111111-1111-1111-1111-111111111111"
+  region: centralindia
+workload:
+  name_prefix: demo
+`
+	if _, err := LoadCustomer(writeCfg(t, noCloud)); err == nil {
+		t.Fatal("expected cloud error")
+	}
+}
+
+func TestAirGappedExplicitFalse(t *testing.T) {
+	cfg, err := LoadCustomer(writeCfg(t, v2Base+"state:\n  backend: azurerm\n  air_gapped: false\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.IsAirGapped() || cfg.UsesLocalState() {
+		t.Fatalf("air_gapped=%v local=%v", cfg.IsAirGapped(), cfg.UsesLocalState())
+	}
+}
+
+func TestValidateCustomerYAMLFeatureRegistry(t *testing.T) {
+	ok := v2Base + "features:\n  resource_group: true\n  virtual_network: true\n"
+	if err := ValidateCustomerYAML(writeCfg(t, ok)); err != nil {
+		t.Fatalf("valid config rejected: %v", err)
+	}
+	unknown := v2Base + "features:\n  resource_group: true\n  made_up_feature: true\n"
+	if err := ValidateCustomerYAML(writeCfg(t, unknown)); err == nil || !strings.Contains(err.Error(), "made_up_feature") {
+		t.Fatalf("unknown feature not rejected: %v", err)
+	}
+	unsupported := v2Base + "features:\n  resource_group: true\n  virtual_network: true\n  mongodb_atlas: true\n"
+	if err := ValidateCustomerYAML(writeCfg(t, unsupported)); err == nil {
+		t.Fatal("unsupported feature not rejected")
+	}
+	missingDep := v2Base + "features:\n  virtual_network: false\n  kubernetes_cluster: true\n"
+	if err := ValidateCustomerYAML(writeCfg(t, missingDep)); err == nil {
+		t.Fatal("missing requires not rejected")
+	}
+}
+
+func TestExamplesValidate(t *testing.T) {
+	for _, p := range []string{"sandbox.yaml", "ai-os-centralindia/config.yaml"} {
+		if err := ValidateCustomerYAML(filepath.Join("..", "..", "examples", p)); err != nil {
+			t.Fatalf("%s: %v", p, err)
+		}
 	}
 }

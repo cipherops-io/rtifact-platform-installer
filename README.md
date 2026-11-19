@@ -1,20 +1,28 @@
 # rtifact-platform-installer
 
-Go CLI that embeds OpenTofu and deploys layered Azure platform stacks from customer YAML.
+Go CLI **`rtifact`** embeds OpenTofu and deploys layered **aios-infra** stacks on Azure, AWS, and GCP from customer YAML.
 
 ## Commands
 
 ```bash
 make build-dev
-INSTALLER_CONTENT_ROOT=. ./dist/installer validate examples/sandbox.yaml --check-azure=false
-INSTALLER_CONTENT_ROOT=. ./dist/installer plan examples/sandbox.yaml --stack network --yes
-INSTALLER_CONTENT_ROOT=. ./dist/installer apply examples/sandbox.yaml --stack all
-INSTALLER_CONTENT_ROOT=. ./dist/installer bootstrap examples/sandbox.yaml --yes
-INSTALLER_CONTENT_ROOT=. ./dist/installer preflight examples/sandbox.yaml
-./dist/installer data backup config.yaml
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/sandbox.yaml --check-azure=false
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact azure plan examples/sandbox.yaml --stack core-network --yes
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact bootstrap examples/sandbox.yaml --yes
 ```
 
-Layers: `bootstrap`, `network`, `data`, `cluster` (each with its own state file when using remote backend).
+Layers: `state-backend` (via `bootstrap`), then `core-network`, `data-platform`, `app-platform`, `network-edge`, `ai-integrations` (`--stack all`).
+
+## Release binaries
+
+| Target | `PACKAGED_CLOUDS` |
+|--------|-------------------|
+| `make release-all` | azure,aws,gcp |
+| `make release-azure` | azure |
+| `make release-aws` | aws |
+| `make release-gcp` | gcp |
+
+All artifacts are named `dist/rtifact` with only the packaged cloud subcommands registered.
 
 Module: `github.com/cipherops-io/rtifact-platform-installer`
 

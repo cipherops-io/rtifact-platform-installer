@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,26 +22,37 @@ func LoadCustomer(path string) (*CustomerConfig, error) {
 	if err := yaml.Unmarshal(raw, &cfg); err != nil {
 		return nil, fmt.Errorf("parse customer config: %w", err)
 	}
+	if cfg.SchemaVersion != SchemaVersion {
+		return nil, fmt.Errorf("schema_version must be %d (got %d)", SchemaVersion, cfg.SchemaVersion)
+	}
+	if cfg.Cloud == "" {
+		return nil, fmt.Errorf("cloud is required (supported: %s)", strings.Join(registry.Supported, ", "))
+	}
+	if _, err := registry.Get(cfg.Cloud); err != nil {
+		return nil, err
+	}
 	if cfg.Profile == "" {
 		return nil, fmt.Errorf("profile is required")
 	}
-	if cfg.Azure.SubscriptionID == "" {
-		return nil, fmt.Errorf("azure.subscription_id is required")
+	cfg.Profile = ResolveProfileID(cfg.Profile)
+	if err := validateAccountForCloud(&cfg); err != nil {
+		return nil, err
 	}
-	if cfg.Azure.Region == "" {
-		return nil, fmt.Errorf("azure.region is required")
+	if cfg.Account.Region == "" {
+		return nil, fmt.Errorf("account.region is required")
 	}
 	if cfg.NamePrefix() == "" {
 		return nil, fmt.Errorf("workload.name_prefix or customer.code+workload.name+workload.environment is required")
 	}
-	if cfg.Azure.Environment == "" {
-		cfg.Azure.Environment = "public"
+	if cfg.Account.Environment == "" {
+		cfg.Account.Environment = "public"
 	}
 	return &cfg, nil
 }
 
 // LoadProfileDefaults reads profiles/<id>/defaults.yaml from embedded work dir.
 func LoadProfileDefaults(profilesDir, profileID string) (map[string]any, error) {
+	profileID = ResolveProfileID(profileID)
 	path := filepath.Join(profilesDir, profileID, "defaults.yaml")
 	raw, err := os.ReadFile(path)
 	if err != nil {
@@ -54,6 +67,7 @@ func LoadProfileDefaults(profilesDir, profileID string) (map[string]any, error) 
 
 // LoadProfileMeta reads profiles/<id>/profile.yaml from work dir.
 func LoadProfileMeta(profilesDir, profileID string) (*ProfileMeta, error) {
+	profileID = ResolveProfileID(profileID)
 	path := filepath.Join(profilesDir, profileID, "profile.yaml")
 	raw, err := os.ReadFile(path)
 	if err != nil {
@@ -77,6 +91,8 @@ var customerTFVarSections = []string{
 	"redis_cache",
 	"azure_bastion",
 	"private_dns",
+	"azure_files",
+	"communication_services",
 }
 
 var replaceMergeSections = map[string][]string{
@@ -212,67 +228,37 @@ func mergeSectionsInto(merged, src map[string]any) {
 }
 
 func applyCustomerScalars(merged map[string]any, customer *CustomerConfig) {
-	merged["subscription_id"] = customer.Azure.SubscriptionID
-	merged["location"] = customer.Azure.Region
-	merged["azure_environment"] = customer.Azure.Environment
-	merged["use_msi"] = customer.Azure.Auth.UseMSI
+	merged["subscription_id"] = customer.Account.SubscriptionID
+	merged["account_id"] = customer.Account.AccountID
+	merged["project_id"] = customer.Account.ProjectID
+	merged["location"] = customer.Account.Region
+	merged["azure_environment"] = customer.Account.Environment
+	merged["use_msi"] = customer.Account.Auth.UseMSI
 	merged["name_prefix"] = customer.NamePrefix()
-	if customer.Azure.TenantID != "" {
-		merged["tenant_id"] = customer.Azure.TenantID
+	if customer.Account.TenantID != "" {
+		merged["tenant_id"] = customer.Account.TenantID
 	}
 	if customer.Workload.Environment != "" {
 		merged["workload_environment"] = customer.Workload.Environment
 	}
 }
 
-func validateMergedFeatures(merged map[string]any) error {
-	features, ok := merged["features"].(map[string]any)
-	if !ok {
-		return nil
-	}
-	boolFeature := func(key string) bool {
-		v, ok := features[key]
-		if !ok {
-			return false
+func validateAccountForCloud(cfg *CustomerConfig) error {
+	switch cfg.Cloud {
+	case "azure":
+		if cfg.Account.SubscriptionID == "" {
+			return fmt.Errorf("account.subscription_id is required for cloud azure")
 		}
-		b, _ := v.(bool)
-		return b
-	}
-	if boolFeature("redis_cache") {
-		return fmt.Errorf("features.redis_cache: legacy Azure Cache for Redis is not supported in IaC yet; keep redis_cache false")
-	}
-	needsVNet := []string{
-		"key_vault_private_endpoint",
-		"postgresql_flexible_server",
-		"container_registry",
-		"storage_account",
-		"redis_cache",
-		"kubernetes_cluster",
-		"azure_bastion",
-	}
-	for _, feat := range needsVNet {
-		if boolFeature(feat) && !boolFeature("virtual_network") {
-			return fmt.Errorf("features.%s requires features.virtual_network true", feat)
+	case "aws":
+		if cfg.Account.AccountID == "" {
+			return fmt.Errorf("account.account_id is required for cloud aws")
 		}
-	}
-	if boolFeature("key_vault_private_endpoint") && !boolFeature("key_vault") {
-		return fmt.Errorf("features.key_vault_private_endpoint requires features.key_vault true")
-	}
-	if boolFeature("kubernetes_cluster") && !boolFeature("resource_group") {
-		return fmt.Errorf("features.kubernetes_cluster requires features.resource_group true")
-	}
-	anyOther := false
-	for k, v := range features {
-		if k == "resource_group" {
-			continue
+	case "gcp":
+		if cfg.Account.ProjectID == "" {
+			return fmt.Errorf("account.project_id is required for cloud gcp")
 		}
-		if b, ok := v.(bool); ok && b {
-			anyOther = true
-			break
-		}
-	}
-	if anyOther && !boolFeature("resource_group") {
-		return fmt.Errorf("features.resource_group must be true when deploying any other feature")
+	default:
+		return fmt.Errorf("unsupported cloud %q", cfg.Cloud)
 	}
 	return nil
 }

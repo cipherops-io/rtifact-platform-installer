@@ -18,16 +18,13 @@ func Backup(configPath, suffix string) error {
 	if suffix == "" {
 		suffix = time.Now().UTC().Format("20060102-150405")
 	}
-	dir := filepath.Join(os.Getenv("HOME"), ".rtifact-installer", cfg.NamePrefix())
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return err
-	}
+	dir := config.ArtifactsDir(cfg.NamePrefix())
 	rec := fmt.Sprintf("backup_id=%s\nserver=%s\n", suffix, cfg.NamePrefix())
 	return os.WriteFile(filepath.Join(dir, "data-migrations.json"), []byte(rec), 0o644)
 }
 
 func Provision(configPath, serverName string) error {
-	fmt.Fprintf(os.Stderr, "provision: set overrides.postgresql_flexible_server.server_name=%q then plan/apply --stack data\n", serverName)
+	fmt.Fprintf(os.Stderr, "provision: set overrides.postgresql_flexible_server.server_name=%q then plan/apply --stack data-platform\n", serverName)
 	return nil
 }
 
@@ -40,6 +37,6 @@ func Retire(configPath, serverName string, yes bool) error {
 	if !yes {
 		return fmt.Errorf("retire requires --yes")
 	}
-	fmt.Fprintf(os.Stderr, "retire: destroy only server %q via targeted data stack destroy (manual)\n", serverName)
+	fmt.Fprintf(os.Stderr, "retire: destroy only server %q via targeted data-platform stack destroy (manual)\n", serverName)
 	return nil
 }

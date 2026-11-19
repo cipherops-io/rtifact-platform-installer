@@ -17,15 +17,37 @@ jobs:
       - run: chmod +x build/scripts/*.sh && make package-content
       - run: go test ./...
       - run: make build-dev
-      - run: ./dist/installer validate examples/ai-os-centralindia/config.yaml
+      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/sandbox.yaml --check-azure=false
+      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact aws validate examples/aws.yaml --check-quota=false
+      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact gcp validate examples/gcp.yaml --check-quota=false
+
+  release-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        packaged_clouds:
+          - azure,aws,gcp
+          - azure
+          - aws
+          - gcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: chmod +x build/scripts/*.sh
+      - run: make build-dev PACKAGED_CLOUDS=${{ matrix.packaged_clouds }}
+      - run: ./dist/rtifact version
 
   tofu-validate:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        packaged_clouds: [azure,aws,gcp, azure, aws, gcp]
     steps:
       - uses: actions/checkout@v4
       - uses: opentofu/setup-opentofu@v1
         with:
-          tofu_version: "1.9.0"
+          tofu_version: "1.13.9"
       - run: tofu fmt -recursive -check infra/
-      - run: cd infra/stacks/ai-os-aks && tofu init -backend=false -input=false && tofu validate
-      - run: chmod +x build/scripts/*.sh && TOFU_BIN=tofu make mirror-tofu
+      - run: make tofu-validate PACKAGED_CLOUDS=${{ matrix.packaged_clouds }}

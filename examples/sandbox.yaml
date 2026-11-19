@@ -1,10 +1,11 @@
 schema_version: 1
-profile: ai-os-aks
+cloud: azure
+profile: aios-infra
 tier: sandbox
 customer:
   name: Commotion
   code: cm
-azure:
+account:
   subscription_id: "00000000-0000-0000-0000-000000000001"
   tenant_id: "00000000-0000-0000-0000-000000000000"
   region: centralindia
@@ -25,5 +26,6 @@ network:
   dns_service_ip: "172.21.0.10"
 state:
   backend: local
+  air_gapped: true
 features:
   redis_cache: false

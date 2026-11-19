@@ -1,0 +1,50 @@
+features:
+  resource_group:
+    status: stable
+    requires: []
+    description: Workload resource group
+  virtual_network:
+    status: stable
+    requires: [resource_group]
+  key_vault:
+    status: stable
+    requires: [resource_group]
+  key_vault_private_endpoint:
+    status: stable
+    requires: [key_vault, virtual_network, private_dns_zones]
+  postgresql_flexible_server:
+    status: stable
+    requires: [virtual_network]
+  container_registry:
+    status: stable
+    requires: [virtual_network]
+  storage_account:
+    status: stable
+    requires: [virtual_network]
+  redis_cache:
+    status: stable
+    requires: [virtual_network]
+    description: Azure Cache for Redis Premium (private endpoint); Managed Redis Balanced maps to Premium until native SKU ships
+  azure_files_share:
+    status: stable
+    requires: [virtual_network, private_dns_zones]
+    description: Premium Azure Files share (NFS) with private endpoint
+  communication_email:
+    status: stable
+    requires: [resource_group]
+    description: Azure Communication + Email Communication services (domain verification remains manual)
+  mongodb_atlas:
+    status: unsupported
+    reason: Atlas M30 project, peering or Private Link — configure outside rtifact (see checklist)
+  microsoft_foundry:
+    status: unsupported
+    reason: Foundry model deployments and quotas — configure in Azure AI Foundry portal
+  kubernetes_cluster:
+    status: stable
+    requires: [virtual_network]
+  azure_bastion:
+    status: stable
+    requires: [virtual_network]
+  private_dns_zones:
+    status: stable
+    requires: [resource_group]

@@ -1,0 +1,9 @@
+GitHubOwner: cipherops-io
+GitHubRepo: rtifact-platform-installer
+GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+ProductName: rtifact-installer
+ProfileID: aios-infra
+AirGapped: true
+BoilerplatesRef: v1.1.0
+Clouds:
+  - azure

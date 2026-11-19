@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/version"
 )
 
@@ -71,26 +70,4 @@ func writeProviderRC(path, mirror string) error {
 }
 `, mirror)
 	return os.WriteFile(path, []byte(body), 0o644)
-}
-
-func writeBackend(stackDir string, b *config.BackendBlock, az config.AzureBlock) error {
-	if b.Type != "azurerm" {
-		return fmt.Errorf("unsupported backend type %q", b.Type)
-	}
-	tenant := az.TenantID
-	authLine := ""
-	if tenant != "" {
-		authLine = fmt.Sprintf("    tenant_id           = %q\n    use_azuread_auth    = true\n", tenant)
-	}
-	content := fmt.Sprintf(`terraform {
-  backend "azurerm" {
-    resource_group_name  = %q
-    storage_account_name = %q
-    container_name       = %q
-    key                  = %q
-    subscription_id      = %q
-%s  }
-}
-`, b.ResourceGroupName, b.StorageAccountName, b.ContainerName, b.Key, az.SubscriptionID, authLine)
-	return os.WriteFile(filepath.Join(stackDir, "backend.tofu"), []byte(content), 0o644)
 }
