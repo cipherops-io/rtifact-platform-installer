@@ -107,6 +107,11 @@ jobs:
         if: env.RTIFACT_ACTION == 'plan'
         run: ./dist/rtifact azure plan "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
 
+      # Idempotent: no-ops when remote tfstate storage already exists (e.g. manual E2E setup).
+      - name: rtifact azure bootstrap
+        if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
+        run: ./dist/rtifact azure bootstrap "$E2E_AZURE_CONFIG" --yes
+
       - name: rtifact azure apply
         if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
         run: ./dist/rtifact azure apply "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
