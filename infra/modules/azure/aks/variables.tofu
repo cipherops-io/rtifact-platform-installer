@@ -51,6 +51,7 @@ variable "availability_zones" {
 }
 
 variable "os_disk_type" {
-  type    = string
-  default = "Premium_LRS"
+  type        = string
+  description = "AKS node OS disk type: Managed or Ephemeral (not Azure storage SKU names)."
+  default     = "Managed"
 }

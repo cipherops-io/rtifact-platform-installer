@@ -84,6 +84,7 @@ variable "kubernetes_cluster" {
       vm_size    = string
       node_count = number
     }))
+    os_disk_type = optional(string, "Managed")
   })
 }
 

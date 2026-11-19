@@ -22,7 +22,7 @@ module "aks" {
   dns_service_ip      = var.network.dns_service_ip
   node_pools          = var.kubernetes_cluster.node_pools
   availability_zones  = var.kubernetes_cluster.availability_zones
-  os_disk_type        = try(var.kubernetes_cluster.os_disk_type, "Premium_LRS")
+  os_disk_type        = try(var.kubernetes_cluster.os_disk_type, "Managed")
 }
 
 module "compute" {
