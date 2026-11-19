@@ -42,6 +42,9 @@ resource "azurerm_postgresql_flexible_server" "read_replica" {
   tags                = var.tags
 
   public_network_access_enabled = false
+
+  # Replica create fails while primary PE is UpdatingPrivateEndpointConnection (parallel apply race).
+  depends_on = [azurerm_private_endpoint.postgres]
 }
 
 resource "azurerm_postgresql_flexible_server_configuration" "extensions" {

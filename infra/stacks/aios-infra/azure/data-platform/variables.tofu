@@ -161,6 +161,14 @@ variable "key_vault" {
     sku = string
   })
 }
+
+variable "communication_services" {
+  type = object({
+    data_location = optional(string, "India")
+  })
+  default = { data_location = "India" }
+}
+
 # Fragment merged into each Azure stack variables.tofu (reference only).
 
 variable "bastion" {
