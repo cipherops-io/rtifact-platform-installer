@@ -10,7 +10,10 @@ REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 endif
 
 .PHONY: boilerplate-update
-.PHONY: .check-tofu-tools .check-tofu-tools-fast
+.PHONY: .check-tofu-only .check-tofu-tools .check-tofu-tools-fast
+
+.check-tofu-only:
+	@command -v tofu >/dev/null || (echo "tofu required" && exit 1)
 
 .check-tofu-tools:
 	@command -v tofu >/dev/null || (echo "tofu required; install OpenTofu $(TOFU_VERSION)" && exit 1)
@@ -70,7 +73,7 @@ tofu-docs: .check-tofu-tools
 	  (cd "$$d" && "$(REPO_ROOT)/build/scripts/terraform-docs-module.sh" "$(TERRAFORM_DOCS_CONFIG)"); \
 	done
 
-tofu-validate: .check-tofu-tools-fast
+tofu-validate: .check-tofu-only
 	@set -e; CLOUDS="$(PACKAGED_CLOUDS)"; IFS=','; \
 	for c in $$CLOUDS; do \
 	  c=$$(printf '%s' "$$c" | tr -d ' '); \
