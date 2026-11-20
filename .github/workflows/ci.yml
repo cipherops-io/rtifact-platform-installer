@@ -15,7 +15,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          want=$(sed -n 's/^BOILERPLATES_REF ?= //p' boilerplate.mk | tr -d ' ')
+          want=$(grep '^BOILERPLATES_REF ?=' boilerplate.mk | head -1 | awk '{print $3}')
           for try in "$want" v3.0.0 refactor/skeleton-only-v3 main; do
             if git clone --depth 1 --branch "$try" https://github.com/cipherops-io/boilerplates boilerplates-src 2>/dev/null; then
               echo "BOILERPLATES_REPO_REF=$try" >> "$GITHUB_ENV"
@@ -57,7 +57,7 @@ jobs:
       - name: Install OpenTofu
         run: |
           v=$(make -s print-tool-versions | sed -n 's/^TOFU_VERSION=//p' | head -1)
-          curl -fsSL "https://get.opentofu.org/install-opentofu.sh" | bash -s -- --opentofu-version "$v"
+          curl -fsSL "https://get.opentofu.org/install-opentofu.sh" | bash -s -- --install-method standalone --opentofu-version "$v"
           echo "/usr/local/bin" >> "${GITHUB_PATH}"
       - name: Install terraform-docs
         run: |

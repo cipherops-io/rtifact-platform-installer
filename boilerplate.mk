@@ -60,10 +60,10 @@ print-tool-versions:
 # Scaffold targets — render skeleton templates once (init-only skip rules).
 
 BOILERPLATES_GITHUB ?= github.com/cipherops-io/boilerplates
-BOILERPLATES_REF ?= ?ref=v3.0.0
+BOILERPLATES_GITHUB_REF ?= ?ref=v3.0.0
 BOILERPLATES_REPO ?= ../boilerplates
-TPL_RTIFACT_STACK ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-stack$(BOILERPLATES_REF)
-TPL_RTIFACT_MODULE ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-module$(BOILERPLATES_REF)
+TPL_RTIFACT_STACK ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-stack$(BOILERPLATES_GITHUB_REF)
+TPL_RTIFACT_MODULE ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-module$(BOILERPLATES_GITHUB_REF)
 _TPL_DEFAULTS_LOCAL := $(BOILERPLATES_REPO)/devops-templates/rtifact-product/defaults
 _SCAFFOLD_BAKED_VARS := --var OpenTofuVersion=1.13.9
 
