@@ -7,9 +7,10 @@ Downstream stack layers consume upstream state via `data "terraform_remote_state
 | Output | All three clouds | Azure only | AWS / GCP only |
 |--------|------------------|------------|----------------|
 | `resource_group_name` | yes | | |
-| `storage_account_name` | | yes | AWS `s3_bucket_name`, GCP `gcs_bucket_name` |
-| `dynamodb_table_name` | | | AWS |
+| `storage_account_name` | | yes | |
 | `s3_bucket_name` | | | AWS |
+| `gcs_bucket_name` | | | GCP |
+| `dynamodb_table_name` | | | AWS |
 
 ## core-network {#core-network}
 

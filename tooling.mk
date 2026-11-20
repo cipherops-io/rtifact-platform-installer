@@ -1,7 +1,7 @@
 # DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
 # Change it there, then run: make boilerplate-update
 
-# Tool and CLI versions — rendered from rtifact-product defaults.
+# Tool and CLI versions — rendered from rtifact-product boilerplate.yml defaults.
 
 TOFU_VERSION ?= 1.13.9
 TERRAFORM_DOCS_VERSION ?= 0.20.0
