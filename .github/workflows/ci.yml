@@ -6,25 +6,34 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   verify-managed:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Checkout boilerplates (defaults; same ref as template)
+      - name: Checkout boilerplates (tag)
+        id: bp_tag
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          repository: cipherops-io/boilerplates
+          ref: v3.0.0
+          path: boilerplates-src
+      - name: Checkout boilerplates (feature branch)
+        if: steps.bp_tag.outcome != 'success'
+        uses: actions/checkout@v4
+        with:
+          repository: cipherops-io/boilerplates
+          ref: refactor/skeleton-only-v3
+          path: boilerplates-src
+      - name: Record boilerplates ref
         shell: bash
         run: |
-          set -e
-          want=$(grep '^BOILERPLATES_REF ?=' boilerplate.mk | head -1 | awk '{print $3}')
-          for try in "$want" v3.0.0 refactor/skeleton-only-v3 main; do
-            if git clone --depth 1 --branch "$try" https://github.com/cipherops-io/boilerplates boilerplates-src 2>/dev/null; then
-              echo "BOILERPLATES_REPO_REF=$try" >> "$GITHUB_ENV"
-              echo "Checked out boilerplates @ $try"
-              exit 0
-            fi
-          done
-          echo "checkout cipherops-io/boilerplates failed (tried $want, v3.0.0, refactor/skeleton-only-v3, main)" >&2
-          exit 1
+          ref=$(git -C boilerplates-src describe --tags --exact-match 2>/dev/null || git -C boilerplates-src branch --show-current)
+          echo "BOILERPLATES_REPO_REF=$ref" >> "$GITHUB_ENV"
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -54,6 +63,10 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
+      - name: Install boilerplate CLI
+        run: |
+          make install-boilerplate-cli
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
       - name: Install OpenTofu
         run: |
           v=$(make -s print-tool-versions | sed -n 's/^TOFU_VERSION=//p' | head -1)
