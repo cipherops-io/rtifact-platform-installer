@@ -1,0 +1,86 @@
+# DO NOT EDIT — managed by cipherops-io/boilerplates (defaults/layers.yml).
+# Layer placement registry — mirrored in boilerplate.yml LayerMeta/Layers defaults.
+Layers:
+  - state-backend
+  - core-network
+  - data-platform
+  - app-platform
+  - network-edge
+  - ai-integrations
+
+LayerMeta:
+  state-backend:
+    purpose: Remote state storage for OpenTofu (bootstrap may use local state).
+    question: It stores this installer's own remote state backend.
+    not_here:
+      - Workload resources → data-platform or app-platform
+    examples:
+      - Azure storage account for tfstate
+      - AWS S3 bucket for tfstate
+      - GCS bucket for tfstate
+    upstream: []
+  core-network:
+    purpose: Scope, naming, core networking, egress control, hybrid connectivity, jump host.
+    question: It is foundation other layers build on (network, subnets, NAT, egress firewall, jump host, VPN/ExpressRoute).
+    not_here:
+      - Public ingress → network-edge
+      - Managed data services → data-platform
+      - Private endpoints for PaaS data → data-platform
+    examples:
+      - VNet/VPC and subnets
+      - NAT and egress firewall
+      - Bastion / jump host
+      - VPN or ExpressRoute
+    upstream: []
+  data-platform:
+    purpose: Stateful data, secrets, registries, private endpoints and private DNS.
+    question: It holds data, secrets, keys, images or files, or exposes a private endpoint or private DNS for such a service.
+    not_here:
+      - Kubernetes → app-platform
+      - Public gateway or WAF → network-edge
+      - Core VNet routing → core-network
+    examples:
+      - Database or cache
+      - Object storage or file share
+      - Key vault or KMS
+      - Container registry
+      - Private endpoint and private DNS for PaaS
+    upstream:
+      - core-network
+  app-platform:
+    purpose: Kubernetes clusters, node pools, workload identity, compute VMs.
+    question: It runs workloads (Kubernetes, node pools, VMs, workload identity).
+    not_here:
+      - Databases or key vaults → data-platform
+      - Public edge TLS → network-edge
+    examples:
+      - AKS / EKS / GKE
+      - Node pools and workload identity
+      - Standalone compute VMs
+    upstream:
+      - core-network
+      - data-platform
+  network-edge:
+    purpose: Public ingress, edge security, public DNS, edge TLS termination.
+    question: It faces the public internet (gateway or load balancer with WAF, public DNS, edge TLS).
+    not_here:
+      - Core VNet routing → core-network
+      - Private data plane → data-platform
+    examples:
+      - Application gateway or regional LB with WAF
+      - Public DNS zones
+      - Internet-facing TLS termination
+    upstream:
+      - core-network
+      - app-platform
+  ai-integrations:
+    purpose: Managed AI model access and transactional email / communications.
+    question: It is managed AI model access or transactional email.
+    not_here:
+      - General data stores for AI → data-platform (keys, storage for Foundry live in data-platform)
+    examples:
+      - Azure AI Foundry hub
+      - Communication / email services
+    upstream:
+      - core-network
+      - data-platform

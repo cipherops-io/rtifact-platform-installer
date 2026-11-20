@@ -8,6 +8,7 @@ BOILERPLATES_TEMPLATE_URL ?= github.com/cipherops-io/boilerplates//devops-templa
 BOILERPLATES_REPO ?= ../boilerplates
 BOILERPLATES_REF ?= v3.0.0
 BOILERPLATE_VAR_FILES ?= boilerplate-vars.yml
+_BUILTIN_DEFAULTS := $(REPO_ROOT)/build/boilerplate/defaults
 _TPL_DEFAULTS_LOCAL := $(BOILERPLATES_REPO)/devops-templates/rtifact-product/defaults
 
 ifndef REPO_ROOT
@@ -24,7 +25,9 @@ boilerplate-update:
 	  [ -f "$$f" ] || { echo "missing var file: $$f"; exit 1; }; \
 	  args="$$args --var-file $$f"; \
 	done; \
-	if [ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ] && [ -f "$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml" ]; then \
+	if [ -f "$(_BUILTIN_DEFAULTS)/layers.yml" ] && [ -f "$(_BUILTIN_DEFAULTS)/tool-versions.yml" ]; then \
+	  args="$$args --var-file $(_BUILTIN_DEFAULTS)/layers.yml --var-file $(_BUILTIN_DEFAULTS)/tool-versions.yml"; \
+	elif [ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ] && [ -f "$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml" ]; then \
 	  args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/layers.yml --var-file $(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
 	fi; \
 	boilerplate \
