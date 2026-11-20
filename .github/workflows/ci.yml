@@ -15,12 +15,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Checkout boilerplates (defaults var-files)
-        uses: actions/checkout@v4
-        with:
-          repository: cipherops-io/boilerplates
-          ref: refactor/skeleton-only-v3
-          path: boilerplates-src
-          token: "{{ secrets.GITHUB_TOKEN }}"
+        shell: bash
+        run: |
+          set -e
+          want=$(grep '^BOILERPLATES_REF ?=' boilerplate.mk | head -1 | awk '{print $3}')
+          for ref in "$want" refactor/skeleton-only-v3 v3.0.0; do
+            if git clone --depth 1 -b "$ref" \
+              "https://x-access-token:${GITHUB_TOKEN}@github.com/cipherops-io/boilerplates.git" \
+              boilerplates-src 2>/dev/null; then
+              echo "Checked out boilerplates @ $ref"
+              exit 0
+            fi
+          done
+          echo "boilerplates checkout failed" >&2
+          exit 1
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
