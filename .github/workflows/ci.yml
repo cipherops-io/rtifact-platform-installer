@@ -21,6 +21,7 @@ jobs:
           curl -sSL "https://github.com/terraform-docs/terraform-docs/releases/download/v${TD_VERSION}/terraform-docs-v${TD_VERSION}-linux-amd64.tar.gz" | tar -xz -C "${RUNNER_TEMP}"
           sudo mv "${RUNNER_TEMP}/terraform-docs" /usr/local/bin/terraform-docs
           terraform-docs version
+      - run: chmod +x build/scripts/*.sh
       - run: make tofu-test-fast
       - if: github.ref == 'refs/heads/main'
         run: make tofu-test

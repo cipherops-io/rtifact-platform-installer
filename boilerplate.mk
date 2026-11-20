@@ -102,6 +102,8 @@ tofu-test-fast: .check-tofu-tools-fast
 	    (cd "$$d" && "$(REPO_ROOT)/build/scripts/terraform-docs-module.sh" "$(TERRAFORM_DOCS_CONFIG)" --output-check); \
 	  fi; \
 	done; \
+	chmod +x "$(REPO_ROOT)/build/scripts/"*.sh; \
+	$(MAKE) package-content; \
 	go test ./...
 
 do/tofu-test: .check-tofu-tools
