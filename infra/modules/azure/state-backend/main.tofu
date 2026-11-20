@@ -8,6 +8,16 @@ terraform {
 
 data "azurerm_client_config" "current" {}
 
+# Bootstrap or a prior apply may have created the RG while state still tracks the
+# managed resource; dropping create_resource_group must not delete the live RG.
+removed {
+  from = azurerm_resource_group.shared
+
+  lifecycle {
+    destroy = false
+  }
+}
+
 resource "azurerm_resource_group" "shared" {
   count = var.create_resource_group ? 1 : 0
 

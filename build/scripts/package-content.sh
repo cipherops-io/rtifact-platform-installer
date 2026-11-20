@@ -17,7 +17,7 @@ for c in "${CLOUDS[@]}"; do
   c="$(echo "$c" | xargs)"
   [ -n "$c" ] || continue
   if [ -d "$ROOT/infra/stacks/aios-infra/$c" ]; then
-    rsync -a "$ROOT/infra/stacks/aios-infra/$c" "$PKG/infra/stacks/aios-infra/"
+    rsync -a --exclude '.terraform' "$ROOT/infra/stacks/aios-infra/$c" "$PKG/infra/stacks/aios-infra/"
   fi
   if [ -d "$ROOT/infra/modules/$c" ]; then
     rsync -a "$ROOT/infra/modules/$c" "$PKG/infra/modules/"

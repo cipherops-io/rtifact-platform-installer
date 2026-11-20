@@ -63,6 +63,16 @@ func DestroyOrder() []Layer {
 	return order
 }
 
+// DestroyOrderIndex returns the position of layer in DestroyOrder, or -1.
+func DestroyOrderIndex(layer Layer) int {
+	for i, l := range DestroyOrder() {
+		if l == layer {
+			return i
+		}
+	}
+	return -1
+}
+
 // Upstream returns the layers applied before layer in ApplyOrder (empty for
 // state-backend and core-network).
 func Upstream(layer Layer) []Layer {

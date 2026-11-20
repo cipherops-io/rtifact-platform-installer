@@ -31,10 +31,34 @@ func layerDeploymentMarker(prefix string, layer stacks.Layer) bool {
 	return false
 }
 
-func guardDestroyDependencies(prefix string, layer stacks.Layer) error {
+// downstreamAlreadyDestroyedInBatch is true when layer is destroyed via --stack all
+// and downstream was processed earlier in DestroyOrder in the same run.
+func downstreamAlreadyDestroyedInBatch(batch []stacks.Layer, layer, downstream stacks.Layer) bool {
+	if len(batch) == 0 {
+		return false
+	}
+	if !containsLayer(batch, downstream) {
+		return false
+	}
+	layerIdx, downIdx := stacks.DestroyOrderIndex(layer), stacks.DestroyOrderIndex(downstream)
+	return layerIdx >= 0 && downIdx >= 0 && downIdx < layerIdx
+}
+
+func clearLayerOutputs(prefix string, layer stacks.Layer) error {
+	path := filepath.Join(config.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
+func guardDestroyDependencies(prefix string, layer stacks.Layer, batch []stacks.Layer) error {
 	down := stacks.Downstream(layer)
 	var deps []string
 	for _, d := range down {
+		if downstreamAlreadyDestroyedInBatch(batch, layer, d) {
+			continue
+		}
 		if layerDeploymentMarker(prefix, d) {
 			deps = append(deps, string(d))
 		}
@@ -68,5 +92,5 @@ func destroyDependencyGuard(opts Options, prefix string, layer stacks.Layer) err
 	if opts.Action != "destroy" {
 		return nil
 	}
-	return guardDestroyDependencies(prefix, layer)
+	return guardDestroyDependencies(prefix, layer, opts.DestroyBatch)
 }

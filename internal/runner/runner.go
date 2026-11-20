@@ -28,6 +28,8 @@ type Options struct {
 	AllowDestroyStateful bool
 	PrintChecklist       bool
 	PlanOut              string
+	// DestroyBatch is the full layer list for destroy --stack all (dependency guard).
+	DestroyBatch []stacks.Layer
 }
 
 func Run(opts Options) error {
@@ -76,6 +78,7 @@ func Run(opts Options) error {
 	targetLayers := stacks.ResolveLayers(stack)
 	if opts.Action == "destroy" && stack == stacks.LayerAll {
 		targetLayers = stacks.DestroyOrder()
+		opts.DestroyBatch = append([]stacks.Layer(nil), targetLayers...)
 	}
 
 	for _, layer := range targetLayers {
@@ -113,25 +116,6 @@ func containsLayer(layers []stacks.Layer, want stacks.Layer) bool {
 	return false
 }
 
-// firstMissingUpstreamLocalState reports whether plan should skip layer because
-// an upstream local state file does not exist (common for plan-all before apply).
-func firstMissingUpstreamLocalState(provider cloud.Provider, spec cloud.StateSpec, layer stacks.Layer) (stacks.Layer, bool) {
-	for _, up := range stacks.Upstream(layer) {
-		ub, err := cloud.Backend(provider, layerSpec(spec, up), string(up))
-		if err != nil || ub.Type != "local" {
-			continue
-		}
-		path := ub.Settings["path"]
-		if path == "" {
-			continue
-		}
-		if _, err := os.Stat(path); err != nil {
-			return up, true
-		}
-	}
-	return "", false
-}
-
 // layerSpec returns the state spec used for layer. state-backend always uses
 // local state: it creates the storage the other layers keep their state in.
 func layerSpec(spec cloud.StateSpec, layer stacks.Layer) cloud.StateSpec {
@@ -156,9 +140,13 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	}
 
 	if opts.Action == "plan" {
-		if up, skip := firstMissingUpstreamLocalState(provider, spec, layer); skip {
+		up, ready, err := upstreamReadyForPlan(customer, meta, provider, spec, contentRoot, merged, layer)
+		if err != nil {
+			return err
+		}
+		if !ready {
 			fmt.Fprintf(os.Stderr,
-				"Skipping plan for stack %q: upstream %q has no local state yet (apply upstream stacks first).\n",
+				"Skipping plan for stack %q: upstream %q has not been applied yet (apply upstream stacks first).\n",
 				layer, up)
 			return nil
 		}
@@ -291,7 +279,10 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 			}
 		}
 		// Confirmation (or --yes) happened above; -input=false needs -auto-approve.
-		return run("destroy", "-input=false", "-auto-approve", varFileArg)
+		if err := run("destroy", "-input=false", "-auto-approve", varFileArg); err != nil {
+			return err
+		}
+		return clearLayerOutputs(customer.NamePrefix(), layer)
 	case "output":
 		return run("output", "-json")
 	default:

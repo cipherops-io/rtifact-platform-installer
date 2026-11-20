@@ -1,0 +1,17 @@
+required_version: ">= 0.17.0"
+
+variables:
+  - name: StackTarget
+    type: string
+  - name: OpenTofuVersion
+    type: string
+  - name: ProviderSources
+    type: map
+  - name: ProviderVersions
+    type: map
+  - name: ExtraProviderVersions
+    type: map
+
+skip_files:
+  - path: boilerplate.yml
+    if: "true"

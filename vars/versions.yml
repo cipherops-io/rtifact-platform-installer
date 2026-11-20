@@ -1,0 +1,10 @@
+# Provider and extra provider pins — installer-owned (not in boilerplates).
+ProviderVersions:
+  azure: "5.14.0"
+  aws: "6.73.0"
+  gcp: "8.12.0"
+
+ExtraProviderVersions:
+  random: "3.9.1"
+  tls: "4.4.2"
+  azuread: "3.10.0"

@@ -1,147 +1,194 @@
-# DO NOT EDIT — managed from boilerplates/partials/makefile/ (render: cd boilerplates && make sync-installer-managed)
+# DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
+# Change it there, then run: make boilerplate-update
 
-# Managed makefile fragment — merged into generated boilerplate.mk (do not edit product copy by hand).
+# Generic boilerplate sync — rtifact-product managed template.
 
-BOILERPLATES_TEMPLATE_URL ?= github.com/cipherops-io/boilerplates//devops-templates/platform-installer
-# Local sibling: make boilerplate-update BOILERPLATES_TEMPLATE_URL=../boilerplates/devops-templates/platform-installer
+BOILERPLATES_TEMPLATE_URL ?= github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.0.0
+# Local sibling: make boilerplate-update BOILERPLATES_TEMPLATE_URL=../boilerplates/devops-templates/rtifact-product
+BOILERPLATES_REPO ?= ../boilerplates
+BOILERPLATES_REF ?= v3.0.0
 BOILERPLATE_VAR_FILES ?= boilerplate-vars.yml
+_BUILTIN_DEFAULTS := $(REPO_ROOT)/build/boilerplate/defaults
+_TPL_DEFAULTS_LOCAL := $(BOILERPLATES_REPO)/devops-templates/rtifact-product/defaults
+
 ifndef REPO_ROOT
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 endif
 
-.PHONY: boilerplate-update
-.PHONY: .check-tofu-tools .check-tofu-tools-fast
-
-.check-tofu-tools:
-	@command -v tofu >/dev/null || (echo "tofu required; install OpenTofu $(TOFU_VERSION)" && exit 1)
-	@command -v terraform-docs >/dev/null || (echo "terraform-docs required; see docs/BOILERPLATE.md or BOILERPLATE.md" && exit 1)
-
-.check-tofu-tools-fast:
-	@command -v tofu >/dev/null || (echo "tofu required" && exit 1)
-	@command -v terraform-docs >/dev/null || (echo "terraform-docs required" && exit 1)
+.PHONY: boilerplate-update boilerplate-verify check-template-source print-tool-versions
 
 boilerplate-update:
 	@command -v boilerplate >/dev/null || (echo "boilerplate CLI required (https://boilerplate.gruntwork.io)" && exit 1)
 	@set -e; \
-	files="$(BOILERPLATE_VAR_FILES)"; \
 	args=""; \
-	for f in $$files; do \
+	for f in $(BOILERPLATE_VAR_FILES); do \
 	  [ -f "$$f" ] || { echo "missing var file: $$f"; exit 1; }; \
 	  args="$$args --var-file $$f"; \
 	done; \
+	if [ -f "$(_BUILTIN_DEFAULTS)/layers.yml" ] && [ -f "$(_BUILTIN_DEFAULTS)/tool-versions.yml" ]; then \
+	  args="$$args --var-file $(_BUILTIN_DEFAULTS)/layers.yml --var-file $(_BUILTIN_DEFAULTS)/tool-versions.yml"; \
+	elif [ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ] && [ -f "$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml" ]; then \
+	  args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/layers.yml --var-file $(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
+	fi; \
 	boilerplate \
 	  --template-url $(BOILERPLATES_TEMPLATE_URL) \
-	  --non-interactive \
-	  --disable-dependency-prompt \
-	  --no-hooks \
+	  --non-interactive --disable-dependency-prompt --no-hooks \
+	  --manifest-file boilerplate-manifest.yaml \
 	  --output-folder . \
-	  $$args; \
-	go mod tidy
-# Managed makefile fragment — IaC + Go targets for platform-installer (multi-cloud).
+	  $$args
 
-PACKAGED_CLOUDS ?= azure,aws,gcp
-BINARY ?= rtifact
-DIST ?= dist/$(BINARY)
+boilerplate-verify:
+	@set -e; \
+	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) boilerplate-update; \
+	git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'
+
+check-template-source:
+	@case "$(BOILERPLATES_TEMPLATE_URL)" in \
+	  ../*|/*|~/*|file:*) echo "local template path forbidden in CI — use github.com/...?ref=$(BOILERPLATES_REF)"; exit 1;; \
+	esac
+	@echo "check-template-source: OK"
+
+print-tool-versions:
+	@echo "TOFU_VERSION=$(TOFU_VERSION)"
+	@echo "TERRAFORM_DOCS_VERSION=$(TERRAFORM_DOCS_VERSION)"
+	@echo "BOILERPLATE_VERSION=$(BOILERPLATE_VERSION)"
+# DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
+# Change it there, then run: make boilerplate-update
+
+# Scaffold targets — render skeleton templates once (init-only skip rules).
+
+BOILERPLATES_GITHUB ?= github.com/cipherops-io/boilerplates
+BOILERPLATES_GITHUB_REF ?= ?ref=v3.0.0
+BOILERPLATES_REPO ?= ../boilerplates
+TPL_RTIFACT_STACK ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-stack$(BOILERPLATES_GITHUB_REF)
+TPL_RTIFACT_MODULE ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-module$(BOILERPLATES_GITHUB_REF)
+_TPL_DEFAULTS_LOCAL := $(BOILERPLATES_REPO)/devops-templates/rtifact-product/defaults
+_SCAFFOLD_BAKED_VARS := --var OpenTofuVersion=1.13.9
+
+.PHONY: scaffold-module scaffold-stack-layer
+
+.check-boilerplate-cli:
+	@command -v boilerplate >/dev/null || (echo "boilerplate CLI required" && exit 1)
+
+scaffold-module: .check-boilerplate-cli
+	@test -n "$(CLOUD)" && test -n "$(MODULE)" || { echo "usage: make scaffold-module CLOUD=azure MODULE=my-capability"; exit 1; }
+	@set -e; \
+	tpl="$(TPL_RTIFACT_MODULE)"; \
+	[ -d "$(BOILERPLATES_REPO)/devops-templates/rtifact-module" ] && tpl="$(BOILERPLATES_REPO)/devops-templates/rtifact-module"; \
+	args="--var-file boilerplate-vars.yml $(_SCAFFOLD_BAKED_VARS)"; \
+	[ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ] && args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/layers.yml"; \
+	[ -f "$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml" ] && args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
+	boilerplate --template-url "$$tpl" \
+	  --output-folder "$(REPO_ROOT)/infra/modules/$(CLOUD)/$(MODULE)" \
+	  --non-interactive --disable-dependency-prompt --no-hooks \
+	  $$args --var Cloud=$(CLOUD) --var ModuleName=$(MODULE)
+
+scaffold-stack-layer: .check-boilerplate-cli
+	@test -n "$(CLOUD)" && test -n "$(LAYER)" || { echo "usage: make scaffold-stack-layer CLOUD=azure LAYER=my-layer [PROFILE=<profile-id>]"; exit 1; }
+	@set -e; \
+	tpl="$(TPL_RTIFACT_STACK)"; \
+	[ -d "$(BOILERPLATES_REPO)/devops-templates/rtifact-stack" ] && tpl="$(BOILERPLATES_REPO)/devops-templates/rtifact-stack"; \
+	profile="$${PROFILE:-$(PROFILES)}"; \
+	args="--var-file boilerplate-vars.yml $(_SCAFFOLD_BAKED_VARS)"; \
+	[ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ] && args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/layers.yml"; \
+	[ -f "$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml" ] && args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
+	boilerplate --template-url "$$tpl" \
+	  --output-folder "$(REPO_ROOT)/infra/stacks/$$profile/$(CLOUD)/$(LAYER)" \
+	  --non-interactive --disable-dependency-prompt --no-hooks \
+	  $$args --var Cloud=$(CLOUD) --var Layer=$(LAYER) --var ProfileID=$$profile
+# DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
+# Change it there, then run: make boilerplate-update
+
+include $(dir $(lastword $(MAKEFILE_LIST)))tooling.mk
+
 TERRAFORM_DOCS_CONFIG ?= $(REPO_ROOT)/.terraform-docs.yml
 TERRAFORM_DOCS_GEN_CONFIG ?= $(REPO_ROOT)/.terraform-docs.gen.yml
 
-export REPO_ROOT
+CLOUDS ?= azure aws gcp
+PROFILES ?= aios-infra
 
-.PHONY: tofu-fmt do/tofu-fmt tofu-docs do/tofu-docs
-.PHONY: tofu-validate tofu-test tofu-test-fast do/tofu-test do/tofu-test-fast
-.PHONY: tofu-pre-commit tofu-pre-commit-fast
-.PHONY: tofu-providers-lock do/tofu-providers-lock
+.PHONY: help check-tools
+.PHONY: tofu-fmt tofu-fmt-check tofu-docs tofu-docs-check
+.PHONY: tofu-validate tofu-lock tofu-providers-lock
+.PHONY: tofu-test-fast tofu-test tofu-pre-commit tofu-pre-commit-fast
+.PHONY: go-fmt go-vet go-test go-tidy
 
-do/tofu-fmt: .check-tofu-tools-fast
-	tofu fmt
+help:
+	@grep -E '^[a-zA-Z0-9_.-]+:' $(MAKEFILE_LIST) | cut -d: -f1 | sort -u
 
-tofu-fmt: .check-tofu-tools-fast
-	tofu fmt -recursive infra/
+check-tools:
+	@command -v tofu >/dev/null || { echo "missing: tofu"; exit 1; }
+	@command -v go >/dev/null || { echo "missing: go"; exit 1; }
+	@command -v boilerplate >/dev/null || { echo "missing: boilerplate"; exit 1; }
+	@command -v terraform-docs >/dev/null || echo "warn: terraform-docs not on PATH"
+	@echo "check-tools: OK"
 
-do/tofu-docs: .check-tofu-tools
-	@test -f "$(TERRAFORM_DOCS_CONFIG)" || { echo "missing $(TERRAFORM_DOCS_CONFIG)"; exit 1; }
-	@"$(REPO_ROOT)/build/scripts/terraform-docs-module.sh" "$(TERRAFORM_DOCS_CONFIG)"
+tofu-fmt:
+	@tofu fmt -recursive infra/
 
-tofu-docs: .check-tofu-tools
+tofu-fmt-check:
+	@tofu fmt -check -diff -recursive infra/
+
+tofu-docs:
 	@set -e; \
-	for d in infra/modules/*/*/; do \
-	  [ -f "$$d/providers.tofu" ] || continue; \
+	for d in $$(find "$(REPO_ROOT)/infra/modules" -mindepth 2 -maxdepth 2 -type f -name providers.tofu -exec dirname {} \;); do \
 	  echo "==> docs $$d"; \
 	  (cd "$$d" && "$(REPO_ROOT)/build/scripts/terraform-docs-module.sh" "$(TERRAFORM_DOCS_CONFIG)"); \
 	done
 
-tofu-validate: .check-tofu-tools-fast
-	@set -e; CLOUDS="$(PACKAGED_CLOUDS)"; IFS=','; \
-	for c in $$CLOUDS; do \
-	  c=$$(printf '%s' "$$c" | tr -d ' '); \
-	  for d in infra/stacks/aios-infra/$$c/*/; do \
-	    [ -f "$$d/providers.tofu" ] || continue; \
-	    echo "==> $$d"; (cd "$$d" && tofu init -backend=false -input=false && tofu validate); \
-	  done; \
-	done
-
-do/tofu-test-fast: .check-tofu-tools-fast
-	@test -f providers.tofu || exit 0
-	@set -e; tofu fmt -check -diff; tofu init -backend=false -input=false; tofu validate
-
-tofu-test-fast: .check-tofu-tools-fast
+tofu-docs-check:
 	@set -e; \
-	for readme in infra/modules/*/*/README.md; do \
-	  [ -f "$$readme" ] || continue; \
-	  grep -q 'No inputs' "$$readme" && { echo "stale terraform-docs in $$readme — run: make tofu-docs" >&2; exit 1; }; \
-	done; \
-	tofu fmt -check -recursive infra/; \
-	for d in infra/modules/*/*/; do \
-	  [ -f "$$d/providers.tofu" ] || continue; \
-	  echo "==> test-fast $$d"; \
-	  (cd "$$d" && set -e && tofu fmt -check -diff && tofu init -backend=false -input=false && tofu validate); \
-	  if [ -f "$$d/README.md" ] && [ -f "$(TERRAFORM_DOCS_CONFIG)" ]; then \
-	    (cd "$$d" && "$(REPO_ROOT)/build/scripts/terraform-docs-module.sh" "$(TERRAFORM_DOCS_CONFIG)" --output-check); \
-	  fi; \
-	done; \
-	go test ./...
+	for d in $$(find "$(REPO_ROOT)/infra/modules" -mindepth 2 -maxdepth 2 -type f -name providers.tofu -exec dirname {} \;); do \
+	  (cd "$$d" && "$(REPO_ROOT)/build/scripts/terraform-docs-module.sh" "$(TERRAFORM_DOCS_CONFIG)" --output-check); \
+	done
 
-do/tofu-test: .check-tofu-tools
-	@test -f providers.tofu || exit 0
-	@$(MAKE) do/tofu-test-fast
-	@if [ -f .terraform.lock.hcl ]; then \
-	  tofu init -backend=false -input=false -lockfile=readonly; \
-	fi
-
-tofu-test: .check-tofu-tools
-	@$(MAKE) tofu-test-fast
-	@$(MAKE) tofu-validate
-	@test -f "$(DIST)" || $(MAKE) build-dev
-	@INSTALLER_CONTENT_ROOT=. ./$(DIST) validate examples/sandbox.yaml --check-azure=false
-
-do/tofu-providers-lock: .check-tofu-tools
-	@test -f providers.tofu || exit 0
-	tofu providers lock \
-		-platform=linux_amd64 \
-		-platform=linux_arm64 \
-		-platform=darwin_amd64 \
-		-platform=darwin_arm64 \
-		-platform=windows_amd64
-
-tofu-providers-lock: .check-tofu-tools
-	@set -e; CLOUDS="$(PACKAGED_CLOUDS)"; IFS=','; \
-	for c in $$CLOUDS; do \
+tofu-validate:
+	@set -e; \
+	for c in $(CLOUDS); do \
 	  c=$$(printf '%s' "$$c" | tr -d ' '); \
-	  for d in infra/stacks/aios-infra/$$c/*/; do \
-	    [ -f "$$d/providers.tofu" ] || continue; \
-	    echo "==> lock $$d"; \
-	    (cd "$$d" && tofu init -backend=false -input=false && tofu providers lock \
-	      -platform=linux_amd64 -platform=linux_arm64 \
-	      -platform=darwin_amd64 -platform=darwin_arm64 \
-	      -platform=windows_amd64); \
+	  for d in $$(find "$(REPO_ROOT)/infra/stacks" -path "*/$$c/*" \( -name providers.tofu -o -name versions.tofu \) -exec dirname {} \; | sort -u); do \
+	    echo "==> $$d"; \
+	    (cd "$$d" && tofu init -backend=false -input=false && tofu validate); \
 	  done; \
 	done
 
-tofu-pre-commit-fast: .check-tofu-tools
-	@$(MAKE) tofu-fmt tofu-docs
-	@$(MAKE) fmt
+tofu-lock tofu-providers-lock:
+	@set -e; IFS=','; \
+	for p in $(LOCK_PLATFORMS); do \
+	  for c in $(CLOUDS); do \
+	    c=$$(printf '%s' "$$c" | tr -d ' '); \
+	    for d in $$(find "$(REPO_ROOT)/infra/stacks" -path "*/$$c/*" \( -name providers.tofu -o -name versions.tofu \) -exec dirname {} \; | sort -u); do \
+	      echo "==> lock $$d ($$p)"; \
+	      (cd "$$d" && tofu providers lock -platform=$$p); \
+	    done; \
+	  done; \
+	done
+
+tofu-test-fast: tofu-fmt-check check-tools
+	@set -e; \
+	for d in $$(find "$(REPO_ROOT)/infra/modules" -mindepth 2 -maxdepth 2 -type f -name providers.tofu -exec dirname {} \;); do \
+	  echo "==> module $$d"; \
+	  (cd "$$d" && tofu fmt -check -diff && tofu init -backend=false -input=false && tofu validate); \
+	done; \
+	$(MAKE) go-test
+
+tofu-test: tofu-test-fast tofu-validate
+	@$(MAKE) -f $(firstword $(MAKEFILE_LIST)) validate-config 2>/dev/null || true
+
+tofu-pre-commit-fast: tofu-fmt tofu-docs go-fmt go-tidy
+
+tofu-pre-commit: tofu-pre-commit-fast tofu-lock
+
+go-fmt:
+	@go fmt ./...
+
+go-vet:
+	@go vet ./...
+
+go-test:
+	@go test ./...
+
+go-tidy:
 	@go mod tidy
 
-tofu-pre-commit: .check-tofu-tools
-	@$(MAKE) tofu-pre-commit-fast
-	@$(MAKE) tofu-providers-lock
+-include local.mk

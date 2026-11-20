@@ -66,3 +66,6 @@ release-gcp:
 
 test:
 	go test ./...
+
+tofu-stack-terratest:
+	@cd tests/stacks/terratest && go test -count=1 ./...
