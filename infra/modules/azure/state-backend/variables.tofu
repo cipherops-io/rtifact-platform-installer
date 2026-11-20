@@ -8,3 +8,15 @@ variable "create_resource_group" {
   description = "When false, use an existing resource group (e.g. created by core-network or a prior bootstrap)."
   default     = true
 }
+
+variable "create_storage_account" {
+  type        = bool
+  description = "When false, use an existing storage account (pre-checked by installer)."
+  default     = true
+}
+
+variable "create_container" {
+  type        = bool
+  description = "When false, use an existing storage container (pre-checked by installer)."
+  default     = true
+}

@@ -27,7 +27,13 @@ BOILERPLATES_TEMPLATE_URL = github.com/cipherops-io/boilerplates//devops-templat
 
 ## Verify
 
-Re-renders managed files and fails if anything drifted (manifest excluded):
+CI checks managed files against `boilerplate-manifest.yaml` checksums (no cross-repo fetch):
+
+```bash
+go test ./tests/config/... -run TestManagedManifestChecksums
+```
+
+Optional local re-render:
 
 ```bash
 make boilerplate-verify

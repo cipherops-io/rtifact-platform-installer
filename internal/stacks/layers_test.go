@@ -33,22 +33,29 @@ func TestParseAndResolve(t *testing.T) {
 	}
 }
 
-func TestUpstream(t *testing.T) {
+func TestUpstreamStateDeps(t *testing.T) {
 	if got := Upstream(LayerCoreNetwork); len(got) != 0 {
 		t.Fatalf("core-network upstream = %v", got)
 	}
 	if got := Upstream(LayerDataPlatform); !reflect.DeepEqual(got, []Layer{LayerCoreNetwork}) {
 		t.Fatalf("data-platform upstream = %v", got)
 	}
-	if got := Upstream(LayerStateBackend); len(got) != 0 {
-		t.Fatalf("state-backend upstream = %v", got)
+	if got := Upstream(LayerNetworkEdge); !reflect.DeepEqual(got, []Layer{LayerCoreNetwork}) {
+		t.Fatalf("network-edge upstream = %v", got)
+	}
+	wantAI := []Layer{LayerCoreNetwork, LayerDataPlatform}
+	if got := Upstream(LayerAIIntegration); !reflect.DeepEqual(got, wantAI) {
+		t.Fatalf("ai-integrations upstream = %v", got)
 	}
 }
 
-func TestDownstream(t *testing.T) {
-	wantData := []Layer{LayerAppPlatform, LayerNetworkEdge, LayerAIIntegration}
-	if got := Downstream(LayerDataPlatform); !reflect.DeepEqual(got, wantData) {
+func TestDownstreamDepends(t *testing.T) {
+	wantDP := []Layer{LayerAppPlatform, LayerAIIntegration}
+	if got := Downstream(LayerDataPlatform); !reflect.DeepEqual(got, wantDP) {
 		t.Fatalf("data-platform downstream = %v", got)
+	}
+	if got := Downstream(LayerAppPlatform); !reflect.DeepEqual(got, []Layer{LayerNetworkEdge}) {
+		t.Fatalf("app-platform downstream = %v", got)
 	}
 	if got := Downstream(LayerAIIntegration); len(got) != 0 {
 		t.Fatalf("ai-integrations downstream = %v", got)

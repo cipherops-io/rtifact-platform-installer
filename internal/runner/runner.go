@@ -30,6 +30,11 @@ type Options struct {
 	PlanOut              string
 	// DestroyBatch is the full layer list for destroy --stack all (dependency guard).
 	DestroyBatch []stacks.Layer
+	IgnoreRuntimeDeps    bool
+	DryRunDestroy        bool
+	AcceptPreview        bool
+
+	layerDeployed func(stacks.Layer) bool
 }
 
 func Run(opts Options) error {
@@ -70,6 +75,17 @@ func Run(opts Options) error {
 		return err
 	}
 	spec := config.CloudStateSpec(customer, meta.StackID)
+	probe := newDeployProbe(contentRoot, customer, meta, provider, spec, merged)
+	opts.layerDeployed = probe.deployed
+
+	if opts.Action == "apply" {
+		if err := previewCloudGate(customer.Cloud, opts.AcceptPreview); err != nil {
+			return err
+		}
+		if err := ensureBackendBeforeApplyAll(opts, customer, provider, spec, opts.ConfigPath); err != nil {
+			return err
+		}
+	}
 
 	stack := opts.Stack
 	if stack == "" {
@@ -80,8 +96,14 @@ func Run(opts Options) error {
 		targetLayers = stacks.DestroyOrder()
 		opts.DestroyBatch = append([]stacks.Layer(nil), targetLayers...)
 	}
+	if opts.Action == "destroy" && opts.DryRunDestroy {
+		return destroyDryRunReport(opts, customer.NamePrefix(), targetLayers, probe.deployed)
+	}
 
 	for _, layer := range targetLayers {
+		if err := applyUpstreamGuard(opts, layer, probe.deployed, opts.ConfigPath); err != nil {
+			return err
+		}
 		if err := runOneLayer(opts, customer, meta, provider, spec, contentRoot, merged, layer); err != nil {
 			return usererr.Wrap(err,
 				fmt.Sprintf("OpenTofu %s failed on stack %q.", opts.Action, layer),
@@ -260,6 +282,9 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 				return err
 			}
 			if err := guard.CheckPlanJSON(planJSON, guard.DefaultProtectedTypes()); err != nil {
+				return err
+			}
+			if err := outputChangeGuard(opts, layer, planJSON, opts.layerDeployed); err != nil {
 				return err
 			}
 		}

@@ -27,3 +27,5 @@ All artifacts are named `dist/rtifact` with only the packaged cloud subcommands 
 Module: `github.com/cipherops-io/rtifact-platform-installer`
 
 Managed layout from [`cipherops-io/boilerplates`](../boilerplates) `devops-templates/rtifact-product` (`make boilerplate-update`).
+
+**CI:** GitHub Actions should require jobs `config-tests`, `tofu-fast`, and `go` on `main`. Managed-file drift is enforced by `go test ./tests/config/... -run TestManagedManifestChecksums` (no cross-repo token).

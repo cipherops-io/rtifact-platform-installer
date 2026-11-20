@@ -52,14 +52,20 @@ func clearLayerOutputs(prefix string, layer stacks.Layer) error {
 	return nil
 }
 
-func guardDestroyDependencies(prefix string, layer stacks.Layer, batch []stacks.Layer) error {
+func guardDestroyDependencies(opts Options, prefix string, layer stacks.Layer, batch []stacks.Layer) error {
+	isDeployed := func(l stacks.Layer) bool {
+		if opts.layerDeployed != nil {
+			return opts.layerDeployed(l)
+		}
+		return layerDeploymentMarker(prefix, l)
+	}
 	down := stacks.Downstream(layer)
 	var deps []string
 	for _, d := range down {
 		if downstreamAlreadyDestroyedInBatch(batch, layer, d) {
 			continue
 		}
-		if layerDeploymentMarker(prefix, d) {
+		if isDeployed(d) {
 			deps = append(deps, string(d))
 		}
 	}
@@ -76,15 +82,23 @@ func guardDestroyDependencies(prefix string, layer stacks.Layer, batch []stacks.
 			}
 		}
 	}
-	hint := fmt.Sprintf(
-		"Remove dependent stacks first (recommended order: %s), then destroy %q.",
-		strings.Join(ordered, " → "),
-		layer,
-	)
+	var cmds []string
+	for _, d := range ordered {
+		cmds = append(cmds, fmt.Sprintf("rtifact destroy <config.yaml> --stack %s", d))
+	}
+	cmds = append(cmds, fmt.Sprintf("rtifact destroy <config.yaml> --stack %s", layer))
+	hint := strings.Join([]string{
+		fmt.Sprintf("Cannot destroy stack %q: these stacks depend on it and are still deployed:", layer),
+		"  • " + strings.Join(ordered, "\n  • "),
+		"What you can do:",
+		"  " + strings.Join(cmds, "\n  "),
+		"or remove everything in order:",
+		"  rtifact destroy <config.yaml> --stack all",
+	}, "\n")
 	return usererr.WithHint(
 		fmt.Sprintf("Cannot destroy stack %q while dependent stacks are still deployed.", layer),
 		hint,
-		fmt.Sprintf("Dependent stacks still marked as applied: %s", strings.Join(ordered, ", ")),
+		fmt.Sprintf("Dependent stacks still marked as deployed: %s", strings.Join(ordered, ", ")),
 	)
 }
 
@@ -92,5 +106,5 @@ func destroyDependencyGuard(opts Options, prefix string, layer stacks.Layer) err
 	if opts.Action != "destroy" {
 		return nil
 	}
-	return guardDestroyDependencies(prefix, layer, opts.DestroyBatch)
+	return guardDestroyDependencies(opts, prefix, layer, opts.DestroyBatch)
 }

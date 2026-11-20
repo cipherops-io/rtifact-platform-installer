@@ -33,11 +33,16 @@ func NewRoot() *cobra.Command {
 	var checkAzure bool
 	var explain bool
 	var allowDestroy bool
+	var ignoreRuntimeDeps bool
+	var dryRunDestroy bool
+	var acceptPreview bool
 
 	addStackFlags := func(cmd *cobra.Command) {
 		cmd.Flags().StringVar(&stackFlag, "stack", "all", "state-backend|core-network|data-platform|app-platform|network-edge|ai-integrations|all")
 		cmd.Flags().BoolVar(&yes, "yes", false, "Skip interactive confirmation")
 		cmd.Flags().BoolVar(&allowDestroy, "allow-destroy-stateful", false, "Allow stateful resource replace/destroy")
+		cmd.Flags().BoolVar(&ignoreRuntimeDeps, "ignore-runtime-deps", false, "Apply/destroy without runtime ordering checks")
+		cmd.Flags().BoolVar(&acceptPreview, "accept-preview", false, "Allow apply on AWS/GCP preview clouds")
 	}
 
 	plan := &cobra.Command{Use: "plan [config.yaml]", Args: cobra.ExactArgs(1)}
@@ -54,12 +59,13 @@ func NewRoot() *cobra.Command {
 	for _, c := range []*cobra.Command{plan, apply, destroy} {
 		addStackFlags(c)
 	}
-	plan.RunE = tofuRun("plan", &stackFlag, yes, allowDestroy, false)
-	apply.RunE = tofuRun("apply", &stackFlag, yes, allowDestroy, true)
-	destroy.RunE = tofuRun("destroy", &stackFlag, yes, allowDestroy, false)
+	destroy.Flags().BoolVar(&dryRunDestroy, "dry-run", false, "Print destroy order and dependency guard results without acting")
+	plan.RunE = tofuRun("plan", &stackFlag, yes, allowDestroy, false, ignoreRuntimeDeps, false, acceptPreview)
+	apply.RunE = tofuRun("apply", &stackFlag, yes, allowDestroy, true, ignoreRuntimeDeps, false, acceptPreview)
+	destroy.RunE = tofuRun("destroy", &stackFlag, yes, allowDestroy, false, ignoreRuntimeDeps, dryRunDestroy, acceptPreview)
 	output.RunE = func(cmd *cobra.Command, args []string) error {
 		if outputTofu {
-			return tofuRun("output", &stackFlag, yes, allowDestroy, false)(cmd, args)
+			return tofuRun("output", &stackFlag, yes, allowDestroy, false, ignoreRuntimeDeps, false, acceptPreview)(cmd, args)
 		}
 		return outputs.Print(args[0])
 	}
@@ -178,7 +184,7 @@ func NewRoot() *cobra.Command {
 	return root
 }
 
-func tofuRun(action string, stackFlag *string, yes, allowDestroy, checklist bool) func(*cobra.Command, []string) error {
+func tofuRun(action string, stackFlag *string, yes, allowDestroy, checklist, ignoreRuntimeDeps, dryRunDestroy, acceptPreview bool) func(*cobra.Command, []string) error {
 	return func(_ *cobra.Command, args []string) error {
 		layer, ok := stacks.ParseLayer(*stackFlag)
 		if !ok {
@@ -195,6 +201,9 @@ func tofuRun(action string, stackFlag *string, yes, allowDestroy, checklist bool
 			Yes:                  yes,
 			AllowDestroyStateful: allowDestroy,
 			PrintChecklist:       checklist,
+			IgnoreRuntimeDeps:    ignoreRuntimeDeps,
+			DryRunDestroy:        dryRunDestroy,
+			AcceptPreview:        acceptPreview,
 		})
 	}
 }

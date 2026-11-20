@@ -23,6 +23,21 @@ var ApplyOrder = []Layer{
 	LayerAIIntegration,
 }
 
+// Requires is the state-dependency graph: remote_state reads and plan upstream checks.
+var Requires = map[Layer][]Layer{
+	LayerCoreNetwork:   {},
+	LayerDataPlatform:  {LayerCoreNetwork},
+	LayerAppPlatform:   {LayerCoreNetwork},
+	LayerNetworkEdge:   {LayerCoreNetwork},
+	LayerAIIntegration: {LayerCoreNetwork, LayerDataPlatform},
+}
+
+// RuntimeRequires are ordering/safety edges that are not expressed as terraform_remote_state.
+var RuntimeRequires = map[Layer][]Layer{
+	LayerAppPlatform: {LayerDataPlatform},
+	LayerNetworkEdge: {LayerAppPlatform},
+}
+
 // AllLayers returns every layer, state-backend first.
 func AllLayers() []Layer {
 	out := make([]Layer, 0, len(ApplyOrder)+1)
@@ -73,31 +88,79 @@ func DestroyOrderIndex(layer Layer) int {
 	return -1
 }
 
-// Upstream returns the layers applied before layer in ApplyOrder (empty for
-// state-backend and core-network).
+// Upstream returns direct state dependencies for layer (terraform_remote_state targets).
 func Upstream(layer Layer) []Layer {
-	for i, l := range ApplyOrder {
-		if l == layer {
-			out := make([]Layer, i)
-			copy(out, ApplyOrder[:i])
-			return out
-		}
+	if layer == LayerStateBackend {
+		return nil
 	}
-	return nil
+	deps := Requires[layer]
+	if len(deps) == 0 {
+		return nil
+	}
+	out := make([]Layer, len(deps))
+	copy(out, deps)
+	return out
 }
 
-// Downstream returns layers that are applied after layer in ApplyOrder and may
-// read its remote state (destroy those before destroying layer).
+// RuntimeUpstream returns runtime-only dependencies for apply/destroy policy.
+func RuntimeUpstream(layer Layer) []Layer {
+	deps := RuntimeRequires[layer]
+	if len(deps) == 0 {
+		return nil
+	}
+	out := make([]Layer, len(deps))
+	copy(out, deps)
+	return out
+}
+
+// UpstreamForPlan returns state + runtime dependencies when runtime checks are enabled.
+func UpstreamForPlan(layer Layer, includeRuntime bool) []Layer {
+	seen := map[Layer]bool{}
+	var out []Layer
+	add := func(ls []Layer) {
+		for _, l := range ls {
+			if seen[l] {
+				continue
+			}
+			seen[l] = true
+			out = append(out, l)
+		}
+	}
+	add(Upstream(layer))
+	if includeRuntime {
+		add(RuntimeUpstream(layer))
+	}
+	return out
+}
+
+// Downstream returns layers that depend on layer (state and runtime edges) for destroy guards.
 func Downstream(layer Layer) []Layer {
 	if layer == LayerStateBackend {
 		out := make([]Layer, len(ApplyOrder))
 		copy(out, ApplyOrder)
 		return out
 	}
-	for i, l := range ApplyOrder {
-		if l == layer {
-			return append([]Layer(nil), ApplyOrder[i+1:]...)
+	var out []Layer
+	for _, l := range ApplyOrder {
+		if directDependsOn(l, layer, true) {
+			out = append(out, l)
 		}
 	}
-	return nil
+	return out
+}
+
+func directDependsOn(child, parent Layer, includeRuntime bool) bool {
+	for _, r := range Requires[child] {
+		if r == parent {
+			return true
+		}
+	}
+	if includeRuntime {
+		for _, r := range RuntimeRequires[child] {
+			if r == parent {
+				return true
+			}
+		}
+	}
+	return false
 }

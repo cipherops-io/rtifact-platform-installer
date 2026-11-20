@@ -14,6 +14,15 @@ var DefaultProtectedTypes = func() []string {
 		"azurerm_kubernetes_cluster",
 		"azurerm_resource_group",
 		"azurerm_private_dns_zone",
+		"aws_db_instance",
+		"aws_rds_cluster",
+		"aws_s3_bucket",
+		"aws_eks_cluster",
+		"aws_kms_key",
+		"google_sql_database_instance",
+		"google_storage_bucket",
+		"google_container_cluster",
+		"google_kms_crypto_key",
 	}
 }
 

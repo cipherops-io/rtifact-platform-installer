@@ -88,9 +88,6 @@ func (e *StateBackendMissingError) Error() string {
 func (e *StateBackendMissingError) Unwrap() error { return cloud.ErrStateBackendMissing }
 
 func (p *Provider) EnsureStateBackend(ctx context.Context, spec cloud.StateSpec) (*cloud.StateBackendInfo, error) {
-	if !spec.AirGapped {
-		return nil, fmt.Errorf("aws EnsureStateBackend with state.air_gapped=false: %w", cloud.ErrNotImplemented)
-	}
 	if spec.Account.AccountID == "" {
 		return nil, errors.New("aws EnsureStateBackend requires account.account_id")
 	}

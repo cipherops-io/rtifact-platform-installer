@@ -116,9 +116,6 @@ func (e *StateBackendMissingError) Unwrap() error { return cloud.ErrStateBackend
 // subscription, resource group, storage account and container with `az`.
 // It never creates anything; creation is done by the state-backend layer.
 func (p *Provider) EnsureStateBackend(ctx context.Context, spec cloud.StateSpec) (*cloud.StateBackendInfo, error) {
-	if !spec.AirGapped {
-		return nil, fmt.Errorf("azure EnsureStateBackend with state.air_gapped=false: %w", cloud.ErrNotImplemented)
-	}
 	if spec.Account.SubscriptionID == "" {
 		return nil, errors.New("azure EnsureStateBackend requires account.subscription_id")
 	}

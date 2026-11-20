@@ -62,7 +62,7 @@ variable "azure_bastion" {
     os_disk_size_gb = number
   })
   default = {
-    vm_size         = "t3.small"
+    vm_size         = "e2-medium"
     os_disk_size_gb = 100
   }
 }

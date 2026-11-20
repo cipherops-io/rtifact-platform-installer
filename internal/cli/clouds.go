@@ -35,6 +35,9 @@ func addCloudLifecycle(grp *cobra.Command, cloudName string) {
 	var stackFlag string
 	var yes bool
 	var allowDestroy bool
+	var ignoreRuntimeDeps bool
+	var dryRunDestroy bool
+	var acceptPreview bool
 
 	enforce := func(cfgCloud string) error {
 		if cfgCloud != cloudName {
@@ -51,6 +54,8 @@ func addCloudLifecycle(grp *cobra.Command, cloudName string) {
 		cmd.Flags().StringVar(&stackFlag, "stack", "all", "state-backend|core-network|data-platform|app-platform|network-edge|ai-integrations|all")
 		cmd.Flags().BoolVar(&yes, "yes", false, "Skip interactive confirmation")
 		cmd.Flags().BoolVar(&allowDestroy, "allow-destroy-stateful", false, "Allow stateful resource replace/destroy")
+		cmd.Flags().BoolVar(&ignoreRuntimeDeps, "ignore-runtime-deps", false, "Apply/destroy without runtime ordering checks")
+		cmd.Flags().BoolVar(&acceptPreview, "accept-preview", false, "Allow apply on AWS/GCP preview clouds")
 	}
 
 	wrapRun := func(action string, checklist bool) func(*cobra.Command, []string) error {
@@ -77,6 +82,9 @@ func addCloudLifecycle(grp *cobra.Command, cloudName string) {
 				Yes:                  yes,
 				AllowDestroyStateful: allowDestroy,
 				PrintChecklist:       checklist,
+				IgnoreRuntimeDeps:    ignoreRuntimeDeps,
+				DryRunDestroy:        dryRunDestroy && action == "destroy",
+				AcceptPreview:        acceptPreview,
 			})
 		}
 	}
@@ -92,6 +100,9 @@ func addCloudLifecycle(grp *cobra.Command, cloudName string) {
 	} {
 		cmd := &cobra.Command{Use: spec.use, Args: cobra.ExactArgs(1)}
 		addFlags(cmd)
+		if spec.action == "destroy" {
+			cmd.Flags().BoolVar(&dryRunDestroy, "dry-run", false, "Print destroy order and dependency guard results without acting")
+		}
 		cmd.RunE = wrapRun(spec.action, spec.checklist)
 		grp.AddCommand(cmd)
 	}

@@ -88,12 +88,18 @@ func TestBackendLocal(t *testing.T) {
 	}
 }
 
-func TestEnsureStateBackendNotAirGapped(t *testing.T) {
+func TestEnsureStateBackendWhenNotAirGapped(t *testing.T) {
 	s := spec()
 	s.AirGapped = false
-	_, err := New().EnsureStateBackend(context.Background(), s)
-	if !errors.Is(err, cloud.ErrNotImplemented) {
-		t.Fatalf("err = %v, want ErrNotImplemented", err)
+	f := &fakeAz{outputs: map[string]string{
+		"account show":             s.Account.SubscriptionID,
+		"group exists":             "true",
+		"storage account show":     "cmaiossbxtfstate",
+		"storage container exists": "true",
+	}}
+	_, err := NewWithRunner(f.run).EnsureStateBackend(context.Background(), s)
+	if err != nil {
+		t.Fatalf("EnsureStateBackend: %v", err)
 	}
 }
 

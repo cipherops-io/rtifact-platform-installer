@@ -126,8 +126,50 @@
       "type": "object",
       "additionalProperties": { "type": "boolean" }
     },
-    "network": { "type": "object", "additionalProperties": true },
-    "kubernetes_cluster": { "type": "object", "additionalProperties": true },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vnet_cidr": { "type": "string" },
+        "node_subnet_cidr": { "type": "string" },
+        "load_balancer_subnet_cidr": { "type": "string" },
+        "private_endpoint_subnet_cidr": { "type": "string" },
+        "management_subnet_cidr": { "type": "string" },
+        "pod_cidr": { "type": "string" },
+        "service_cidr": { "type": "string" },
+        "dns_service_ip": { "type": "string" },
+        "subnet_prefixes": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "kubernetes_cluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sku_tier": { "type": "string" },
+        "system_pool": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "vm_size": { "type": "string" },
+            "node_count": { "type": "integer", "minimum": 1 },
+            "os_disk_size_gb": { "type": "integer", "minimum": 30 }
+          }
+        },
+        "master_cidr": { "type": "string" },
+        "node_pools": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "vm_size": { "type": "string" },
+              "node_count": { "type": "integer", "minimum": 1 },
+              "os_disk_size_gb": { "type": "integer", "minimum": 30 }
+            }
+          }
+        }
+      }
+    },
     "key_vault": { "type": "object", "additionalProperties": true },
     "postgresql_flexible_server": { "type": "object", "additionalProperties": true },
     "container_registry": { "type": "object", "additionalProperties": true },
