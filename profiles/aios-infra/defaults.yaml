@@ -104,3 +104,47 @@ container_registry:
 
 key_vault:
   sku: premium
+  foundry:
+    soft_delete_retention_days: 7
+    purge_protection_enabled: true
+    grant_deployer_contributor: true
+    deployer_key_permissions:
+      - Backup
+      - Create
+      - Delete
+      - Get
+      - Import
+      - List
+      - Purge
+      - Recover
+      - Restore
+      - Update
+      - GetRotationPolicy
+      - SetRotationPolicy
+      - Rotate
+    deployer_secret_permissions:
+      - Backup
+      - Delete
+      - Get
+      - List
+      - Purge
+      - Recover
+      - Restore
+      - Set
+    deployer_certificate_permissions:
+      - Create
+      - Delete
+      - Get
+      - Import
+      - List
+      - ManageContacts
+      - ManageIssuers
+      - SetIssuers
+      - Update
+
+ai_foundry:
+  public_network_access: Disabled
+  storage:
+    account_tier: Standard
+    account_replication_type: LRS
+    public_network_access: Disabled

@@ -1,6 +1,7 @@
 # Build artifacts
 /build/embed/tofu/
 /build/embed/mirror/
+/build/.plugin-cache/
 /internal/packaged/build/embed/tofu/
 /internal/packaged/build/embed/mirror/
 **/installer.auto.tfvars.json

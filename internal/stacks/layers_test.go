@@ -44,3 +44,16 @@ func TestUpstream(t *testing.T) {
 		t.Fatalf("state-backend upstream = %v", got)
 	}
 }
+
+func TestDownstream(t *testing.T) {
+	wantData := []Layer{LayerAppPlatform, LayerNetworkEdge, LayerAIIntegration}
+	if got := Downstream(LayerDataPlatform); !reflect.DeepEqual(got, wantData) {
+		t.Fatalf("data-platform downstream = %v", got)
+	}
+	if got := Downstream(LayerAIIntegration); len(got) != 0 {
+		t.Fatalf("ai-integrations downstream = %v", got)
+	}
+	if got := Downstream(LayerStateBackend); len(got) != len(ApplyOrder) {
+		t.Fatalf("state-backend downstream = %v", got)
+	}
+}

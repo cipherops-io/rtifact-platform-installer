@@ -1,12 +1,15 @@
 package runner
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/version"
 )
@@ -70,4 +73,69 @@ func writeProviderRC(path, mirror string) error {
 }
 `, mirror)
 	return os.WriteFile(path, []byte(body), 0o644)
+}
+
+// pluginCacheDir is reused across stack runs so providers are not re-downloaded for every temp work dir.
+func pluginCacheDir(contentRoot string) (string, error) {
+	pc, err := filepath.Abs(filepath.Join(contentRoot, "build", ".plugin-cache"))
+	if err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(pc, 0o755); err != nil {
+		return "", err
+	}
+	return pc, nil
+}
+
+const tofuInitAttempts = 3
+
+func runTofuInit(tofuPath, stackWork string, env []string, initArgs []string) error {
+	var lastErr error
+	backoff := 2 * time.Second
+	for attempt := 1; attempt <= tofuInitAttempts; attempt++ {
+		if attempt > 1 {
+			time.Sleep(backoff)
+			backoff *= 2
+		}
+		var stderr bytes.Buffer
+		c := exec.Command(tofuPath, initArgs...)
+		c.Dir = stackWork
+		c.Env = env
+		c.Stdout = os.Stdout
+		c.Stderr = io.MultiWriter(os.Stderr, &stderr)
+		err := c.Run()
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		msg := stderr.String()
+		if attempt == tofuInitAttempts || !retryableTofuInit(stderr.String()) {
+			return err
+		}
+		fmt.Fprintf(os.Stderr, "OpenTofu init failed (attempt %d/%d); retrying after %s…\n", attempt, tofuInitAttempts, backoff)
+		if msg != "" && strings.Contains(msg, "connection reset") {
+			fmt.Fprintf(os.Stderr, "  (provider registry connection was reset)\n")
+		}
+	}
+	return lastErr
+}
+
+func retryableTofuInit(stderr string) bool {
+	retryHints := []string{
+		"Failed to install provider",
+		"connection reset",
+		"connection refused",
+		"i/o timeout",
+		"temporary failure",
+		"TLS handshake timeout",
+		"unexpected EOF",
+		"Error while installing",
+	}
+	lower := strings.ToLower(stderr)
+	for _, h := range retryHints {
+		if strings.Contains(lower, strings.ToLower(h)) {
+			return true
+		}
+	}
+	return false
 }

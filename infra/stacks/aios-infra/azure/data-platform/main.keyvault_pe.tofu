@@ -33,3 +33,19 @@ module "key_vault_pe" {
 
   depends_on = [module.security]
 }
+
+module "foundry_key_vault_pe" {
+  count = local.key_vault_pe_enabled && var.features.ai_foundry ? 1 : 0
+
+  source                         = "../../../../modules/azure/private-endpoint"
+  name                           = "${var.name_prefix}-foundry-kv-pe"
+  location                       = var.location
+  resource_group_name            = local.core.resource_group_name
+  subnet_id                      = local.core.private_endpoint_subnet_id
+  private_connection_resource_id = module.security[0].ai_foundry_key_vault_id
+  subresource_names              = ["vault"]
+  private_dns_zone_ids           = [azurerm_private_dns_zone.vault[0].id]
+  tags                           = local.core.tags
+
+  depends_on = [module.security]
+}

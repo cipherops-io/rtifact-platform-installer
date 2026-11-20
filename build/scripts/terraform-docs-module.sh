@@ -44,9 +44,30 @@ new_readme=$(mktemp)
 trap 'rm -rf "$tmpdir" "$new_readme"' EXIT ERR INT
 
 awk -v frag="$fragment" '
-  BEGIN { while ((getline line < frag) > 0) body = body line "\n" }
-  /^<!-- BEGIN_TF_DOCS -->$/ { print; printf "%s", body; skip = 1; next }
-  /^<!-- END_TF_DOCS -->$/ { skip = 0; print; next }
+  BEGIN {
+    while ((getline line < frag) > 0) {
+      if (line ~ /^<!-- (BEGIN|END)_TF_DOCS -->$/) {
+        continue
+      }
+      body = body line "\n"
+    }
+  }
+  /^<!-- BEGIN_TF_DOCS -->$/ {
+    if (!injected) {
+      print
+      printf "%s", body
+      skip = 1
+      injected = 1
+    }
+    next
+  }
+  /^<!-- END_TF_DOCS -->$/ {
+    if (skip) {
+      skip = 0
+      print
+    }
+    next
+  }
   skip { next }
   { print }
 ' "$readme" > "$new_readme"

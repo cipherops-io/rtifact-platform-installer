@@ -12,9 +12,9 @@ const (
 	RandomProviderVersion  = "3.9.1"
 	TLSProviderVersion     = "4.4.2"
 
-	AzureCLI        = "az"
-	CLIVersion      = "2.93.0"
-	CLIName         = AzureCLI
+	AzureCLI           = "az"
+	CLIVersion         = "2.93.0"
+	CLIName            = AzureCLI
 	StateContainerName = "tfstate"
 
 	StateStorageAccountSuffix = "tfstate"

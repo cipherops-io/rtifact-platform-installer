@@ -138,6 +138,15 @@ variable "container_registry" {
 variable "key_vault" {
   type = object({
     sku = string
+    foundry = object({
+      sku                              = optional(string)
+      soft_delete_retention_days       = number
+      purge_protection_enabled         = bool
+      grant_deployer_contributor       = bool
+      deployer_key_permissions         = list(string)
+      deployer_secret_permissions      = list(string)
+      deployer_certificate_permissions = list(string)
+    })
   })
 }
 variable "azure_files" {
@@ -264,8 +273,10 @@ variable "ai_foundry" {
   type = object({
     public_network_access = optional(string, "Disabled")
     friendly_name         = optional(string)
+    storage = object({
+      account_tier             = string
+      account_replication_type = string
+      public_network_access    = string
+    })
   })
-  default = {
-    public_network_access = "Disabled"
-  }
 }

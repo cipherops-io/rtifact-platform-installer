@@ -6,6 +6,10 @@ output "storage_account_id" {
   value = try(azurerm_storage_account.main[0].id, null)
 }
 
+output "ai_foundry_storage_account_id" {
+  value = try(azurerm_storage_account.foundry[0].id, null)
+}
+
 output "acr_id" {
   value = try(azurerm_container_registry.main[0].id, null)
 }
