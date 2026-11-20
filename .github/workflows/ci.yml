@@ -14,6 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout boilerplates (defaults var-files)
+        uses: actions/checkout@v4
+        with:
+          repository: cipherops-io/boilerplates
+          ref: refactor/skeleton-only-v3
+          path: boilerplates-src
+          token: "{{ secrets.GITHUB_TOKEN }}"
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -24,20 +31,10 @@ jobs:
       - name: Verify managed files
         shell: bash
         run: |
-          set -e
-          want=$(grep '^BOILERPLATES_REF ?=' boilerplate.mk | head -1 | awk '{print $3}')
-          for ref in "$want" v3.0.0 refactor/skeleton-only-v3; do
-            export BOILERPLATES_REF="$ref"
-            export BOILERPLATES_TEMPLATE_URL="github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=${ref}"
-            export BOILERPLATES_REPO=/nonexistent
-            if make check-template-source boilerplate-update; then
-              git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'
-              echo "verify-managed OK (boilerplates ref=${ref})"
-              exit 0
-            fi
-          done
-          echo "boilerplate-verify failed for all template refs" >&2
-          exit 1
+          export BOILERPLATES_REPO="${GITHUB_WORKSPACE}/boilerplates-src"
+          tpl_ref=$(git -C boilerplates-src describe --tags --exact-match 2>/dev/null || git -C boilerplates-src branch --show-current)
+          export BOILERPLATES_TEMPLATE_URL="github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=${tpl_ref}"
+          make check-template-source boilerplate-verify
   config-tests:
     runs-on: ubuntu-latest
     steps:

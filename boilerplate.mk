@@ -9,8 +9,6 @@ BOILERPLATES_REPO ?= ../boilerplates
 BOILERPLATES_REF ?= v3.0.0
 BOILERPLATE_VAR_FILES ?= boilerplate-vars.yml
 _TPL_DEFAULTS_LOCAL := $(BOILERPLATES_REPO)/devops-templates/rtifact-product/defaults
-_TPL_LAYERS_URL := github.com/cipherops-io/boilerplates.git//devops-templates/rtifact-product/defaults/layers.yml?ref=$(BOILERPLATES_REF)
-_TPL_TOOLS_URL := github.com/cipherops-io/boilerplates.git//devops-templates/rtifact-product/defaults/tool-versions.yml?ref=$(BOILERPLATES_REF)
 
 ifndef REPO_ROOT
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -26,12 +24,9 @@ boilerplate-update:
 	  [ -f "$$f" ] || { echo "missing var file: $$f"; exit 1; }; \
 	  args="$$args --var-file $$f"; \
 	done; \
-	layers="$(_TPL_LAYERS_URL)"; tools="$(_TPL_TOOLS_URL)"; \
-	if [ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ]; then \
-	  layers="$(_TPL_DEFAULTS_LOCAL)/layers.yml"; \
-	  tools="$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
+	if [ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ] && [ -f "$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml" ]; then \
+	  args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/layers.yml --var-file $(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
 	fi; \
-	args="$$args --var-file $$layers --var-file $$tools"; \
 	boilerplate \
 	  --template-url $(BOILERPLATES_TEMPLATE_URL) \
 	  --non-interactive --disable-dependency-prompt --no-hooks \
