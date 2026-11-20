@@ -3,52 +3,27 @@
 
 # AGENTS.md — ai-integrations (aws)
 
-## 1. Purpose
+## Purpose
 
-Model platform access and transactional email / communications.
+Managed AI model access and transactional email / communications.
 
-## 2. Put here / Do NOT put here
+**Put here if:** It is managed AI model access or transactional email.
 
-**Put here:**
+**Not here:**
 
-- AI hub / Foundry / Bedrock / Vertex endpoints
-- Email and communication services
+- General data stores for AI → data-platform (keys, storage for Foundry live in data-platform)
 
+**Examples:**
 
-**Do NOT put here:**
+- Azure AI Foundry hub
+- Communication / email services
 
-- General data stores — use data-platform
+## Modules in use today
 
+None yet (stub layer). Create with `make scaffold-module CLOUD=aws MODULE=<name>`, then register as `ai-integrations/<name>` in `boilerplate-vars.yml`.
 
-## 3. Cloud service map (aws)
+**Reads from:** core-network, data-platform
 
-| Service | Module folder |
-|---------|----------------|
-| bedrock | `ai-integrations` |
+**Provides:** `docs/layer-contracts.md#ai-integrations`
 
-## 4. File layout
-
-- Use `main.<concern>.tofu` per concern; one `module` block per file; gate with `features.<name>`.
-
-## 5. Upstream inputs and outputs
-
-- Read prior layers via `upstream_state` / `terraform_remote_state`.
-- Required outputs: see `docs/layer-contracts.md` for **ai-integrations**.
-
-## 6. Add-a-service checklist
-
-1. Create `infra/modules/aws/<name>/`
-2. Add module to `Modules` in `boilerplate-vars.yml`
-3. Add `features.<name>` to profile + schema
-4. Wire in this stack layer
-5. `make tofu-pre-commit-fast`
-
-## 7. Validate this layer
-
-```bash
-make tofu-validate
-```
-
-## 8. Installer-specific notes
-
-See `AGENTS.local.md` in the repo root.
+**How to place a new service:** `infra/AGENTS.md#placement`

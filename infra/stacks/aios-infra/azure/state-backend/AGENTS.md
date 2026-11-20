@@ -3,51 +3,27 @@
 
 # AGENTS.md — state-backend (azure)
 
-## 1. Purpose
+## Purpose
 
-Remote state storage for OpenTofu (bootstrap runs with local state).
+Remote state storage for OpenTofu (bootstrap may use local state).
 
-## 2. Put here / Do NOT put here
+**Put here if:** It stores this installer's own remote state backend.
 
-**Put here:**
+**Not here:**
 
-- Remote state backends (storage account, S3, GCS)
+- Workload resources → data-platform or app-platform
+
+**Examples:**
+
+- Azure storage account for tfstate
+- AWS S3 bucket for tfstate
+- GCS bucket for tfstate
+
+## Modules in use today
+
+- `state-backend`
 
 
-**Do NOT put here:**
+**Provides:** `docs/layer-contracts.md#state-backend`
 
-- Workload resources — use data-platform or app-platform
-
-
-## 3. Cloud service map (azure)
-
-| Service | Module folder |
-|---------|----------------|
-| storage | `state-backend` |
-
-## 4. File layout
-
-- Use `main.<concern>.tofu` per concern; one `module` block per file; gate with `features.<name>`.
-
-## 5. Upstream inputs and outputs
-
-- Read prior layers via `upstream_state` / `terraform_remote_state`.
-- Required outputs: see `docs/layer-contracts.md` for **state-backend**.
-
-## 6. Add-a-service checklist
-
-1. Create `infra/modules/azure/<name>/`
-2. Add module to `Modules` in `boilerplate-vars.yml`
-3. Add `features.<name>` to profile + schema
-4. Wire in this stack layer
-5. `make tofu-pre-commit-fast`
-
-## 7. Validate this layer
-
-```bash
-make tofu-validate
-```
-
-## 8. Installer-specific notes
-
-See `AGENTS.local.md` in the repo root.
+**How to place a new service:** `infra/AGENTS.md#placement`

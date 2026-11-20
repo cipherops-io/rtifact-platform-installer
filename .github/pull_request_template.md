@@ -6,7 +6,7 @@
 
 ## Managed files
 
-- [ ] I did **not** hand-edit managed paths (see `.rtifact/managed-files.txt`)
-- [ ] If I changed installer **logic**, only `.tofu` / Go / profiles outside managed list
+- [ ] I did **not** hand-edit managed paths (see `boilerplate-manifest.yaml` after `make boilerplate-update`)
+- [ ] If I changed installer **logic**, only `.tofu` / Go / profiles outside the manifest
 
 ## Test plan

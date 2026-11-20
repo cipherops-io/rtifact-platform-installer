@@ -1,3 +1,5 @@
+# DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
+# Change it there, then run: make boilerplate-update
 # Used only by build/scripts/terraform-docs-module.sh (generation pass in a temp dir).
 version: ">= 0.20.0"
 

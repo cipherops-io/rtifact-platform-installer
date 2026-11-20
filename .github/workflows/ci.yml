@@ -14,7 +14,19 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
+      - name: Install boilerplate CLI
+        run: |
+          make install-boilerplate-cli
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
       - run: make check-template-source boilerplate-verify
+  config-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: go test ./tests/config/...
   tofu-fast:
     runs-on: ubuntu-latest
     steps:

@@ -3,53 +3,32 @@
 
 # AGENTS.md — app-platform (azure)
 
-## 1. Purpose
+## Purpose
 
 Kubernetes clusters, node pools, workload identity, compute VMs.
 
-## 2. Put here / Do NOT put here
+**Put here if:** It runs workloads (Kubernetes, node pools, VMs, workload identity).
 
-**Put here:**
+**Not here:**
 
-- AKS/EKS/GKE and node pools
-- VM scale sets / EC2 / GCE when not on K8s
+- Databases or key vaults → data-platform
+- Public edge TLS → network-edge
+
+**Examples:**
+
+- AKS / EKS / GKE
+- Node pools and workload identity
+- Standalone compute VMs
+
+## Modules in use today
+
+- `aks`
+
+- `compute`
 
 
-**Do NOT put here:**
+**Reads from:** core-network, data-platform
 
-- Databases — use data-platform
+**Provides:** `docs/layer-contracts.md#app-platform`
 
-
-## 3. Cloud service map (azure)
-
-| Service | Module folder |
-|---------|----------------|
-| aks | `aks` |
-| compute | `compute` |
-
-## 4. File layout
-
-- Use `main.<concern>.tofu` per concern; one `module` block per file; gate with `features.<name>`.
-
-## 5. Upstream inputs and outputs
-
-- Read prior layers via `upstream_state` / `terraform_remote_state`.
-- Required outputs: see `docs/layer-contracts.md` for **app-platform**.
-
-## 6. Add-a-service checklist
-
-1. Create `infra/modules/azure/<name>/`
-2. Add module to `Modules` in `boilerplate-vars.yml`
-3. Add `features.<name>` to profile + schema
-4. Wire in this stack layer
-5. `make tofu-pre-commit-fast`
-
-## 7. Validate this layer
-
-```bash
-make tofu-validate
-```
-
-## 8. Installer-specific notes
-
-See `AGENTS.local.md` in the repo root.
+**How to place a new service:** `infra/AGENTS.md#placement`

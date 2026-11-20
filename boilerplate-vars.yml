@@ -19,36 +19,36 @@ Layers:
   - ai-integrations
 Modules:
   azure:
-    - ai-foundry
-    - aks
-    - app-gateway
-    - bastion-host
-    - compute
-    - connectivity
-    - data
-    - dns-public
-    - firewall
-    - naming
-    - network
-    - private-endpoint
-    - security
-    - state-backend
+    - state-backend/state-backend
+    - core-network/naming
+    - core-network/network
+    - core-network/firewall
+    - core-network/bastion-host
+    - core-network/connectivity
+    - data-platform/data
+    - data-platform/security
+    - data-platform/private-endpoint
+    - app-platform/aks
+    - app-platform/compute
+    - network-edge/app-gateway
+    - network-edge/dns-public
+    - ai-integrations/ai-foundry
   aws:
-    - compute
-    - data
-    - eks
-    - naming
-    - private-endpoint
-    - security
-    - state-backend
-    - vpc
+    - state-backend/state-backend
+    - core-network/naming
+    - core-network/vpc
+    - data-platform/data
+    - data-platform/security
+    - data-platform/private-endpoint
+    - app-platform/eks
+    - app-platform/compute
   gcp:
-    - compute
-    - data
-    - gke
-    - naming
-    - private-endpoint
-    - security
-    - state-backend
-    - vpc
+    - state-backend/state-backend
+    - core-network/naming
+    - core-network/vpc
+    - data-platform/data
+    - data-platform/security
+    - data-platform/private-endpoint
+    - app-platform/gke
+    - app-platform/compute
 AirGapped: true

@@ -3,11 +3,14 @@
 
 # Generic boilerplate sync — rtifact-product managed template.
 
-BOILERPLATES_TEMPLATE_URL ?= ../boilerplates/devops-templates/rtifact-product
-# Before push / CI: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.0.0
-# For copies outside the org workspace (e2e temp dir), override: make ... BOILERPLATES_VAR_REPO=/path/to/boilerplates
-BOILERPLATES_VAR_REPO ?= ../boilerplates
-BOILERPLATE_VAR_FILES ?= boilerplate-vars.yml $(BOILERPLATES_VAR_REPO)/vars/versions.yml $(BOILERPLATES_VAR_REPO)/vars/layers.yml
+BOILERPLATES_TEMPLATE_URL ?= github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.0.0
+# Local sibling: make boilerplate-update BOILERPLATES_TEMPLATE_URL=../boilerplates/devops-templates/rtifact-product
+BOILERPLATES_REPO ?= ../boilerplates
+BOILERPLATES_REF ?= v3.0.0
+BOILERPLATE_VAR_FILES ?= boilerplate-vars.yml
+_TPL_DEFAULTS_LOCAL := $(BOILERPLATES_REPO)/devops-templates/rtifact-product/defaults
+_TPL_LAYERS_URL := github.com/cipherops-io/boilerplates//devops-templates/rtifact-product/defaults/layers.yml?ref=$(BOILERPLATES_REF)
+_TPL_TOOLS_URL := github.com/cipherops-io/boilerplates//devops-templates/rtifact-product/defaults/tool-versions.yml?ref=$(BOILERPLATES_REF)
 
 ifndef REPO_ROOT
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -23,32 +26,27 @@ boilerplate-update:
 	  [ -f "$$f" ] || { echo "missing var file: $$f"; exit 1; }; \
 	  args="$$args --var-file $$f"; \
 	done; \
+	layers="$(_TPL_LAYERS_URL)"; tools="$(_TPL_TOOLS_URL)"; \
+	if [ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ]; then \
+	  layers="$(_TPL_DEFAULTS_LOCAL)/layers.yml"; \
+	  tools="$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
+	fi; \
+	args="$$args --var-file $$layers --var-file $$tools"; \
 	boilerplate \
 	  --template-url $(BOILERPLATES_TEMPLATE_URL) \
 	  --non-interactive --disable-dependency-prompt --no-hooks \
+	  --manifest-file boilerplate-manifest.yaml \
 	  --output-folder . \
-	  $$args; \
-	go mod tidy
+	  $$args
 
 boilerplate-verify:
 	@set -e; \
-	tmp=$$(mktemp -d); \
-	trap 'rm -rf "$$tmp"' EXIT; \
-	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) boilerplate-update BOILERPLATES_TEMPLATE_URL=$(BOILERPLATES_TEMPLATE_URL) REPO_ROOT="$$tmp" 2>/dev/null || true; \
-	test -f .rtifact/managed-files.txt; \
-	while IFS= read -r path; do \
-	  [ -z "$$path" ] && continue; \
-	  case "$$path" in \#*) continue;; esac; \
-	  [ -f "$$path" ] || continue; \
-	  if [ -f "$$tmp/$$path" ]; then \
-	    diff -q "$$path" "$$tmp/$$path" >/dev/null || { echo "managed drift: $$path"; diff -u "$$path" "$$tmp/$$path" | head -20; exit 1; }; \
-	  fi; \
-	done < .rtifact/managed-files.txt; \
-	echo "boilerplate-verify: OK"
+	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) boilerplate-update; \
+	git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'
 
 check-template-source:
 	@case "$(BOILERPLATES_TEMPLATE_URL)" in \
-	  ../*|/*|~/*|file:*) echo "local template path forbidden in CI — use github.com/...?ref=v3.0.0"; exit 1;; \
+	  ../*|/*|~/*|file:*) echo "local template path forbidden in CI — use github.com/...?ref=$(BOILERPLATES_REF)"; exit 1;; \
 	esac
 	@echo "check-template-source: OK"
 
@@ -66,6 +64,8 @@ BOILERPLATES_REF ?= ?ref=v3.0.0
 BOILERPLATES_REPO ?= ../boilerplates
 TPL_RTIFACT_STACK ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-stack$(BOILERPLATES_REF)
 TPL_RTIFACT_MODULE ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-module$(BOILERPLATES_REF)
+_TPL_DEFAULTS_LOCAL := $(BOILERPLATES_REPO)/devops-templates/rtifact-product/defaults
+_SCAFFOLD_BAKED_VARS := --var OpenTofuVersion=1.13.9
 
 .PHONY: scaffold-module scaffold-stack-layer
 
@@ -77,8 +77,9 @@ scaffold-module: .check-boilerplate-cli
 	@set -e; \
 	tpl="$(TPL_RTIFACT_MODULE)"; \
 	[ -d "$(BOILERPLATES_REPO)/devops-templates/rtifact-module" ] && tpl="$(BOILERPLATES_REPO)/devops-templates/rtifact-module"; \
-	args=""; \
-	for f in $(BOILERPLATE_VAR_FILES); do args="$$args --var-file $$f"; done; \
+	args="--var-file boilerplate-vars.yml $(_SCAFFOLD_BAKED_VARS)"; \
+	[ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ] && args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/layers.yml"; \
+	[ -f "$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml" ] && args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
 	boilerplate --template-url "$$tpl" \
 	  --output-folder "$(REPO_ROOT)/infra/modules/$(CLOUD)/$(MODULE)" \
 	  --non-interactive --disable-dependency-prompt --no-hooks \
@@ -90,8 +91,9 @@ scaffold-stack-layer: .check-boilerplate-cli
 	tpl="$(TPL_RTIFACT_STACK)"; \
 	[ -d "$(BOILERPLATES_REPO)/devops-templates/rtifact-stack" ] && tpl="$(BOILERPLATES_REPO)/devops-templates/rtifact-stack"; \
 	profile="$${PROFILE:-$(PROFILES)}"; \
-	args=""; \
-	for f in $(BOILERPLATE_VAR_FILES); do args="$$args --var-file $$f"; done; \
+	args="--var-file boilerplate-vars.yml $(_SCAFFOLD_BAKED_VARS)"; \
+	[ -f "$(_TPL_DEFAULTS_LOCAL)/layers.yml" ] && args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/layers.yml"; \
+	[ -f "$(_TPL_DEFAULTS_LOCAL)/tool-versions.yml" ] && args="$$args --var-file $(_TPL_DEFAULTS_LOCAL)/tool-versions.yml"; \
 	boilerplate --template-url "$$tpl" \
 	  --output-folder "$(REPO_ROOT)/infra/stacks/$$profile/$(CLOUD)/$(LAYER)" \
 	  --non-interactive --disable-dependency-prompt --no-hooks \
@@ -104,7 +106,7 @@ include $(dir $(lastword $(MAKEFILE_LIST)))tooling.mk
 TERRAFORM_DOCS_CONFIG ?= $(REPO_ROOT)/.terraform-docs.yml
 TERRAFORM_DOCS_GEN_CONFIG ?= $(REPO_ROOT)/.terraform-docs.gen.yml
 
-CLOUDS ?= azure,aws,gcp
+CLOUDS ?= azure aws gcp
 PROFILES ?= aios-infra
 
 .PHONY: help check-tools
@@ -143,7 +145,7 @@ tofu-docs-check:
 	done
 
 tofu-validate:
-	@set -e; IFS=','; \
+	@set -e; \
 	for c in $(CLOUDS); do \
 	  c=$$(printf '%s' "$$c" | tr -d ' '); \
 	  for d in $$(find "$(REPO_ROOT)/infra/stacks" -path "*/$$c/*" \( -name providers.tofu -o -name versions.tofu \) -exec dirname {} \; | sort -u); do \

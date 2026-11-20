@@ -2,16 +2,30 @@
      Change it there, then run: make boilerplate-update -->
 # AGENTS.md — modules (aws)
 
-Modules wired in this cloud (from `boilerplate-vars.yml` → `Modules`):
+Registered modules (from `boilerplate-vars.yml` → `Modules`), grouped by layer:
 
-- `compute/`
-- `data/`
-- `eks/`
-- `naming/`
-- `private-endpoint/`
-- `security/`
+### state-backend
+
 - `state-backend/`
+
+
+### core-network
+
+- `naming/`
 - `vpc/`
 
 
-Add a module: scaffold with `make scaffold-module CLOUD=aws MODULE=<name>`, then register in `boilerplate-vars.yml` and profiles.
+### data-platform
+
+- `data/`
+- `security/`
+- `private-endpoint/`
+
+
+### app-platform
+
+- `eks/`
+- `compute/`
+
+
+Add a module: `make scaffold-module CLOUD=aws MODULE=<name>`, register as `<layer>/<name>` in `boilerplate-vars.yml`, add `features.<name>` to the profile.
