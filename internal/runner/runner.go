@@ -28,6 +28,8 @@ type Options struct {
 	AllowDestroyStateful bool
 	PrintChecklist       bool
 	PlanOut              string
+	// DestroyBatch is the full layer list for destroy --stack all (dependency guard).
+	DestroyBatch []stacks.Layer
 }
 
 func Run(opts Options) error {
@@ -76,6 +78,7 @@ func Run(opts Options) error {
 	targetLayers := stacks.ResolveLayers(stack)
 	if opts.Action == "destroy" && stack == stacks.LayerAll {
 		targetLayers = stacks.DestroyOrder()
+		opts.DestroyBatch = append([]stacks.Layer(nil), targetLayers...)
 	}
 
 	for _, layer := range targetLayers {
@@ -291,7 +294,10 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 			}
 		}
 		// Confirmation (or --yes) happened above; -input=false needs -auto-approve.
-		return run("destroy", "-input=false", "-auto-approve", varFileArg)
+		if err := run("destroy", "-input=false", "-auto-approve", varFileArg); err != nil {
+			return err
+		}
+		return clearLayerOutputs(customer.NamePrefix(), layer)
 	case "output":
 		return run("output", "-json")
 	default:
