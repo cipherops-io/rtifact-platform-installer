@@ -16,7 +16,7 @@ const stackRoot = "../../infra/stacks/aios-infra/azure"
 func TestEveryLayerHasStack(t *testing.T) {
 	for _, l := range stacks.AllLayers() {
 		dir := filepath.Join(stackRoot, string(l))
-		for _, f := range []string{"main.tofu", "providers.tofu", "variables.tofu", ".terraform.lock.hcl"} {
+		for _, f := range []string{"main.tofu", "versions.tofu", "providers.tofu", "variables.tofu", ".terraform.lock.hcl"} {
 			if _, err := os.Stat(filepath.Join(dir, f)); err != nil {
 				t.Errorf("layer %s: %v", l, err)
 			}
@@ -30,7 +30,7 @@ func TestEveryLayerHasStack(t *testing.T) {
 
 func TestProviderPinsMatchVersions(t *testing.T) {
 	for _, l := range stacks.AllLayers() {
-		b, err := os.ReadFile(filepath.Join(stackRoot, string(l), "providers.tofu"))
+		b, err := os.ReadFile(filepath.Join(stackRoot, string(l), "versions.tofu"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -42,8 +42,15 @@ func TestProviderPinsMatchVersions(t *testing.T) {
 			`version = "` + azure.TLSProviderVersion + `"`,
 		} {
 			if !strings.Contains(s, want) {
-				t.Errorf("layer %s providers.tofu missing %s", l, want)
+				t.Errorf("layer %s versions.tofu missing %s", l, want)
 			}
+		}
+		prov, err := os.ReadFile(filepath.Join(stackRoot, string(l), "providers.tofu"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(prov), `required_providers`) {
+			t.Errorf("layer %s: provider pins must be in versions.tofu, not providers.tofu", l)
 		}
 	}
 }
