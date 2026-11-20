@@ -24,16 +24,20 @@ jobs:
       - name: Verify managed files
         shell: bash
         run: |
+          set -e
           git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-          ref=$(grep '^BOILERPLATES_REF ?=' boilerplate.mk | head -1 | awk '{print $3}')
-          for try in "$ref" refactor/skeleton-only-v3; do
-            export BOILERPLATES_TEMPLATE_URL="github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=${try}"
-            if make check-template-source boilerplate-update && git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'; then
-              echo "verify-managed OK (template ref=${try})"
-              exit 0
-            fi
+          auth="https://x-access-token:${GITHUB_TOKEN}@github.com/cipherops-io/boilerplates.git"
+          want=$(grep '^BOILERPLATES_REF ?=' boilerplate.mk | head -1 | awk '{print $3}')
+          for ref in "refs/tags/${want}" "refs/heads/refactor/skeleton-only-v3" "refs/heads/main"; do
+            sha=$(git ls-remote "$auth" "$ref" 2>/dev/null | awk '{print $1}')
+            [ -n "$sha" ] || continue
+            export BOILERPLATES_TEMPLATE_URL="github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=${sha}"
+            make check-template-source boilerplate-update
+            git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'
+            echo "verify-managed OK ($ref @ ${sha:0:12})"
+            exit 0
           done
-          echo "verify-managed failed" >&2
+          echo "verify-managed: could not fetch boilerplates template (check org Actions repo access)" >&2
           exit 1
   config-tests:
     runs-on: ubuntu-latest
