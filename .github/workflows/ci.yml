@@ -1,28 +1,43 @@
+# DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
+# Change it there, then run: make boilerplate-update
 name: ci
 on:
   push:
     branches: [main]
   pull_request:
+
 jobs:
-  test:
+  verify-managed:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-go@v7.1.0
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - uses: opentofu/setup-opentofu@v2.0.2
+      - run: make check-template-source boilerplate-verify
+  tofu-fast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
-          tofu_version: "1.13.9"
-      - name: Install terraform-docs
-        env:
-          TD_VERSION: "0.20.0"
+          go-version: "1.22"
+      - name: Install OpenTofu
         run: |
-          curl -sSL "https://github.com/terraform-docs/terraform-docs/releases/download/v${TD_VERSION}/terraform-docs-v${TD_VERSION}-linux-amd64.tar.gz" | tar -xz -C "${RUNNER_TEMP}"
+          v=$(make -s print-tool-versions | sed -n 's/^TOFU_VERSION=//p' | head -1)
+          curl -fsSL "https://get.opentofu.org/install-opentofu.sh" | bash -s -- -v "$v"
+      - name: Install terraform-docs
+        run: |
+          v=$(make -s print-tool-versions | sed -n 's/^TERRAFORM_DOCS_VERSION=//p' | head -1)
+          curl -sSL "https://github.com/terraform-docs/terraform-docs/releases/download/v${v}/terraform-docs-v${v}-linux-amd64.tar.gz" | tar -xz -C "${RUNNER_TEMP}"
           sudo mv "${RUNNER_TEMP}/terraform-docs" /usr/local/bin/terraform-docs
-          terraform-docs version
-      - run: chmod +x build/scripts/*.sh
+      - run: chmod +x build/scripts/*.sh 2>/dev/null || true
       - run: make tofu-test-fast
-      - if: github.ref == 'refs/heads/main'
-        run: make tofu-test
-  # Live Azure deploy E2E is workflow_dispatch only: .github/workflows/azure-e2e.yml
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: make go-test go-vet

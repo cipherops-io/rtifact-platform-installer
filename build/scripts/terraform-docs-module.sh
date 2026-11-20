@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Permanent OpenTofu module docs: terraform-docs still inspects .tf only (not .tofu metadata).
-# We render from a temp copy of *.tofu → *.tf, then splice into README inject markers — no .tf in the repo.
+# DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
+# Change it there, then run: make boilerplate-update
 set -euo pipefail
 
 module_root=$(pwd)
