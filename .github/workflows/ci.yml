@@ -14,26 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Checkout boilerplates (tag)
-        id: bp_tag
-        uses: actions/checkout@v4
-        continue-on-error: true
-        with:
-          repository: cipherops-io/boilerplates
-          ref: v3.0.0
-          path: boilerplates-src
-      - name: Checkout boilerplates (feature branch)
-        if: steps.bp_tag.outcome != 'success'
-        uses: actions/checkout@v4
-        with:
-          repository: cipherops-io/boilerplates
-          ref: refactor/skeleton-only-v3
-          path: boilerplates-src
-      - name: Record boilerplates ref
-        shell: bash
-        run: |
-          ref=$(git -C boilerplates-src describe --tags --exact-match 2>/dev/null || git -C boilerplates-src branch --show-current)
-          echo "BOILERPLATES_REPO_REF=$ref" >> "$GITHUB_ENV"
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -44,9 +24,20 @@ jobs:
       - name: Verify managed files
         shell: bash
         run: |
-          export BOILERPLATES_REPO="${GITHUB_WORKSPACE}/boilerplates-src"
-          export BOILERPLATES_TEMPLATE_URL="github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=${BOILERPLATES_REPO_REF}"
-          make check-template-source boilerplate-verify
+          set -e
+          want=$(grep '^BOILERPLATES_REF ?=' boilerplate.mk | head -1 | awk '{print $3}')
+          for ref in "$want" v3.0.0 refactor/skeleton-only-v3; do
+            export BOILERPLATES_REF="$ref"
+            export BOILERPLATES_TEMPLATE_URL="github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=${ref}"
+            export BOILERPLATES_REPO=/nonexistent
+            if make check-template-source boilerplate-update; then
+              git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'
+              echo "verify-managed OK (boilerplates ref=${ref})"
+              exit 0
+            fi
+          done
+          echo "boilerplate-verify failed for all template refs" >&2
+          exit 1
   config-tests:
     runs-on: ubuntu-latest
     steps:
