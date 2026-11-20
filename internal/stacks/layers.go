@@ -75,3 +75,19 @@ func Upstream(layer Layer) []Layer {
 	}
 	return nil
 }
+
+// Downstream returns layers that are applied after layer in ApplyOrder and may
+// read its remote state (destroy those before destroying layer).
+func Downstream(layer Layer) []Layer {
+	if layer == LayerStateBackend {
+		out := make([]Layer, len(ApplyOrder))
+		copy(out, ApplyOrder)
+		return out
+	}
+	for i, l := range ApplyOrder {
+		if l == layer {
+			return append([]Layer(nil), ApplyOrder[i+1:]...)
+		}
+	}
+	return nil
+}

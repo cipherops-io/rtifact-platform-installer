@@ -30,7 +30,9 @@ module "security" {
   tenant_id           = data.azurerm_client_config.current.tenant_id
   features = {
     disk_encryption_set = var.features.disk_encryption_set
+    ai_foundry          = var.features.ai_foundry
   }
+  foundry_key_vault = local.foundry_key_vault_settings
 }
 
 module "data" {
@@ -50,6 +52,7 @@ module "data" {
     private_dns_zones          = var.features.private_dns_zones
     azure_files_share          = var.features.azure_files_share
     disk_encryption_set        = false
+    ai_foundry                 = var.features.ai_foundry
   }
   managed_redis_sku_name           = var.azure_managed_redis.sku_name
   postgresql_version               = var.postgresql_flexible_server.version
@@ -73,6 +76,7 @@ module "data" {
   private_endpoint_subnet_id       = local.core.private_endpoint_subnet_id
   vnet_id                          = local.core.vnet_id
   dns_resource_group_name          = local.core.resource_group_name
+  foundry_storage                  = local.foundry_storage_settings
 }
 
 data "azurerm_client_config" "current" {}

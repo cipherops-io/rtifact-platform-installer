@@ -163,6 +163,12 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 			return nil
 		}
 	}
+	if err := foundryApplyGuard(opts, layer, customer.NamePrefix(), merged); err != nil {
+		return err
+	}
+	if err := destroyDependencyGuard(opts, customer.NamePrefix(), layer); err != nil {
+		return err
+	}
 
 	work, err := os.MkdirTemp("", "installer-tofu-")
 	if err != nil {
@@ -220,8 +226,10 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 		}
 		env = append(env, "TF_CLI_CONFIG_FILE="+rcPath)
 	} else {
-		pc := filepath.Join(work, ".plugin-cache")
-		_ = os.MkdirAll(pc, 0o755)
+		pc, err := pluginCacheDir(contentRoot)
+		if err != nil {
+			return fmt.Errorf("plugin cache: %w", err)
+		}
 		env = append(env, "TF_PLUGIN_CACHE_DIR="+pc)
 	}
 
@@ -242,7 +250,7 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 		initArgs = append(initArgs, "-lockfile=readonly")
 	}
 	initArgs = append(initArgs, "-reconfigure")
-	if err := run(initArgs...); err != nil {
+	if err := runTofuInit(tofuPath, stackWork, env, initArgs); err != nil {
 		return err
 	}
 

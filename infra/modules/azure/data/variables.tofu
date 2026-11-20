@@ -25,6 +25,7 @@ variable "features" {
     private_dns_zones          = bool
     azure_files_share          = bool
     disk_encryption_set        = optional(bool, false)
+    ai_foundry                 = optional(bool, false)
   })
 }
 
@@ -133,4 +134,13 @@ variable "vnet_id" {
 
 variable "dns_resource_group_name" {
   type = string
+}
+
+variable "foundry_storage" {
+  description = "Non-HNS storage for Azure AI Foundry; set from customer ai_foundry.storage YAML."
+  type = object({
+    account_tier             = string
+    account_replication_type = string
+    public_network_access    = string
+  })
 }

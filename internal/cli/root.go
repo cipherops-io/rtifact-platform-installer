@@ -9,9 +9,9 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/bootstrap"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/dataops"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/preflight"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/quota"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/runner"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/status"
@@ -106,14 +106,14 @@ func NewRoot() *cobra.Command {
 	root.AddCommand(validate)
 
 	root.AddCommand(&cobra.Command{
-		Use:   "preflight [config.yaml]",
-		Args:  cobra.ExactArgs(1),
-		RunE:  func(_ *cobra.Command, args []string) error { return preflight.Run(args[0]) },
+		Use:  "preflight [config.yaml]",
+		Args: cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error { return preflight.Run(args[0]) },
 	})
 
 	bootstrapCmd := &cobra.Command{
-		Use:   "bootstrap [config.yaml]",
-		Args:  cobra.ExactArgs(1),
+		Use:  "bootstrap [config.yaml]",
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			y, _ := cmd.Flags().GetBool("yes")
 			return bootstrap.Run(args[0], y)
@@ -123,14 +123,14 @@ func NewRoot() *cobra.Command {
 	root.AddCommand(bootstrapCmd)
 
 	root.AddCommand(&cobra.Command{
-		Use:   "status [config.yaml]",
-		Args:  cobra.ExactArgs(1),
-		RunE:  func(_ *cobra.Command, args []string) error { return status.Print(args[0]) },
+		Use:  "status [config.yaml]",
+		Args: cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error { return status.Print(args[0]) },
 	})
 
 	initCfg := &cobra.Command{Use: "init-config"}
 	initCfg.AddCommand(&cobra.Command{
-		Use:  "write",
+		Use: "write",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			tier, _ := cmd.Flags().GetString("tier")
 			customer, _ := cmd.Flags().GetString("customer")
@@ -145,8 +145,8 @@ func NewRoot() *cobra.Command {
 
 	data := &cobra.Command{Use: "data"}
 	data.AddCommand(&cobra.Command{
-		Use:   "backup [config.yaml]",
-		Args:  cobra.ExactArgs(1),
+		Use:  "backup [config.yaml]",
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			s, _ := cmd.Flags().GetString("name")
 			return dataops.Backup(args[0], s)

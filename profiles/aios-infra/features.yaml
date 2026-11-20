@@ -43,7 +43,7 @@ features:
   ai_foundry:
     status: stable
     requires: [key_vault, storage_account]
-    description: Microsoft Foundry Hub (azurerm_ai_foundry); model deployments remain manual
+    description: Microsoft Foundry Hub (azurerm_ai_foundry); dedicated non-HNS storage and access-policy Key Vault on data-platform (main KV stays RBAC); model deployments remain manual
   kubernetes_cluster:
     status: stable
     requires: [virtual_network]
