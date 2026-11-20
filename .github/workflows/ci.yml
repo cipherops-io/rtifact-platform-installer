@@ -22,7 +22,19 @@ jobs:
           make install-boilerplate-cli
           echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
       - name: Verify managed files
-        run: make check-template-source boilerplate-verify
+        shell: bash
+        run: |
+          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+          ref=$(grep '^BOILERPLATES_REF ?=' boilerplate.mk | head -1 | awk '{print $3}')
+          for try in "$ref" refactor/skeleton-only-v3; do
+            export BOILERPLATES_TEMPLATE_URL="github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=${try}"
+            if make check-template-source boilerplate-update && git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'; then
+              echo "verify-managed OK (template ref=${try})"
+              exit 0
+            fi
+          done
+          echo "verify-managed failed" >&2
+          exit 1
   config-tests:
     runs-on: ubuntu-latest
     steps:

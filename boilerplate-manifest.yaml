@@ -145,10 +145,10 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-20T10:54:18Z"
+Timestamp: "2026-11-20T10:56:32Z"
 TemplateURL: ../boilerplates/devops-templates/rtifact-product
 BoilerplateVersion: v0.17.0
-SourceChecksum: sha256:071476f62ba998eb5ee51bcab7c3ae8b25f0354a0c34a7748506d18dc3be4500
+SourceChecksum: sha256:e698a9344b1a4cbeb39967e3096850c7da4554f4fe80d0a36c193a475f502f27
 OutputDir: .
 Dependencies:
     - Variables:
@@ -3959,7 +3959,7 @@ Files:
     - Path: .github/pull_request_template.md
       Checksum: sha256:cc6698fcfd3c326e04625bba5bc8cbce8691f7993b82c62cbca6a46ecf7271a2
     - Path: .github/workflows/ci.yml
-      Checksum: sha256:c9fec46acd26712ed1c5c2b270e1add67c76c0a84c2548cfa9a7bf14d5aed1b1
+      Checksum: sha256:07f12843d959602fa46ac9635011eeb408ab6ac51e96915c89761519a63a46c7
     - Path: .terraform-docs.gen.yml
       Checksum: sha256:7cba1689f7c088a1b9e208dfd0aeef31535f4dd321584f8e3a0e847365f584d0
     - Path: .terraform-docs.yml
