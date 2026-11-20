@@ -1,7 +1,7 @@
 Variables:
     AirGapped: true
     BoilerplateCliVersion: 0.17.0
-    BoilerplatesRef: v3.0.0
+    BoilerplatesRef: v3.0.1
     CliNames:
         aws: aws
         azure: az
@@ -145,17 +145,17 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-20T11:41:17Z"
+Timestamp: "2026-11-20T13:51:43Z"
 TemplateURL: ../boilerplates/devops-templates/rtifact-product
 BoilerplateVersion: v0.17.0
-SourceChecksum: sha256:cb9bda3d4f1e383c6ee9e30d63ed241a1e0a663304b31d5dead905f8e8512ccf
+SourceChecksum: sha256:1930146f5bcce28207dbde7d86740f0232cb204e9e17cd65025d31f9dfd32062
 OutputDir: .
 Dependencies:
     - Variables:
         __each__: azure
         AirGapped: true
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.0.0
+        BoilerplatesRef: v3.0.1
         CliNames:
             aws: aws
             azure: az
@@ -313,7 +313,7 @@ Dependencies:
         __each__: aws
         AirGapped: true
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.0.0
+        BoilerplatesRef: v3.0.1
         CliNames:
             aws: aws
             azure: az
@@ -471,7 +471,7 @@ Dependencies:
         __each__: gcp
         AirGapped: true
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.0.0
+        BoilerplatesRef: v3.0.1
         CliNames:
             aws: aws
             azure: az
@@ -629,7 +629,7 @@ Dependencies:
         __each__: azure
         AirGapped: true
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.0.0
+        BoilerplatesRef: v3.0.1
         CliNames:
             aws: aws
             azure: az
@@ -785,7 +785,7 @@ Dependencies:
             __each__: azure
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -944,7 +944,7 @@ Dependencies:
             __each__: azure
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -1103,7 +1103,7 @@ Dependencies:
             __each__: azure
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -1262,7 +1262,7 @@ Dependencies:
             __each__: azure
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -1421,7 +1421,7 @@ Dependencies:
             __each__: azure
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -1580,7 +1580,7 @@ Dependencies:
             __each__: azure
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -1739,7 +1739,7 @@ Dependencies:
         __each__: aws
         AirGapped: true
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.0.0
+        BoilerplatesRef: v3.0.1
         CliNames:
             aws: aws
             azure: az
@@ -1895,7 +1895,7 @@ Dependencies:
             __each__: aws
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -2054,7 +2054,7 @@ Dependencies:
             __each__: aws
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -2213,7 +2213,7 @@ Dependencies:
             __each__: aws
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -2372,7 +2372,7 @@ Dependencies:
             __each__: aws
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -2531,7 +2531,7 @@ Dependencies:
             __each__: aws
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -2690,7 +2690,7 @@ Dependencies:
             __each__: aws
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -2849,7 +2849,7 @@ Dependencies:
         __each__: gcp
         AirGapped: true
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.0.0
+        BoilerplatesRef: v3.0.1
         CliNames:
             aws: aws
             azure: az
@@ -3005,7 +3005,7 @@ Dependencies:
             __each__: gcp
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -3164,7 +3164,7 @@ Dependencies:
             __each__: gcp
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -3323,7 +3323,7 @@ Dependencies:
             __each__: gcp
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -3482,7 +3482,7 @@ Dependencies:
             __each__: gcp
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -3641,7 +3641,7 @@ Dependencies:
             __each__: gcp
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -3800,7 +3800,7 @@ Dependencies:
             __each__: gcp
             AirGapped: true
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.0.0
+            BoilerplatesRef: v3.0.1
             CliNames:
                 aws: aws
                 azure: az
@@ -3959,28 +3959,24 @@ Files:
     - Path: .github/pull_request_template.md
       Checksum: sha256:cc6698fcfd3c326e04625bba5bc8cbce8691f7993b82c62cbca6a46ecf7271a2
     - Path: .github/workflows/ci.yml
-      Checksum: sha256:4d9ad4792dcc0ddacfccfbaf85aee7ff85f3064482fddbd5f23fb3e46ee2d9a8
+      Checksum: sha256:0af88baf5b10d26237edee3270a98260b2bb666e723e26e52b864a924ae30436
     - Path: .terraform-docs.gen.yml
       Checksum: sha256:7cba1689f7c088a1b9e208dfd0aeef31535f4dd321584f8e3a0e847365f584d0
     - Path: .terraform-docs.yml
       Checksum: sha256:2ef73e4f08fcbd4b3ee01fe67c91b588ad1b0321bcb5e854e915ae2cc1447694
     - Path: AGENTS.md
-      Checksum: sha256:67be368514bce8cee0914bfda67af117586703ca7d0c15977ecb44979a1ec2b4
+      Checksum: sha256:08346166f2bd3f76cc186384720df751929f177346904afc78adfdece7a8b78b
     - Path: CLAUDE.md
       Checksum: sha256:c54ba6a2cf5a7404006d2da37d3e66950d240149b1ebe2c709d2c248ef25c876
     - Path: boilerplate.mk
-      Checksum: sha256:dff93a7a39e1c8a96eba617dbb2be05fce6428ab872d9aa2b6c39ef4a064a851
-    - Path: build/boilerplate/defaults/layers.yml
-      Checksum: sha256:e7edf4b9be5d788cbf6ee4da5384b62983d9c4c1a2b14af9fc24a13531d7067f
-    - Path: build/boilerplate/defaults/tool-versions.yml
-      Checksum: sha256:d4d61833aa3d5fbdcf47c1a037329baf6c1d29c80b228fe64b2b86990760dcac
+      Checksum: sha256:d8b9cbf41ea8f757518ebf72e8082dd8f0c6f640c5d331a781d595dc8dd5bb08
     - Path: build/scripts/terraform-docs-module.sh
       Checksum: sha256:edf53e942fd1e54c1ebcb1610e1dba7e36223d67c14bdfe6af14ad46ae777395
     - Path: docs/BOILERPLATE.md
-      Checksum: sha256:2b99220d307c264f5743708b042662426b0acdfd26ac71001d1a149694ebd445
+      Checksum: sha256:e18d090bd8929e5690b201cc491b12acb76832c399fe43a1fd6531ff07a34991
     - Path: infra/AGENTS.md
       Checksum: sha256:4c0ff8ab604d372356d7e6ccadc111c4d9f1a91675cfc9e78c047e300baef170
     - Path: infra/modules/AGENTS.md
       Checksum: sha256:c14dce5fe1654bc8007dbd72bb94de5ffe0d2b31ae7553f75e0350193dbaedf6
     - Path: tooling.mk
-      Checksum: sha256:a67c10f096430b883b212ac23115fa0b6a35075c3275e5e043d617c6a527ce77
+      Checksum: sha256:0590c7bfb470a984b9c7605933a5bff644aabe6535be96991a2a34e72625cdd7

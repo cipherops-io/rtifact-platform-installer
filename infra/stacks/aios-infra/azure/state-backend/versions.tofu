@@ -1,3 +1,4 @@
+# GENERATED from vars/versions.yml — edit there, then: make bump-providers
 terraform {
   required_version = ">= 1.13.9"
   required_providers {

@@ -1,7 +1,6 @@
 MODULE := github.com/cipherops-io/rtifact-platform-installer
 BINARY := rtifact
 DIST := dist/$(BINARY)
-TOFU_VERSION ?= 1.13.9
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 PACKAGED_CLOUDS ?= azure,aws,gcp

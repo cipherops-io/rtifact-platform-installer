@@ -41,7 +41,7 @@ jobs:
           curl -sSL "https://github.com/terraform-docs/terraform-docs/releases/download/v${v}/terraform-docs-v${v}-linux-amd64.tar.gz" | tar -xz -C "${RUNNER_TEMP}"
           sudo mv "${RUNNER_TEMP}/terraform-docs" /usr/local/bin/terraform-docs
       - run: chmod +x build/scripts/*.sh 2>/dev/null || true
-      - run: make package-content tofu-fmt-check check-tools go-test
+      - run: make package-content tofu-fmt-check check-tools go-test tofu-validate
   go:
     runs-on: ubuntu-latest
     steps:

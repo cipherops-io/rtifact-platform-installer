@@ -26,4 +26,4 @@ All artifacts are named `dist/rtifact` with only the packaged cloud subcommands 
 
 Module: `github.com/cipherops-io/rtifact-platform-installer`
 
-Generated from [`cipherops-io/boilerplates`](../boilerplates) `devops-templates/platform-installer`.
+Managed layout from [`cipherops-io/boilerplates`](../boilerplates) `devops-templates/rtifact-product` (`make boilerplate-update`).
