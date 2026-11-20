@@ -13,8 +13,8 @@
 ## Provider bumps
 
 ```bash
-make bump-providers   # edits stack versions.tofu
+make bump-providers   # re-renders infra/stacks/**/versions.tofu from build/boilerplate/stack-versions/layer-versions
 make tofu-lock
 ```
 
-Pins canonical file: `vars/versions.yml` in this repo.
+Provider and extra-provider pins: `vars/versions.yml`. OpenTofu semver and registry `ProviderSources` come from managed `tooling.mk` (boilerplates `defaults/tool-versions.yml`).
