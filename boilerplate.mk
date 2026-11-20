@@ -9,8 +9,8 @@ BOILERPLATES_REPO ?= ../boilerplates
 BOILERPLATES_REF ?= v3.0.0
 BOILERPLATE_VAR_FILES ?= boilerplate-vars.yml
 _TPL_DEFAULTS_LOCAL := $(BOILERPLATES_REPO)/devops-templates/rtifact-product/defaults
-_TPL_LAYERS_URL := github.com/cipherops-io/boilerplates//devops-templates/rtifact-product/defaults/layers.yml?ref=$(BOILERPLATES_REF)
-_TPL_TOOLS_URL := github.com/cipherops-io/boilerplates//devops-templates/rtifact-product/defaults/tool-versions.yml?ref=$(BOILERPLATES_REF)
+_TPL_LAYERS_URL := github.com/cipherops-io/boilerplates.git//devops-templates/rtifact-product/defaults/layers.yml?ref=$(BOILERPLATES_REF)
+_TPL_TOOLS_URL := github.com/cipherops-io/boilerplates.git//devops-templates/rtifact-product/defaults/tool-versions.yml?ref=$(BOILERPLATES_REF)
 
 ifndef REPO_ROOT
 REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))

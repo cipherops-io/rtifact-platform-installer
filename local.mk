@@ -32,6 +32,4 @@ bump-providers:
 	done
 	@$(MAKE) tofu-lock
 
-tofu-test-fast: package-content
-
 tofu-test: validate-config

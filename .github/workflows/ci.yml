@@ -11,6 +11,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout boilerplates (defaults; same ref as template)
+        shell: bash
+        run: |
+          set -e
+          want=$(sed -n 's/^BOILERPLATES_REF ?= //p' boilerplate.mk | tr -d ' ')
+          for try in "$want" v3.0.0 refactor/skeleton-only-v3 main; do
+            if git clone --depth 1 --branch "$try" https://github.com/cipherops-io/boilerplates boilerplates-src 2>/dev/null; then
+              echo "BOILERPLATES_REPO_REF=$try" >> "$GITHUB_ENV"
+              echo "Checked out boilerplates @ $try"
+              exit 0
+            fi
+          done
+          echo "checkout cipherops-io/boilerplates failed (tried $want, v3.0.0, refactor/skeleton-only-v3, main)" >&2
+          exit 1
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -18,7 +32,12 @@ jobs:
         run: |
           make install-boilerplate-cli
           echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
-      - run: make check-template-source boilerplate-verify
+      - name: Verify managed files
+        shell: bash
+        run: |
+          export BOILERPLATES_REPO="${GITHUB_WORKSPACE}/boilerplates-src"
+          export BOILERPLATES_TEMPLATE_URL="github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=${BOILERPLATES_REPO_REF}"
+          make check-template-source boilerplate-verify
   config-tests:
     runs-on: ubuntu-latest
     steps:
@@ -26,6 +45,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
+      - run: make package-content
       - run: go test ./tests/config/...
   tofu-fast:
     runs-on: ubuntu-latest
@@ -37,14 +57,15 @@ jobs:
       - name: Install OpenTofu
         run: |
           v=$(make -s print-tool-versions | sed -n 's/^TOFU_VERSION=//p' | head -1)
-          curl -fsSL "https://get.opentofu.org/install-opentofu.sh" | bash -s -- -v "$v"
+          curl -fsSL "https://get.opentofu.org/install-opentofu.sh" | bash -s -- --opentofu-version "$v"
+          echo "/usr/local/bin" >> "${GITHUB_PATH}"
       - name: Install terraform-docs
         run: |
           v=$(make -s print-tool-versions | sed -n 's/^TERRAFORM_DOCS_VERSION=//p' | head -1)
           curl -sSL "https://github.com/terraform-docs/terraform-docs/releases/download/v${v}/terraform-docs-v${v}-linux-amd64.tar.gz" | tar -xz -C "${RUNNER_TEMP}"
           sudo mv "${RUNNER_TEMP}/terraform-docs" /usr/local/bin/terraform-docs
       - run: chmod +x build/scripts/*.sh 2>/dev/null || true
-      - run: make tofu-test-fast
+      - run: make package-content tofu-fmt-check check-tools go-test
   go:
     runs-on: ubuntu-latest
     steps:
@@ -52,4 +73,4 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - run: make go-test go-vet
+      - run: make package-content go-test go-vet
