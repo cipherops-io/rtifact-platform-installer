@@ -1,0 +1,25 @@
+features:
+  network:
+    status: stable
+    requires: []
+    description: VPC, subnets, NAT, gateway endpoints
+  bastion:
+    status: stable
+    requires: [network]
+    description: Jump host (SSM or SSH)
+  kubernetes_cluster:
+    status: stable
+    requires: [network]
+    description: EKS cluster, node groups, add-ons
+  karpenter:
+    status: stable
+    requires: [kubernetes_cluster]
+    description: Karpenter AWS infrastructure (IAM, SQS, Pod Identity)
+  public_dns:
+    status: stable
+    requires: []
+    description: Public Route53 zone
+  certificates:
+    status: stable
+    requires: [public_dns]
+    description: ACM certificates (regional and us-east-1)

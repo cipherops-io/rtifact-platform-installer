@@ -14,7 +14,7 @@
   "properties": {
     "schema_version": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "cloud": {
       "type": "string",
@@ -45,9 +45,20 @@
         "air_gapped": {
           "type": "boolean",
           "default": true
-        }
+        },
+        "bucket_name": { "type": "string", "minLength": 3 },
+        "encryption": { "type": "string" },
+        "versioning": { "type": "boolean" }
       },
       "additionalProperties": false
+    },
+    "tags": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "certificates": {
+      "type": "object",
+      "additionalProperties": true
     },
     "overrides": { "type": "object" },
     "profile": {
@@ -128,9 +139,16 @@
     },
     "network": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "properties": {
         "vnet_cidr": { "type": "string" },
+        "vpc_cidr": { "type": "string" },
+        "secondary_cidrs": { "type": "array", "items": { "type": "string" } },
+        "availability_zones": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+        "nat_gateway": { "type": "string", "enum": ["single", "per_az", "none"] },
+        "gateway_endpoints": { "type": "array", "items": { "type": "string" } },
+        "flow_logs": { "type": "boolean" },
+        "subnets": { "type": "object", "additionalProperties": true },
         "node_subnet_cidr": { "type": "string" },
         "load_balancer_subnet_cidr": { "type": "string" },
         "private_endpoint_subnet_cidr": { "type": "string" },
@@ -143,7 +161,7 @@
     },
     "kubernetes_cluster": {
       "type": "object",
-      "additionalProperties": false,
+      "additionalProperties": true,
       "properties": {
         "sku_tier": { "type": "string" },
         "system_pool": {

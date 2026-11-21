@@ -17,7 +17,7 @@ func PrintExplain(customerPath string) error {
 	if err != nil {
 		return err
 	}
-	def, err := LoadProfileDefaults(filepath.Join(root, "profiles"), cfg.Profile)
+	def, err := LoadProfileDefaults(filepath.Join(root, "profiles"), cfg.Profile, cfg.Cloud)
 	if err != nil {
 		return err
 	}
@@ -38,34 +38,3 @@ func PrintExplain(customerPath string) error {
 	return nil
 }
 
-func WriteInitConfig(tier, customer, out string) error {
-	body := fmt.Sprintf(`schema_version: 1
-cloud: azure
-profile: ai-os-k8s
-tier: %s
-customer:
-  name: %s
-  code: %s
-account:
-  subscription_id: "00000000-0000-0000-0000-000000000000"
-  tenant_id: "00000000-0000-0000-0000-000000000000"
-  region: centralindia
-workload:
-  name: aios
-  environment: sbx
-network:
-  vnet_cidr: "10.0.0.0/20"
-  node_subnet_cidr: "10.0.0.0/22"
-  load_balancer_subnet_cidr: "10.0.4.0/24"
-  private_endpoint_subnet_cidr: "10.0.5.0/24"
-  management_subnet_cidr: "10.0.6.0/27"
-  pod_cidr: "10.244.0.0/16"
-  service_cidr: "172.20.0.0/16"
-  dns_service_ip: "172.20.0.10"
-state:
-  backend: azurerm
-  bootstrap: true
-  air_gapped: true
-`, tier, customer, customer)
-	return os.WriteFile(out, []byte(body), 0o644)
-}

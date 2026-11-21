@@ -3,7 +3,10 @@ package config
 import "fmt"
 
 // SchemaVersion is the customer config schema version this build understands.
-const SchemaVersion = 1
+const SchemaVersion = 2
+
+// SchemaV1RetiredHint is shown when schema_version is 1 (unsafe under default-off features).
+const SchemaV1RetiredHint = `schema_version: 2 is required. Under v2 every feature defaults to off in the profile; enable features explicitly in your YAML (see examples/ for your cloud).`
 
 // CustomerConfig is the external customer-supplied YAML contract (schema v2).
 type CustomerConfig struct {
@@ -51,8 +54,11 @@ type CustomerIdentity struct {
 }
 
 type StateBlock struct {
-	Backend   string `yaml:"backend"`
-	Bootstrap bool   `yaml:"bootstrap"`
+	Backend    string `yaml:"backend"`
+	Bootstrap  bool   `yaml:"bootstrap"`
+	BucketName string `yaml:"bucket_name,omitempty"`
+	Encryption string `yaml:"encryption,omitempty"`
+	Versioning *bool  `yaml:"versioning,omitempty"`
 	// AirGapped defaults to true when unset: only CLI tools, no cloud SDK calls.
 	AirGapped *bool `yaml:"air_gapped,omitempty"`
 }
@@ -104,4 +110,21 @@ type ProfileMeta struct {
 	ChecklistID   string            `yaml:"checklist_id"`
 	Clouds        []string          `yaml:"clouds,omitempty"`
 	CloudMaturity map[string]string `yaml:"cloud_maturity,omitempty"`
+}
+
+// CloudMaturityFor returns operational, preview, or unknown.
+func (m *ProfileMeta) CloudMaturityFor(cloud string) string {
+	if m == nil || m.CloudMaturity == nil {
+		if cloud == "azure" {
+			return "operational"
+		}
+		return "preview"
+	}
+	if v, ok := m.CloudMaturity[cloud]; ok && v != "" {
+		return v
+	}
+	if cloud == "azure" {
+		return "operational"
+	}
+	return "preview"
 }

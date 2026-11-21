@@ -10,7 +10,7 @@ import (
 
 func TestFeatureRegistryLoad(t *testing.T) {
 	root := filepath.Join("..", "..")
-	reg, err := features.LoadProfileRegistry(filepath.Join(root, "profiles"), "aios-infra")
+	reg, err := features.LoadProfileRegistry(filepath.Join(root, "profiles"), "aios-infra", "azure")
 	if err != nil {
 		t.Fatal(err)
 	}

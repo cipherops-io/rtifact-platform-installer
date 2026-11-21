@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
       - run: make package-content
       - run: go test ./tests/config/...
   tofu-fast:
@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
       - name: Install boilerplate CLI
         run: |
           make install-boilerplate-cli
@@ -48,5 +48,41 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
       - run: make package-content go-test go-vet
+  per-cloud:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        cloud:
+          - azure
+          - aws
+          - gcp
+    env:
+      PACKAGED_CLOUDS: ${{ matrix.cloud }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install boilerplate CLI
+        run: |
+          make install-boilerplate-cli
+          echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+      - name: Install OpenTofu
+        run: |
+          v=$(make -s print-tool-versions | sed -n 's/^TOFU_VERSION=//p' | head -1)
+          curl -fsSL "https://get.opentofu.org/install-opentofu.sh" | bash -s -- --install-method standalone --opentofu-version "$v"
+          echo "/usr/local/bin" >> "${GITHUB_PATH}"
+      - name: Install terraform-docs
+        run: |
+          v=$(make -s print-tool-versions | sed -n 's/^TERRAFORM_DOCS_VERSION=//p' | head -1)
+          curl -sSL "https://github.com/terraform-docs/terraform-docs/releases/download/v${v}/terraform-docs-v${v}-linux-amd64.tar.gz" | tar -xz -C "${RUNNER_TEMP}"
+          sudo mv "${RUNNER_TEMP}/terraform-docs" /usr/local/bin/terraform-docs
+      - run: chmod +x build/scripts/*.sh 2>/dev/null || true
+      - run: make package-content
+      - run: go test ./tests/config/...
+      - run: make tofu-validate
+      - run: make build-dev
+      - run: ./dist/rtifact validate "examples/${{ matrix.cloud }}/minimal.yaml"

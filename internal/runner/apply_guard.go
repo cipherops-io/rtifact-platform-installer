@@ -10,12 +10,12 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 )
 
-func previewCloudGate(cloud string, accept bool) error {
-	if cloud == "azure" || accept {
+func previewCloudGate(maturity string, cloud string, accept bool) error {
+	if maturity == "operational" || accept {
 		return nil
 	}
 	return usererr.WithHint(
-		fmt.Sprintf("Cloud %q is preview in this installer build.", cloud),
+		fmt.Sprintf("Cloud %q is %s in this installer build.", cloud, maturity),
 		"Re-run with --accept-preview after reading docs; Azure is fully supported.",
 		"Preview exit criteria: AWS/GCP stateful plan guard, corrected stack defaults, EnsureStateBackend without ErrNotImplemented, one full apply+destroy on a real account.",
 	)

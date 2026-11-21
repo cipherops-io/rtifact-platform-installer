@@ -29,8 +29,15 @@ Instructions for humans and AI agents working in this repository.
 
 - `infra/modules/<cloud>/` — reusable building blocks (`providers.tofu` + `*.tofu`).
 - `infra/stacks/<profile>/<cloud>/<layer>/` — composition roots; **only stacks** configure cloud provider blocks (`azurerm`, `aws`, `google`).
-- `profiles/` — workload defaults (not customer-specific).
+- `profiles/<profile>/<cloud>/` — per-cloud defaults, features, and tiers (not customer-specific).
+- `schemas/<cloud>.schema.json`, `examples/<cloud>/`, `tests/config/contracts/<cloud>.yaml` — per cloud only.
 - Customer values live **outside** this repo.
+
+## Cloud layout rules
+
+1. A cloud's files live only under that cloud's paths (`profiles/.../<cloud>/`, `examples/<cloud>/`, etc.); never reference another cloud's names or keys.
+2. Every capability has exactly one `features.<name>` switch (default false). Do not add `enabled` keys inside config sections.
+3. No customer-specific default values in `*.tofu` files; defaults belong in `profiles/<id>/<cloud>/defaults.yaml`.
 
 ## When changing IaC
 
@@ -59,9 +66,9 @@ Logic is edited **in this repo only**. Managed structure/tooling is edited in **
 
 ## Boilerplates checkout
 
-Use sibling `../boilerplates` for template development; before push set `BOILERPLATES_TEMPLATE_URL` to `github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.0.1`.
+Use sibling `../boilerplates` for template development; before push set `BOILERPLATES_TEMPLATE_URL` to `github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.1.0`.
 
-Templates: `rtifact-product` (managed sync), `rtifact-stack`, `rtifact-module` (one-shot scaffolds).
+Templates: `rtifact-product` (managed sync), `rtifact-stack`, `rtifact-module`, `rtifact-cloud` (one-shot scaffolds).
 
 ## Backport rules
 

@@ -12,13 +12,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
       - run: go mod download
       - run: chmod +x build/scripts/*.sh && make package-content
       - run: go test ./...
       - run: make build-dev
-      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/sandbox.yaml --check-azure=false
-      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact aws validate examples/aws.yaml --check-quota=false
+      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/azure/sandbox.yaml --check-azure=false
+      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/aws/minimal.yaml --check-quota=false
       - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact gcp validate examples/gcp.yaml --check-quota=false
 
   release-matrix:
@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
       - run: chmod +x build/scripts/*.sh
       - run: make build-dev PACKAGED_CLOUDS=${{ matrix.packaged_clouds }}
       - run: ./dist/rtifact version

@@ -13,6 +13,7 @@ Registered modules (from `boilerplate-vars.yml` → `Modules`), grouped by layer
 
 - `naming/`
 - `vpc/`
+- `bastion/`
 
 
 ### data-platform
@@ -26,6 +27,13 @@ Registered modules (from `boilerplate-vars.yml` → `Modules`), grouped by layer
 
 - `eks/`
 - `compute/`
+- `karpenter-infra/`
+
+
+### network-edge
+
+- `dns-public/`
+- `certificates/`
 
 
 Add a module: `make scaffold-module CLOUD=aws MODULE=<name>`, register as `<layer>/<name>` in `boilerplate-vars.yml`, add `features.<name>` to the profile.

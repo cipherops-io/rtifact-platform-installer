@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -54,7 +55,7 @@ func Run(opts Options) error {
 	}
 
 	profilesDir := filepath.Join(contentRoot, "profiles")
-	defaults, err := config.LoadProfileDefaults(profilesDir, customer.Profile)
+	defaults, err := config.LoadProfileDefaults(profilesDir, customer.Profile, customer.Cloud)
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,8 @@ func Run(opts Options) error {
 	opts.layerDeployed = probe.deployed
 
 	if opts.Action == "apply" {
-		if err := previewCloudGate(customer.Cloud, opts.AcceptPreview); err != nil {
+		maturity := meta.CloudMaturityFor(customer.Cloud)
+		if err := previewCloudGate(maturity, customer.Cloud, opts.AcceptPreview); err != nil {
 			return err
 		}
 		if err := ensureBackendBeforeApplyAll(opts, customer, provider, spec, opts.ConfigPath); err != nil {
@@ -179,6 +181,11 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	if err := destroyDependencyGuard(opts, customer.NamePrefix(), layer); err != nil {
 		return err
 	}
+	if opts.Action == "destroy" {
+		if err := awsDestroyOrphanGuard(customer, layer, merged); err != nil {
+			return err
+		}
+	}
 
 	work, err := os.MkdirTemp("", "installer-tofu-")
 	if err != nil {
@@ -207,6 +214,7 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	if err := injectAzureResourceGroupFlags(customer, provider, layerSpec(spec, layer), layer, layerMerged); err != nil {
 		return err
 	}
+	injectDNSDelegation(context.Background(), layer, customer, layerMerged)
 	if err := config.WriteAutoTofuVarsJSON(stackWork, layerMerged); err != nil {
 		return err
 	}
@@ -296,7 +304,7 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 		if err := run("apply", "-input=false", planFile); err != nil {
 			return err
 		}
-		return captureOutputs(tofuPath, stackWork, env, customer.NamePrefix(), layer, customer.Account.Region)
+		return captureOutputs(tofuPath, stackWork, env, customer, layer, merged, opts.ConfigPath)
 	case "destroy":
 		if !opts.Yes {
 			if err := confirmDestroy(string(layer)); err != nil {
@@ -337,7 +345,9 @@ func readYesNo() error {
 	return nil
 }
 
-func captureOutputs(tofuPath, stackWork string, env []string, prefix string, layer stacks.Layer, awsRegion string) error {
+func captureOutputs(tofuPath, stackWork string, env []string, customer *config.CustomerConfig, layer stacks.Layer, merged map[string]any, configPath string) error {
+	prefix := customer.NamePrefix()
+	awsRegion := customer.Account.Region
 	c := exec.Command(tofuPath, "output", "-json")
 	c.Dir = stackWork
 	c.Env = env
@@ -367,6 +377,11 @@ func captureOutputs(tofuPath, stackWork string, env []string, prefix string, lay
 		}
 		for _, p := range written {
 			fmt.Fprintf(os.Stderr, "Wrote %s\n", p)
+		}
+	}
+	if layer == stacks.LayerNetworkEdge {
+		if err := delegationPauseIfNeeded(customer.Cloud, merged, configPath, prefix, flat); err != nil {
+			return err
 		}
 	}
 	return nil

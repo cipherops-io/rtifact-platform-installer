@@ -166,7 +166,7 @@ func addCloudLifecycle(grp *cobra.Command, cloudName string) {
 			if err != nil {
 				return err
 			}
-			def, err := config.LoadProfileDefaults(filepath.Join(root, "profiles"), cfg.Profile)
+			def, err := config.LoadProfileDefaults(filepath.Join(root, "profiles"), cfg.Profile, cfg.Cloud)
 			if err != nil {
 				return err
 			}

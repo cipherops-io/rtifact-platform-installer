@@ -9,6 +9,7 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloudconfig"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/quota"
 )
 
@@ -25,7 +26,7 @@ func Run(configPath string) error {
 		return err
 	}
 	profilesDir := root + "/profiles"
-	defaults, err := config.LoadProfileDefaults(profilesDir, cfg.Profile)
+	defaults, err := config.LoadProfileDefaults(profilesDir, cfg.Profile, cfg.Cloud)
 	if err != nil {
 		return err
 	}
@@ -33,11 +34,17 @@ func Run(configPath string) error {
 	if err != nil {
 		return err
 	}
+	merged["cloud"] = cfg.Cloud
 	if err := quota.ValidateMerged(configPath, merged); err != nil {
 		return err
 	}
 	if err := checkCIDR(merged); err != nil {
 		return err
+	}
+	if cc, err := cloudconfig.Get(cfg.Cloud); err == nil {
+		if err := cc.Preflight(context.Background(), merged); err != nil {
+			return err
+		}
 	}
 	if cfg.State != nil && cfg.State.Backend == "azurerm" {
 		fmt.Fprintln(os.Stderr, "preflight: remote state configured (reachability not checked)")

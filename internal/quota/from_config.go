@@ -41,6 +41,9 @@ func ValidateMerged(customerPath string, merged map[string]any) error {
 	if err != nil {
 		return err
 	}
+	if cfg.Cloud != "azure" {
+		return nil
+	}
 	pools := PoolsFromMerged(merged)
 	totals, err := CheckPools(context.Background(), cfg.Account.SubscriptionID, cfg.Account.Region, pools)
 	if err != nil {

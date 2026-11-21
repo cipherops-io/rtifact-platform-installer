@@ -1,0 +1,23 @@
+state-backend:
+  - resource_group_name
+core-network:
+  - resource_group_name
+  - resource_group_id
+  - tags
+  - vnet_id
+  - node_subnet_id
+  - load_balancer_subnet_id
+  - private_endpoint_subnet_id
+  - management_subnet_id
+data-platform:
+  - key_vault_id
+  - key_vault_uri
+  - postgresql_id
+  - storage_account_id
+  - acr_id
+app-platform:
+  - cluster_name
+  - aks_name
+  - oidc_issuer_url
+  - bastion_private_ip
+  - bastion_ssh_private_key_pem

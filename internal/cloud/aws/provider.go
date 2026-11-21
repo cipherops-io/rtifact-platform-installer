@@ -29,12 +29,16 @@ func execRun(ctx context.Context, name string, args ...string) ([]byte, error) {
 
 func (*Provider) Name() string { return CloudName }
 
-func stateBucketName(namePrefix string) string {
+// stateBucketDefault matches infra/modules/aws/state-backend/main.tofu locals.bucket_name.
+func stateBucketDefault(namePrefix, accountID string) string {
 	base := strings.ToLower(strings.ReplaceAll(namePrefix, "_", "-"))
 	if len(base) > 45 {
 		base = base[:45]
 	}
-	return base + StateBucketSuffix
+	if accountID == "" {
+		return base + StateBucketSuffix
+	}
+	return fmt.Sprintf("%s-tfstate-%s", base, accountID)
 }
 
 func stateLockTableName(namePrefix string) string {
@@ -46,7 +50,11 @@ func stateLockTableName(namePrefix string) string {
 }
 
 func stateBackendNames(spec cloud.StateSpec) (bucket, table string) {
-	bucket = stateBucketName(spec.NamePrefix)
+	if spec.StateBucketName != "" {
+		bucket = spec.StateBucketName
+	} else {
+		bucket = stateBucketDefault(spec.NamePrefix, spec.Account.AccountID)
+	}
 	table = stateLockTableName(spec.NamePrefix)
 	if o := spec.Override; o != nil {
 		if o.S3Bucket != "" {

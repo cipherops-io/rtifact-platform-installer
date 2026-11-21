@@ -1,0 +1,7 @@
+features:
+  virtual_network:
+    status: stable
+    requires: []
+  kubernetes_cluster:
+    status: stable
+    requires: [virtual_network]

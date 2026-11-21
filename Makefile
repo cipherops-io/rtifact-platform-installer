@@ -4,7 +4,15 @@ DIST := dist/$(BINARY)
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 PACKAGED_CLOUDS ?= azure,aws,gcp
-LDFLAGS := -s -w -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Release=true -X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS)
+VERSION ?= 0.0.0-dev
+CUSTOMER ?= internal
+GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+LDFLAGS := -s -w \
+  -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Release=true \
+  -X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS) \
+  -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Version=$(VERSION) \
+  -X github.com/cipherops-io/rtifact-platform-installer/internal/version.GitCommit=$(GIT_COMMIT) \
+  -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Customer=$(CUSTOMER)
 
 include boilerplate.mk
 
@@ -13,7 +21,7 @@ include boilerplate.mk
 
 validate-examples:
 	@test -f $(DIST) || $(MAKE) build-dev
-	@INSTALLER_CONTENT_ROOT=. ./$(DIST) validate examples/sandbox.yaml --check-azure=false
+	@INSTALLER_CONTENT_ROOT=. ./$(DIST) validate examples/azure/sandbox.yaml --check-azure=false
 
 e2e-sandbox:
 	go test -tags=e2e -timeout=120m ./tests/e2e/ -run TestSandboxLifecycle

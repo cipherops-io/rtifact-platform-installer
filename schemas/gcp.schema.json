@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "gcp.schema.json",
+  "title": "CustomerConfigGCP",
+  "allOf": [{ "$ref": "common.schema.json" }],
+  "type": "object",
+  "properties": {
+    "cloud": { "const": "gcp" },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vnet_cidr": { "type": "string" },
+        "node_subnet_cidr": { "type": "string" },
+        "pod_cidr": { "type": "string" },
+        "service_cidr": { "type": "string" }
+      }
+    },
+    "kubernetes_cluster": { "type": "object", "additionalProperties": true }
+  }
+}

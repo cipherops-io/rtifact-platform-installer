@@ -49,6 +49,8 @@ type StateSpec struct {
 	Profile    string
 	NamePrefix string
 	Account    Account
+	// StateBucketName is the S3/GCS bucket from customer state.bucket_name when set.
+	StateBucketName string
 	// Local selects the local backend instead of the cloud remote backend.
 	Local bool
 	// LocalDir is the directory holding local state files (Local only).

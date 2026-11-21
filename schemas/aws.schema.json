@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aws.schema.json",
+  "title": "CustomerConfigAWS",
+  "type": "object",
+  "properties": {
+    "cloud": { "const": "aws" },
+    "network": {
+      "type": "object",
+      "required": ["vpc_cidr", "availability_zones", "subnets"],
+      "additionalProperties": false,
+      "properties": {
+        "vpc_cidr": { "type": "string" },
+        "secondary_cidrs": { "type": "array", "items": { "type": "string" } },
+        "availability_zones": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+        "nat_gateway": { "type": "string", "enum": ["single", "per_az", "none"] },
+        "gateway_endpoints": { "type": "array", "items": { "type": "string" } },
+        "flow_logs": { "type": "boolean" },
+        "subnets": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": ["cidrs", "route"],
+            "additionalProperties": false,
+            "properties": {
+              "cidrs": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+              "route": { "type": "string", "enum": ["internet", "nat", "isolated"] },
+              "public_ip_on_launch": { "type": "boolean" },
+              "roles": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "kubernetes_cluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "kubernetes_version": { "type": "string" },
+        "support_type": { "type": "string", "enum": ["STANDARD", "EXTENDED"] },
+        "endpoint": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "public": { "type": "boolean" },
+            "private": { "type": "boolean" },
+            "public_access_cidrs": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "authentication_mode": { "type": "string" },
+        "admin_principal_arns": { "type": "array", "items": { "type": "string" } },
+        "service_cidr": { "type": "string" },
+        "log_types": { "type": "array", "items": { "type": "string" } },
+        "secrets_encryption": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "type": "string", "enum": ["none", "kms"] },
+            "kms_key_arn": { "type": "string" }
+          }
+        },
+        "deletion_protection": { "type": "boolean" },
+        "service_security_groups": { "type": "object" },
+        "addons": { "type": "object" },
+        "node_role_policies": { "type": "array", "items": { "type": "string" } },
+        "node_groups": { "type": "object" },
+        "karpenter": { "type": "object" }
+      }
+    },
+    "bastion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "access": { "type": "string", "enum": ["ssm", "ssh"] },
+        "instance_type": { "type": "string" },
+        "subnet_tier": { "type": "string" },
+        "public_ip": { "type": "boolean" },
+        "allowed_cidrs": { "type": "array", "items": { "type": "string" } },
+        "ssh_public_key": { "type": "string" },
+        "iam_policy_arns": { "type": "array", "items": { "type": "string" } },
+        "architecture": { "type": "string", "enum": ["x86_64", "arm64"] },
+        "ami_id": { "type": "string" },
+        "disk": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "size_gb": { "type": "integer", "minimum": 8 },
+            "type": { "type": "string" },
+            "encrypted": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "public_dns": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "zone_name": { "type": "string" },
+        "parent_zone_id": { "type": "string" },
+        "delegated": { "type": "boolean" }
+      }
+    },
+    "certificates": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "names": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "key_algorithm": { "type": "string" },
+        "cloudfront": { "type": "boolean" }
+      }
+    }
+  }
+}

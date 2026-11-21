@@ -4,7 +4,14 @@
 
 - **Modules** `infra/modules/<cloud>/<name>/` — reusable building blocks.
 - **Stacks** `infra/stacks/<profile>/<cloud>/<layer>/` — composition roots; only stacks configure cloud `provider` blocks.
+- **Profiles** `profiles/<profile>/<cloud>/` — defaults, features, tiers for one cloud only.
 - Edit **`.tofu` logic here**; do not hand-edit managed `AGENTS.md` files — update boilerplates and `make boilerplate-update`.
+
+## Cloud layout rules
+
+1. Keep each cloud's IaC and profile data under that cloud's folders only; never import or name another cloud's resources in the wrong tree.
+2. Gate capabilities with a single `features.<name>` flag (default false); remove `enabled` sub-keys from YAML sections.
+3. Do not encode customer defaults in `variables.tofu` or other `*.tofu` files — use `profiles/<id>/<cloud>/defaults.yaml`.
 
 ## How to place a new service {#placement}
 

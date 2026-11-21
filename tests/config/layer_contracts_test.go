@@ -6,26 +6,11 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 var outputLine = regexp.MustCompile(`^output\s+"([a-z0-9_]+)"`)
-
-// allCloudOutputs must appear in every cloud's outputs.tofu for the given layer.
-var allCloudOutputs = map[string][]string{
-	"state-backend": {
-		"resource_group_name",
-	},
-	"core-network": {
-		"resource_group_name", "resource_group_id", "tags", "vnet_id",
-		"node_subnet_id", "load_balancer_subnet_id", "private_endpoint_subnet_id", "management_subnet_id",
-	},
-	"data-platform": {
-		"key_vault_id", "key_vault_uri", "postgresql_id", "storage_account_id", "acr_id",
-	},
-	"app-platform": {
-		"cluster_name", "aks_name", "oidc_issuer_url", "bastion_private_ip", "bastion_ssh_private_key_pem",
-	},
-}
 
 func outputsInFile(path string) (map[string]bool, error) {
 	b, err := os.ReadFile(path)
@@ -41,11 +26,26 @@ func outputsInFile(path string) (map[string]bool, error) {
 	return found, nil
 }
 
-func TestLayerContractsAllCloudOutputs(t *testing.T) {
+func loadCloudContracts(t *testing.T, cloud string) map[string][]string {
+	t.Helper()
+	path := filepath.Join("contracts", cloud+".yaml")
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read contract %s: %v", path, err)
+	}
+	out := map[string][]string{}
+	if err := yaml.Unmarshal(b, &out); err != nil {
+		t.Fatalf("parse contract %s: %v", path, err)
+	}
+	return out
+}
+
+func TestLayerContractsPerCloud(t *testing.T) {
 	profile := "aios-infra"
 	clouds := []string{"azure", "aws", "gcp"}
-	for layer, want := range allCloudOutputs {
-		for _, cloud := range clouds {
+	for _, cloud := range clouds {
+		byLayer := loadCloudContracts(t, cloud)
+		for layer, want := range byLayer {
 			path := filepath.Join("../../infra/stacks", profile, cloud, layer, "outputs.tofu")
 			if _, err := os.Stat(path); err != nil {
 				t.Fatalf("missing outputs for %s/%s: %v", cloud, layer, err)
@@ -56,7 +56,7 @@ func TestLayerContractsAllCloudOutputs(t *testing.T) {
 			}
 			for _, name := range want {
 				if !got[name] {
-					t.Errorf("%s %s: missing required output %q (enforced by docs/layer-contracts.md)", cloud, layer, name)
+					t.Errorf("%s %s: missing required output %q (see tests/config/contracts/%s.yaml)", cloud, layer, name, cloud)
 				}
 			}
 		}

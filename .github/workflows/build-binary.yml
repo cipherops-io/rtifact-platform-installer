@@ -1,0 +1,97 @@
+# DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
+# Change it there, then run: make boilerplate-update
+
+name: build-binary
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag of this repository, e.g. v0.3.0"
+        required: true
+        type: string
+      cloud:
+        description: "Cloud to package"
+        required: true
+        type: choice
+        options:
+          - azure
+          - aws
+          - gcp
+      customer:
+        description: "Customer name (lowercase letters, digits, hyphens)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+    env:
+      VERSION: ${{ inputs.version }}
+      CLOUD: ${{ inputs.cloud }}
+      CUSTOMER: ${{ inputs.customer }}
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+    steps:
+      - name: Check inputs
+        run: |
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "version must look like v1.2.3"; exit 1; }
+          [[ "$CUSTOMER" =~ ^[a-z][a-z0-9-]{1,30}$ ]] || { echo "customer: lowercase letters, digits and hyphens only"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.version }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        run: make release PACKAGED_CLOUDS="$CLOUD" VERSION="$VERSION" CUSTOMER="$CUSTOMER" GOOS="$GOOS" GOARCH="$GOARCH"
+
+      - name: Smoke test
+        if: ${{ matrix.goos == 'linux' }}
+        run: |
+          ./dist/rtifact version | tee version.txt
+          grep -q "$VERSION" version.txt
+          grep -q "$CLOUD" version.txt
+          grep -q "$CUSTOMER" version.txt
+          ./dist/rtifact validate "examples/$CLOUD/minimal.yaml"
+
+      - name: Package
+        run: |
+          NAME="rtifact-${CUSTOMER}-${CLOUD}-${VERSION}-${GOOS}-${GOARCH}"
+          mkdir -p out
+          cp dist/rtifact "out/$NAME"
+          (cd out && sha256sum "$NAME" > "$NAME.sha256")
+          echo "NAME=$NAME" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 30
+
+      # Zot push: enable when the registry is ready (ArtifactRegistryHost / vars.ZOT_HOST).
+      # - uses: oras-project/setup-oras@v1
+      # - name: Push to Zot
+      #   env:
+      #     ZOT_HOST: ${{ vars.ZOT_HOST }}
+      #     ZOT_USERNAME: ${{ secrets.ZOT_USERNAME }}
+      #     ZOT_PASSWORD: ${{ secrets.ZOT_PASSWORD }}
+      #   run: |
+      #     echo "$ZOT_PASSWORD" | oras login "$ZOT_HOST" -u "$ZOT_USERNAME" --password-stdin
+      #     cd out
+      #     oras push "$ZOT_HOST/rtifact/$CUSTOMER/installer:${VERSION}-${CLOUD}-${GOOS}-${GOARCH}" \
+      #       "$NAME:application/vnd.rtifact.installer.v1" "$NAME.sha256:text/plain"

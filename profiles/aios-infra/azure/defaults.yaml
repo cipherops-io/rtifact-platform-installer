@@ -1,17 +1,17 @@
 features:
-  resource_group: true
-  virtual_network: true
-  key_vault: true
-  key_vault_private_endpoint: true
-  postgresql_flexible_server: true
-  container_registry: true
-  storage_account: true
-  redis_cache: true
-  azure_files_share: true
+  resource_group: false
+  virtual_network: false
+  key_vault: false
+  key_vault_private_endpoint: false
+  postgresql_flexible_server: false
+  container_registry: false
+  storage_account: false
+  redis_cache: false
+  azure_files_share: false
   communication_email: false
-  kubernetes_cluster: true
-  azure_bastion: true
-  private_dns_zones: true
+  kubernetes_cluster: false
+  azure_bastion: false
+  private_dns_zones: false
   azure_firewall: false
   azure_vpn_gateway: false
   azure_express_route_gateway: false

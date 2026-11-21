@@ -1,0 +1,29 @@
+features:
+  network: false
+  bastion: false
+  kubernetes_cluster: false
+  karpenter: false
+  public_dns: false
+  certificates: false
+
+network:
+  nat_gateway: single
+  gateway_endpoints: [s3, dynamodb]
+  flow_logs: false
+
+bastion:
+  access: ssm
+  public_ip: false
+
+public_dns:
+  delegated: false
+
+certificates:
+  key_algorithm: RSA_2048
+  cloudfront: false
+
+state:
+  backend: s3
+  air_gapped: false
+  versioning: true
+  encryption: AES256

@@ -26,6 +26,8 @@ Kubernetes clusters, node pools, workload identity, compute VMs.
 
 - `compute`
 
+- `karpenter-infra`
+
 
 **Reads from:** core-network, data-platform
 

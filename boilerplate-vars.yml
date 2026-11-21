@@ -2,7 +2,7 @@ GitHubOwner: cipherops-io
 GitHubRepo: rtifact-platform-installer
 GoModulePath: github.com/cipherops-io/rtifact-platform-installer
 ProductName: rtifact
-BoilerplatesRef: v3.0.1
+BoilerplatesRef: v3.1.0
 Clouds:
   - azure
   - aws
@@ -37,11 +37,15 @@ Modules:
     - state-backend/state-backend
     - core-network/naming
     - core-network/vpc
+    - core-network/bastion
     - data-platform/data
     - data-platform/security
     - data-platform/private-endpoint
     - app-platform/eks
     - app-platform/compute
+    - app-platform/karpenter-infra
+    - network-edge/dns-public
+    - network-edge/certificates
   gcp:
     - state-backend/state-backend
     - core-network/naming

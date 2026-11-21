@@ -67,7 +67,7 @@ jobs:
 
       - uses: actions/setup-go@v7.1.0
         with:
-          go-version: "1.22"
+          go-version-file: go.mod
 
       - uses: opentofu/setup-opentofu@v2.0.2
         with:
@@ -93,7 +93,7 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
           chmod +x build/scripts/*.sh scripts/github-e2e-prepare-config.sh
-          ./scripts/github-e2e-prepare-config.sh examples/github-e2e-azure.yaml "$RUNNER_TEMP/e2e-config.yaml"
+          ./scripts/github-e2e-prepare-config.sh examples/azure/github-e2e-azure.yaml "$RUNNER_TEMP/e2e-config.yaml"
           echo "E2E_AZURE_CONFIG=$RUNNER_TEMP/e2e-config.yaml" >> "$GITHUB_ENV"
 
       - name: Build rtifact (azure only)

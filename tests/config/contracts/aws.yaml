@@ -1,0 +1,22 @@
+state-backend:
+  - s3_bucket_name
+  - dynamodb_table_name
+core-network:
+  - tags
+  - vpc_id
+  - vpc_cidrs
+  - subnet_ids_by_tier
+  - availability_zones
+  - route_table_ids
+  - nat_gateway_public_ips
+  - bastion_instance_id
+app-platform:
+  - cluster_name
+  - cluster_endpoint
+  - cluster_certificate_authority_data
+  - oidc_issuer_url
+  - karpenter_queue_name
+network-edge:
+  - dns_zone_id
+  - dns_name_servers
+  - certificate_regional_arn

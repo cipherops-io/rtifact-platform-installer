@@ -19,9 +19,9 @@ func TestMergeBuildCustomerFields(t *testing.T) {
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.yaml")
 	body := `
-schema_version: 1
+schema_version: 2
 cloud: azure
-profile: ai-os-k8s
+profile: aios-infra
 account:
   subscription_id: "11111111-1111-1111-1111-111111111111"
   region: centralindia
@@ -81,9 +81,9 @@ func TestMergeReplaceNodePools(t *testing.T) {
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.yaml")
 	body := `
-schema_version: 1
+schema_version: 2
 cloud: azure
-profile: ai-os-k8s
+profile: aios-infra
 account:
   subscription_id: "11111111-1111-1111-1111-111111111111"
   region: centralindia
@@ -134,9 +134,9 @@ func writeCfg(t *testing.T, body string) string {
 }
 
 const v2Base = `
-schema_version: 1
+schema_version: 2
 cloud: azure
-profile: ai-os-k8s
+profile: aios-infra
 account:
   subscription_id: "11111111-1111-1111-1111-111111111111"
   region: centralindia
@@ -161,8 +161,21 @@ func TestLoadCustomerSchemaV2(t *testing.T) {
 }
 
 func TestLoadCustomerRejectsUnsupportedSchemaVersion(t *testing.T) {
+	v1 := `
+schema_version: 1
+cloud: azure
+profile: aios-infra
+account:
+  subscription_id: "11111111-1111-1111-1111-111111111111"
+  region: centralindia
+workload:
+  name_prefix: demo
+`
+	if _, err := LoadCustomer(writeCfg(t, v1)); err == nil || !strings.Contains(err.Error(), "schema_version: 2 is required") {
+		t.Fatalf("expected v1 rejection: %v", err)
+	}
 	wrong := `
-schema_version: 2
+schema_version: 99
 cloud: azure
 profile: aios-infra
 account:
@@ -175,7 +188,7 @@ workload:
 		t.Fatal("expected schema_version error")
 	}
 	noCloud := `
-schema_version: 1
+schema_version: 2
 profile: aios-infra
 account:
   subscription_id: "11111111-1111-1111-1111-111111111111"
@@ -199,7 +212,7 @@ func TestAirGappedExplicitFalse(t *testing.T) {
 }
 
 func TestValidateCustomerYAMLFeatureRegistry(t *testing.T) {
-	ok := v2Base + "features:\n  resource_group: true\n  virtual_network: true\n"
+	ok := v2Base + "features:\n  resource_group: true\n  virtual_network: true\n  key_vault: false\n"
 	if err := ValidateCustomerYAML(writeCfg(t, ok)); err != nil {
 		t.Fatalf("valid config rejected: %v", err)
 	}
@@ -227,7 +240,7 @@ func TestValidateCustomerYAMLFeatureRegistry(t *testing.T) {
 }
 
 func TestExamplesValidate(t *testing.T) {
-	for _, p := range []string{"sandbox.yaml", "ai-os-centralindia/config.yaml"} {
+	for _, p := range []string{"azure/sandbox.yaml", "azure/minimal.yaml", "aws/minimal.yaml"} {
 		if err := ValidateCustomerYAML(filepath.Join("..", "..", "examples", p)); err != nil {
 			t.Fatalf("%s: %v", p, err)
 		}

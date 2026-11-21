@@ -22,8 +22,25 @@ Var files: `boilerplate-vars.yml` only. Tool pins and `LayerMeta` come from `boi
 CI uses the GitHub template ref (not a local path). Override only for local work:
 
 ```make
-BOILERPLATES_TEMPLATE_URL = github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.0.1
+BOILERPLATES_TEMPLATE_URL = github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.1.0
 ```
+
+## Per-customer binary build (`build-binary.yml`)
+
+Workflow dispatch on a **release tag** (not branch HEAD):
+
+```bash
+make release PACKAGED_CLOUDS=<cloud> VERSION=<tag> CUSTOMER=<name> GOOS=<os> GOARCH=<arch>
+```
+
+Produces `dist/<ProductName>`. Smoke checks:
+
+```bash
+./dist/<ProductName> version   # prints version, packaged cloud(s), customer
+./dist/<ProductName> validate examples/<cloud>/minimal.yaml
+```
+
+Managed workflow: `.github/workflows/build-binary.yml` (matrix targets from template `BuildTargets`).
 
 ## Verify
 

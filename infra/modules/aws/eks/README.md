@@ -1,3 +1,6 @@
+## Karpenter discovery
+
+The cluster **extra** security group and node subnets carry `karpenter.sh/discovery=<cluster_name>`. Karpenter provisions nodes in subnets tagged for discovery; the initial node group uses the same subnets.
 
 <!-- BEGIN_TF_DOCS -->
 

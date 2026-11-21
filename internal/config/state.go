@@ -56,6 +56,9 @@ func CloudStateSpec(c *CustomerConfig, profileID string) cloud.StateSpec {
 		spec.LocalDir = filepath.Join(ArtifactsDir(c.NamePrefix()), "state")
 		_ = os.MkdirAll(spec.LocalDir, 0o755)
 	}
+	if c.State != nil && c.State.BucketName != "" {
+		spec.StateBucketName = c.State.BucketName
+	}
 	if b := c.Backend; b != nil {
 		spec.Override = &cloud.BackendOverride{
 			ResourceGroupName:  b.ResourceGroupName,

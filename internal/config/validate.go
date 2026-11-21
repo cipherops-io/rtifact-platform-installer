@@ -1,14 +1,12 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
-	"github.com/santhosh-tekuri/jsonschema/v5"
 	"gopkg.in/yaml.v3"
 )
 
@@ -27,21 +25,13 @@ func ValidateCustomerYAML(path string) error {
 		return usererr.Wrap(err, "Config file is not valid YAML.", "Fix indentation, colons, and quoting in your YAML.")
 	}
 	data = normalizeYAML(data)
-
-	schemaRaw, err := fsReadSchema()
-	if err != nil {
-		return err
-	}
-	compiler := jsonschema.NewCompiler()
-	if err := compiler.AddResource("customer-config.schema.json", bytes.NewReader(schemaRaw)); err != nil {
-		return err
-	}
-	sch, err := compiler.Compile("customer-config.schema.json")
+	cloud, _ := data.(map[string]any)["cloud"].(string)
+	sch, err := compileCustomerSchema(cloud)
 	if err != nil {
 		return err
 	}
 	if err := sch.Validate(data); err != nil {
-		return usererr.Wrap(err, "Config file failed JSON schema validation.", "Compare your YAML with examples/ and the schema in schemas/customer-config.schema.json.")
+		return usererr.Wrap(err, "Config file failed JSON schema validation.", "Compare your YAML with examples/<cloud>/ and schemas/"+cloud+".schema.json.")
 	}
 	cfg, err := LoadCustomer(path)
 	if err != nil {
@@ -58,7 +48,7 @@ func ValidateCustomerYAML(path string) error {
 		)
 	}
 	profilesDir := filepath.Join(contentRoot, "profiles")
-	defaults, err := LoadProfileDefaults(profilesDir, cfg.Profile)
+	defaults, err := LoadProfileDefaults(profilesDir, cfg.Profile, cfg.Cloud)
 	if err != nil {
 		return fmt.Errorf("profile %q: %w", cfg.Profile, err)
 	}
@@ -86,10 +76,6 @@ func checkProfileCloud(meta *ProfileMeta, cloudName string) error {
 		}
 	}
 	return fmt.Errorf("cloud %q is not supported (supported: %v)", cloudName, meta.Clouds)
-}
-
-func fsReadSchema() ([]byte, error) {
-	return assets.ReadSchemaFile("customer-config.schema.json")
 }
 
 func normalizeYAML(v any) any {

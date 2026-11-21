@@ -7,6 +7,7 @@ const ProductName = "rtifact"
 var (
 	Version   = "0.1.0-dev"
 	GitCommit = "unknown"
+	Customer  = "internal"
 	Release   = "false"
 )
 

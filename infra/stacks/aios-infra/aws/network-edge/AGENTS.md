@@ -22,7 +22,10 @@ Public ingress, edge security, public DNS, edge TLS termination.
 
 ## Modules in use today
 
-None yet (stub layer). Create with `make scaffold-module CLOUD=aws MODULE=<name>`, then register as `network-edge/<name>` in `boilerplate-vars.yml`.
+- `dns-public`
+
+- `certificates`
+
 
 **Reads from:** core-network, app-platform
 

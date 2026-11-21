@@ -1,4 +1,4 @@
-schema_version: 1
+schema_version: 2
 cloud: azure
 profile: aios-infra
 tier: sandbox
@@ -28,4 +28,14 @@ state:
   backend: local
   air_gapped: true
 features:
+  resource_group: true
+  virtual_network: true
+  key_vault: true
+  key_vault_private_endpoint: true
+  postgresql_flexible_server: true
+  container_registry: true
+  storage_account: true
   redis_cache: false
+  kubernetes_cluster: true
+  azure_bastion: true
+  private_dns_zones: true

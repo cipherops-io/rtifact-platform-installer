@@ -17,6 +17,7 @@ var DefaultProtectedTypes = func() []string {
 		"aws_db_instance",
 		"aws_rds_cluster",
 		"aws_s3_bucket",
+		"aws_route53_zone",
 		"aws_eks_cluster",
 		"aws_kms_key",
 		"google_sql_database_instance",

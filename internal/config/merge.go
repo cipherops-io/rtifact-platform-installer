@@ -9,6 +9,7 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloudconfig"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,6 +24,9 @@ func LoadCustomer(path string) (*CustomerConfig, error) {
 		return nil, fmt.Errorf("parse customer config: %w", err)
 	}
 	if cfg.SchemaVersion != SchemaVersion {
+		if cfg.SchemaVersion == 1 {
+			return nil, fmt.Errorf("%s", SchemaV1RetiredMessage(cfg.Cloud))
+		}
 		return nil, fmt.Errorf("schema_version must be %d (got %d)", SchemaVersion, cfg.SchemaVersion)
 	}
 	if cfg.Cloud == "" {
@@ -50,13 +54,19 @@ func LoadCustomer(path string) (*CustomerConfig, error) {
 	return &cfg, nil
 }
 
-// LoadProfileDefaults reads profiles/<id>/defaults.yaml from embedded work dir.
-func LoadProfileDefaults(profilesDir, profileID string) (map[string]any, error) {
+// LoadProfileDefaults reads profiles/<id>/<cloud>/defaults.yaml (or legacy profiles/<id>/defaults.yaml).
+func LoadProfileDefaults(profilesDir, profileID, cloud string) (map[string]any, error) {
 	profileID = ResolveProfileID(profileID)
-	path := filepath.Join(profilesDir, profileID, "defaults.yaml")
+	path := filepath.Join(profilesDir, profileID, cloud, "defaults.yaml")
 	raw, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("profile defaults %q: %w", profileID, err)
+		if os.IsNotExist(err) {
+			path = filepath.Join(profilesDir, profileID, "defaults.yaml")
+			raw, err = os.ReadFile(path)
+		}
+	}
+	if err != nil {
+		return nil, fmt.Errorf("profile defaults %q/%s: %w", profileID, cloud, err)
 	}
 	var defaults map[string]any
 	if err := yaml.Unmarshal(raw, &defaults); err != nil {
@@ -82,6 +92,9 @@ func LoadProfileMeta(profilesDir, profileID string) (*ProfileMeta, error) {
 
 var customerTFVarSections = []string{
 	"features",
+	"state",
+	"tags",
+	"certificates",
 	"network",
 	"kubernetes_cluster",
 	"key_vault",
@@ -109,11 +122,14 @@ var replaceMergeSections = map[string][]string{
 	"kubernetes_cluster": {"node_pools"},
 }
 
-func LoadProfileTier(profilesDir, profileID, tier string) (map[string]any, error) {
+func LoadProfileTier(profilesDir, profileID, cloud, tier string) (map[string]any, error) {
 	if tier == "" {
 		return nil, nil
 	}
-	path := filepath.Join(profilesDir, profileID, "tiers", tier+".yaml")
+	path := filepath.Join(profilesDir, profileID, cloud, "tiers", tier+".yaml")
+	if _, err := os.Stat(path); err != nil {
+		path = filepath.Join(profilesDir, profileID, "tiers", tier+".yaml")
+	}
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("tier %q: %w", tier, err)
@@ -131,6 +147,11 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 	if err != nil {
 		return nil, err
 	}
+	cloudProfile, err := cloudconfig.Get(customer.Cloud)
+	if err != nil {
+		return nil, err
+	}
+	sections := cloudProfile.TFVarSections()
 	rawBytes, err := os.ReadFile(customerPath)
 	if err != nil {
 		return nil, err
@@ -144,7 +165,7 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 	contentRoot, _, _ := assets.ContentRootOptional()
 	var tierMap map[string]any
 	if customer.Tier != "" && contentRoot != "" {
-		tierMap, err = LoadProfileTier(filepath.Join(contentRoot, "profiles"), customer.Profile, customer.Tier)
+		tierMap, err = LoadProfileTier(filepath.Join(contentRoot, "profiles"), customer.Profile, customer.Cloud, customer.Tier)
 		if err != nil {
 			return nil, err
 		}
@@ -152,14 +173,14 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 
 	merged := deepCopyMap(defaults)
 	if tierMap != nil {
-		mergeSectionsInto(merged, tierMap)
+		mergeSectionsInto(merged, tierMap, sections)
 	}
 	if customer.Overrides != nil {
-		mergeSectionsInto(merged, customer.Overrides)
+		mergeSectionsInto(merged, customer.Overrides, sections)
 	}
 	applyCustomerScalars(merged, customer)
 
-	for _, section := range customerTFVarSections {
+	for _, section := range sections {
 		val, ok := raw[section]
 		if !ok || val == nil {
 			continue
@@ -196,45 +217,21 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 		}
 	}
 
-	normalizeMergedBastion(merged)
-	if err := validateMergedFeaturesFromRegistry(merged, customer.Profile); err != nil {
+	cloudProfile.Normalize(merged)
+	if err := validateMergedFeaturesFromRegistry(merged, customer.Profile, customer.Cloud); err != nil {
+		return nil, err
+	}
+	if err := validateAtLeastOneFeature(merged); err != nil {
+		return nil, err
+	}
+	if err := cloudProfile.Validate(merged); err != nil {
 		return nil, err
 	}
 	return merged, nil
 }
 
-// normalizeMergedBastion maps legacy azure_bastion sizing into bastion and defaults managed=false.
-func normalizeMergedBastion(merged map[string]any) {
-	bastion, _ := merged["bastion"].(map[string]any)
-	if bastion == nil {
-		bastion = make(map[string]any)
-	}
-	if legacy, ok := merged["azure_bastion"].(map[string]any); ok {
-		for _, k := range []string{"vm_size", "os_disk_size_gb", "os_disk_type"} {
-			if _, set := bastion[k]; !set {
-				if v, ok := legacy[k]; ok {
-					bastion[k] = v
-				}
-			}
-		}
-	}
-	if _, ok := bastion["managed"]; !ok {
-		bastion["managed"] = false
-	}
-	if _, ok := bastion["os_disk_type"]; !ok {
-		bastion["os_disk_type"] = "Premium_LRS"
-	}
-	if _, ok := bastion["vm_size"]; !ok {
-		bastion["vm_size"] = "Standard_D4s_v5"
-	}
-	if _, ok := bastion["os_disk_size_gb"]; !ok {
-		bastion["os_disk_size_gb"] = float64(100)
-	}
-	merged["bastion"] = bastion
-}
-
-func mergeSectionsInto(merged, src map[string]any) {
-	for _, section := range customerTFVarSections {
+func mergeSectionsInto(merged, src map[string]any, sections []string) {
+	for _, section := range sections {
 		val, ok := src[section]
 		if !ok || val == nil {
 			continue

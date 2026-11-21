@@ -12,7 +12,7 @@ import (
 // validateMergedFeaturesFromRegistry validates merged features (a free-form map)
 // against the profile feature registry: unknown keys, unsupported features and
 // `requires` dependencies.
-func validateMergedFeaturesFromRegistry(merged map[string]any, profileID string) error {
+func validateMergedFeaturesFromRegistry(merged map[string]any, profileID, cloud string) error {
 	if _, ok := merged["features"].(map[string]any); !ok {
 		return nil
 	}
@@ -20,7 +20,7 @@ func validateMergedFeaturesFromRegistry(merged map[string]any, profileID string)
 	if err != nil {
 		return fmt.Errorf("locate profiles for feature registry: %w", err)
 	}
-	reg, err := features.LoadProfileRegistry(filepath.Join(root, "profiles"), profileID)
+	reg, err := features.LoadProfileRegistry(filepath.Join(root, "profiles"), profileID, cloud)
 	if err != nil {
 		return fmt.Errorf("load feature registry for profile %q: %w", profileID, err)
 	}
@@ -46,6 +46,16 @@ func validateFeatureBusinessRules(merged map[string]any, feat map[string]bool) e
 		return fmt.Errorf("enable at most one of features.azure_vpn_gateway and features.azure_express_route_gateway")
 	}
 	return nil
+}
+
+func validateAtLeastOneFeature(merged map[string]any) error {
+	feat := featuresBoolMap(merged)
+	for _, on := range feat {
+		if on {
+			return nil
+		}
+	}
+	return fmt.Errorf("nothing to deploy: enable at least one feature in your config")
 }
 
 func featuresBoolMap(merged map[string]any) map[string]bool {

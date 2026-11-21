@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "common.schema.json",
+  "type": "object",
+  "required": ["schema_version", "cloud", "profile", "account", "workload"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 2 },
+    "cloud": { "type": "string", "enum": ["azure", "aws", "gcp"] },
+    "tier": { "type": "string", "minLength": 1 },
+    "customer": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "code": { "type": "string", "pattern": "^[a-z][a-z0-9]{1,5}$" }
+      }
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "backend": { "type": "string", "enum": ["local", "azurerm", "s3", "gcs"] },
+        "bootstrap": { "type": "boolean" },
+        "air_gapped": { "type": "boolean", "default": true },
+        "bucket_name": { "type": "string", "minLength": 3 },
+        "encryption": { "type": "string" },
+        "versioning": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "tags": { "type": "object", "additionalProperties": { "type": "string" } },
+    "overrides": { "type": "object" },
+    "profile": { "type": "string", "minLength": 1 },
+    "account": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["subscription_id", "region"],
+          "additionalProperties": false,
+          "properties": {
+            "subscription_id": { "type": "string", "pattern": "^[0-9a-fA-F-]{36}$" },
+            "tenant_id": { "type": "string", "pattern": "^[0-9a-fA-F-]{36}$" },
+            "region": { "type": "string", "minLength": 1 },
+            "environment": { "type": "string", "enum": ["public", "usgovernment", "china"] },
+            "auth": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": { "use_msi": { "type": "boolean" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["account_id", "region"],
+          "additionalProperties": false,
+          "properties": {
+            "account_id": { "type": "string", "pattern": "^[0-9]{12}$" },
+            "region": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["project_id", "region"],
+          "additionalProperties": false,
+          "properties": {
+            "project_id": { "type": "string", "minLength": 1 },
+            "region": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "workload": {
+      "type": "object",
+      "required": ["name_prefix"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "name_prefix": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{1,20}[a-z0-9]$" },
+        "environment": { "type": "string", "minLength": 1 }
+      }
+    },
+    "features": { "type": "object", "additionalProperties": { "type": "boolean" } },
+    "backend": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "resource_group_name", "storage_account_name", "container_name", "key"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "azurerm" },
+            "resource_group_name": { "type": "string" },
+            "storage_account_name": { "type": "string" },
+            "container_name": { "type": "string" },
+            "key": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "s3_bucket", "dynamodb_table", "key"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "s3" },
+            "s3_bucket": { "type": "string" },
+            "dynamodb_table": { "type": "string" },
+            "s3_region": { "type": "string" },
+            "key": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "gcs_bucket", "key"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "gcs" },
+            "gcs_bucket": { "type": "string" },
+            "gcs_prefix": { "type": "string" },
+            "key": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

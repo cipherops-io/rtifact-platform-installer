@@ -96,7 +96,7 @@ func NewRoot() *cobra.Command {
 				return err
 			}
 			cfg, _ := config.LoadCustomer(args[0])
-			def, err := config.LoadProfileDefaults(filepath.Join(root, "profiles"), cfg.Profile)
+			def, err := config.LoadProfileDefaults(filepath.Join(root, "profiles"), cfg.Profile, cfg.Cloud)
 			if err != nil {
 				return err
 			}
@@ -141,9 +141,11 @@ func NewRoot() *cobra.Command {
 			tier, _ := cmd.Flags().GetString("tier")
 			customer, _ := cmd.Flags().GetString("customer")
 			out, _ := cmd.Flags().GetString("out")
-			return config.WriteInitConfig(tier, customer, out)
+			cloud, _ := cmd.Flags().GetString("cloud")
+			return config.WriteInitConfig(cloud, tier, customer, out)
 		},
 	})
+	initCfg.PersistentFlags().String("cloud", "azure", "cloud (azure, aws, gcp)")
 	initCfg.PersistentFlags().String("tier", "sandbox", "tier name")
 	initCfg.PersistentFlags().String("customer", "example", "customer code")
 	initCfg.PersistentFlags().String("out", "config.yaml", "output path")
@@ -177,7 +179,7 @@ func NewRoot() *cobra.Command {
 		Use:   "version",
 		Short: "Print version",
 		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Printf("rtifact %s (%s) clouds=%s\n", version.Version, version.GitCommit, version.PackagedClouds)
+			fmt.Printf("rtifact %s (commit %s) customer=%s clouds=%s\n", version.Version, version.GitCommit, version.Customer, version.PackagedClouds)
 		},
 	})
 

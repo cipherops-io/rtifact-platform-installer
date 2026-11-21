@@ -28,6 +28,8 @@ Scope, naming, core networking, egress control, hybrid connectivity, jump host.
 
 - `vpc`
 
+- `bastion`
+
 
 **Provides:** `docs/layer-contracts.md#core-network`
 

@@ -118,12 +118,22 @@ func Print(configPath string) error {
 		}
 	}
 
-	addFromLayer(stacks.LayerCoreNetwork,
-		"resource_group_name", "vnet_id")
+	switch cfg.Cloud {
+	case "aws":
+		addFromLayer(stacks.LayerCoreNetwork, "vpc_id", "subnet_ids_by_tier")
+		addFromLayer(stacks.LayerNetworkEdge, "dns_zone_id", "certificate_regional_arn")
+	default:
+		addFromLayer(stacks.LayerCoreNetwork, "resource_group_name", "vnet_id")
+	}
 	addFromLayer(stacks.LayerDataPlatform,
 		"key_vault_uri", "acr_id", "postgresql_id", "storage_account_id")
-	addFromLayer(stacks.LayerAppPlatform,
-		"cluster_name", "aks_name", "bastion_private_ip", "oidc_issuer_url")
+	switch cfg.Cloud {
+	case "aws":
+		addFromLayer(stacks.LayerAppPlatform, "cluster_name", "cluster_endpoint", "oidc_issuer_url")
+	default:
+		addFromLayer(stacks.LayerAppPlatform,
+			"cluster_name", "aks_name", "bastion_private_ip", "oidc_issuer_url")
+	}
 
 	kubePath := filepath.Join(cwd, kubeconfigFile(prefix))
 	if st, err := os.Stat(kubePath); err == nil && !st.IsDir() {

@@ -11,28 +11,24 @@ module "eks" {
   count = var.features.kubernetes_cluster ? 1 : 0
 
   source             = "../../../../modules/aws/eks"
-  scope_name         = local.core.resource_group_name
-  location           = var.location
   name_prefix        = var.name_prefix
-  tags               = local.core.tags
-  kubernetes_version = var.kubernetes_cluster.kubernetes_version
-  node_subnet_id     = local.core.node_subnet_id
-  pod_cidr           = var.network.pod_cidr
-  service_cidr       = var.network.service_cidr
-  dns_service_ip     = var.network.dns_service_ip
-  node_pools         = var.kubernetes_cluster.node_pools
-  availability_zones = var.kubernetes_cluster.availability_zones
+  location           = var.location
+  tags               = try(var.tags, local.core.tags)
+  vpc_id             = local.core.vpc_id
+  vpc_cidrs          = local.core.vpc_cidrs
+  subnet_ids_by_tier = local.core.subnet_ids_by_tier
+  kubernetes_cluster = var.kubernetes_cluster
 }
 
-module "compute" {
-  count = var.features.azure_bastion ? 1 : 0
+module "karpenter" {
+  count = var.features.karpenter ? 1 : 0
 
-  source          = "../../../../modules/aws/compute"
-  scope_name      = local.core.resource_group_name
-  location        = var.location
-  name_prefix     = var.name_prefix
-  tags            = local.core.tags
-  subnet_id       = local.core.management_subnet_id
-  vm_size         = var.azure_bastion.vm_size
-  os_disk_size_gb = var.azure_bastion.os_disk_size_gb
+  source       = "../../../../modules/aws/karpenter-infra"
+  name_prefix  = var.name_prefix
+  location     = var.location
+  tags         = try(var.tags, local.core.tags)
+  cluster_name = module.eks[0].cluster_name
+  karpenter    = var.kubernetes_cluster.karpenter
+
+  depends_on = [module.eks]
 }

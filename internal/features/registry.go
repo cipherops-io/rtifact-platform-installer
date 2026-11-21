@@ -32,8 +32,12 @@ func Load(path string) (*Registry, error) {
 	return &r, nil
 }
 
-func LoadProfileRegistry(profilesDir, profileID string) (*Registry, error) {
-	return Load(filepath.Join(profilesDir, profileID, "features.yaml"))
+func LoadProfileRegistry(profilesDir, profileID, cloud string) (*Registry, error) {
+	path := filepath.Join(profilesDir, profileID, cloud, "features.yaml")
+	if _, err := os.Stat(path); err != nil {
+		return Load(filepath.Join(profilesDir, profileID, "features.yaml"))
+	}
+	return Load(path)
 }
 
 func (r *Registry) ValidateEnabled(features map[string]bool) error {
