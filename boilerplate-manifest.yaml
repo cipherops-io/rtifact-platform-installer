@@ -153,10 +153,10 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-21T06:21:47Z"
-TemplateURL: ../boilerplates/devops-templates/rtifact-product
+Timestamp: "2026-11-21T06:28:13Z"
+TemplateURL: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.1.0
 BoilerplateVersion: v0.17.0
-SourceChecksum: sha256:cc628d1eb84029c37281c16557135768cf85f94730bad7f2b806e70c8d04ff37
+SourceChecksum: git-sha1:c912bbe93ea54ef5531cdb86bed1660136f8e7a6
 OutputDir: .
 Dependencies:
     - Variables:
