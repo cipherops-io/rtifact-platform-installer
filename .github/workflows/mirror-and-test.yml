@@ -17,9 +17,9 @@ jobs:
       - run: chmod +x build/scripts/*.sh && make package-content
       - run: go test ./...
       - run: make build-dev
-      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/azure/sandbox.yaml --check-azure=false
+      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/azure/sandbox.yaml --check-quota=false
       - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/aws/minimal.yaml --check-quota=false
-      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact gcp validate examples/gcp.yaml --check-quota=false
+      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/gcp.yaml --check-quota=false
 
   release-matrix:
     runs-on: ubuntu-latest

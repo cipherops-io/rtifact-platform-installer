@@ -20,8 +20,8 @@ func TestGCPLifecycle(t *testing.T) {
 		t.Fatal("build rtifact first: make build-dev")
 	}
 	for _, args := range [][]string{
-		{"gcp", "validate", cfg, "--check-quota=false"},
-		{"gcp", "preflight", cfg},
+		{"validate", cfg, "--check-quota=false"},
+		{"preflight", cfg},
 	} {
 		cmd := exec.Command(bin, args...)
 		cmd.Env = append(os.Environ(), "INSTALLER_CONTENT_ROOT="+filepath.Join(root, "..", ".."))

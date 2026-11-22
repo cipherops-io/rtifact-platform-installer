@@ -14,6 +14,14 @@ Aligned with **boilerplates [v3.2.0](https://github.com/cipherops-io/boilerplate
 - CI: `deploy-unit` (not cluster e2e); `build-binary` prints binary size.
 - Pre-C2: Helm **v4.3.2** SDK (Go 1.26); chart-style `${...}` allowed; shared env placeholder regex; defaults for wait/rollback; `ResolvedSecretRedactor` stub for C2.
 
+### Architect pass (pre-C2)
+
+- Remove `dataops` CLI stubs; root lifecycle commands only (no `rtifact aws|azure|gcp` duplicate groups).
+- `internal/maputil` for shared map/YAML helpers; deploy tree walks unified in `walk.go`.
+- Cloud `Hooks` (schema/maturity/quota) and `LifecycleHooks` (AWS destroy guard, Route53 delegation) on providers.
+- Stray paths: `build/provider-versions.yml`, `build/scripts/github-e2e-prepare-config.sh`; drop tracked `local.mk`, `vars/versions.yml`, `docs/layer-contracts.md`.
+- `validate --check-quota` (replaces `--check-azure`); default from cloud hooks when flag omitted.
+
 ## [0.2.0] - 2026-11-22
 
 Aligned with **boilerplates [v3.1.1](https://github.com/cipherops-io/boilerplates/releases/tag/v3.1.1)**.

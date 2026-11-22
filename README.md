@@ -6,8 +6,8 @@ Go CLI **`rtifact`** embeds OpenTofu and deploys layered **aios-infra** stacks o
 
 ```bash
 make build-dev
-INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/sandbox.yaml --check-azure=false
-INSTALLER_CONTENT_ROOT=. ./dist/rtifact azure plan examples/sandbox.yaml --stack core-network --yes
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/azure/sandbox.yaml --check-quota=false
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact plan examples/azure/sandbox.yaml --stack core-network --yes
 INSTALLER_CONTENT_ROOT=. ./dist/rtifact bootstrap examples/sandbox.yaml --yes
 ```
 
@@ -22,7 +22,7 @@ Layers: `state-backend` (via `bootstrap`), then `core-network`, `data-platform`,
 | `make release-aws` | aws |
 | `make release-gcp` | gcp |
 
-All artifacts are named `dist/rtifact` with only the packaged cloud subcommands registered.
+All artifacts are named `dist/rtifact`; `cloud:` in customer YAML selects the target (build with `PACKAGED_CLOUDS` for smaller binaries).
 
 Module: `github.com/cipherops-io/rtifact-platform-installer`
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 )
 
@@ -95,7 +96,7 @@ func (p *deployProbe) layerHasState(layer stacks.Layer) (bool, error) {
 	stackRel := stackRelDir(p.meta.StackID, p.customer.Cloud, layer)
 	stackWork := filepath.Join(infraWork, stackRel)
 
-	layerMerged := deepCopyMap(p.merged)
+	layerMerged := maputil.DeepCopyMap(p.merged)
 	upstreamMap := map[string]any{}
 	for _, up := range stacks.Upstream(layer) {
 		ub, err := cloud.Backend(p.provider, layerSpec(p.spec, up), string(up))

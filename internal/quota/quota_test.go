@@ -11,7 +11,7 @@ func TestFetchUsagesPlaceholderSubscription(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "--check-azure=false") {
+	if !strings.Contains(err.Error(), "--check-quota=false") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

@@ -3,11 +3,13 @@ package outputs
 import (
 	"fmt"
 	"strings"
+
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 )
 
 // awsKubeconfigYAML builds an EKS kubeconfig using the aws eks get-token exec plugin.
 func awsKubeconfigYAML(flat map[string]any, region string) string {
-	name := firstString(flat, "cluster_name", "aks_name")
+	name := maputil.FirstString(flat, "cluster_name", "aks_name")
 	endpoint := asString(flat["cluster_endpoint"])
 	ca := asString(flat["cluster_certificate_authority_data"])
 	if name == "" || endpoint == "" || ca == "" || region == "" {

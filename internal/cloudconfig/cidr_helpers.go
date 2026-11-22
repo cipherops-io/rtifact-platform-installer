@@ -5,28 +5,6 @@ import (
 	"net"
 )
 
-func stringSlice(v any) ([]string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	switch t := v.(type) {
-	case []string:
-		return t, nil
-	case []any:
-		out := make([]string, 0, len(t))
-		for i, x := range t {
-			s, ok := x.(string)
-			if !ok {
-				return nil, fmt.Errorf("index %d: not a string", i)
-			}
-			out = append(out, s)
-		}
-		return out, nil
-	default:
-		return nil, fmt.Errorf("expected list of strings")
-	}
-}
-
 func cidrInAllowed(cidr string, allowed []*net.IPNet) bool {
 	ip, n, err := net.ParseCIDR(cidr)
 	if err != nil {

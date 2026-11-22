@@ -20,7 +20,7 @@ func TestSandboxLifecycle(t *testing.T) {
 		t.Fatal("build rtifact first: make build-dev")
 	}
 	for _, args := range [][]string{
-		{"validate", cfg, "--check-azure=false"},
+		{"validate", cfg, "--check-quota=false"},
 		{"preflight", cfg},
 		{"plan", cfg, "--stack", "core-network", "--yes"},
 	} {

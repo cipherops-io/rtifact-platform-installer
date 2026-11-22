@@ -6,6 +6,8 @@ import (
 	"net"
 	"os/exec"
 	"strings"
+
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 )
 
 func init() {
@@ -35,7 +37,7 @@ func (awsConfig) Normalize(merged map[string]any) {
 	if kc != nil {
 		if se, ok := kc["secrets_encryption"].(map[string]any); ok {
 			if _, hasMode := se["mode"]; !hasMode {
-				if truthy(se["enabled"]) {
+				if maputil.Truthy(se["enabled"]) {
 					se["mode"] = "kms"
 				} else {
 					se["mode"] = "none"
@@ -52,7 +54,7 @@ func (awsConfig) Validate(merged map[string]any) error {
 	if err := validateAWSSubnets(merged); err != nil {
 		return err
 	}
-	if truthy(features["network"]) {
+	if maputil.Truthy(features["network"]) {
 		netw, ok := merged["network"].(map[string]any)
 		if !ok {
 			return fmt.Errorf("features.network is true: set a network block with vpc_cidr, two availability_zones, and subnets")
@@ -60,7 +62,7 @@ func (awsConfig) Validate(merged map[string]any) error {
 		if _, ok := netw["vpc_cidr"].(string); !ok || netw["vpc_cidr"] == "" {
 			return fmt.Errorf("features.network: network.vpc_cidr is required")
 		}
-		zones, _ := stringSlice(netw["availability_zones"])
+		zones, _ := maputil.StringSlice(netw["availability_zones"])
 		if len(zones) < 2 {
 			return fmt.Errorf("features.network: network.availability_zones must list at least two zones")
 		}
@@ -69,10 +71,10 @@ func (awsConfig) Validate(merged map[string]any) error {
 			return fmt.Errorf("features.network: network.subnets is required")
 		}
 	}
-	if truthy(features["kubernetes_cluster"]) {
+	if maputil.Truthy(features["kubernetes_cluster"]) {
 		netw, _ := merged["network"].(map[string]any)
 		subnets, _ := netw["subnets"].(map[string]any)
-		zones, _ := stringSlice(netw["availability_zones"])
+		zones, _ := maputil.StringSlice(netw["availability_zones"])
 		if !subnetTierCoversZones(subnets, zones, "cluster") {
 			return fmt.Errorf("features.kubernetes_cluster: include a subnet tier with role cluster in two zones")
 		}
@@ -80,8 +82,8 @@ func (awsConfig) Validate(merged map[string]any) error {
 		if !ok {
 			return fmt.Errorf("features.kubernetes_cluster is true: set kubernetes_cluster")
 		}
-		if ep, ok := kc["endpoint"].(map[string]any); ok && truthy(ep["public"]) {
-			cidrs, _ := stringSlice(ep["public_access_cidrs"])
+		if ep, ok := kc["endpoint"].(map[string]any); ok && maputil.Truthy(ep["public"]) {
+			cidrs, _ := maputil.StringSlice(ep["public_access_cidrs"])
 			if len(cidrs) == 0 {
 				return fmt.Errorf("kubernetes_cluster.endpoint.public is true: set endpoint.public_access_cidrs")
 			}
@@ -119,7 +121,7 @@ func (awsConfig) Preflight(ctx context.Context, merged map[string]any) error {
 	if vpc, _ := netw["vpc_cidr"].(string); vpc != "" {
 		cidrs = append(cidrs, vpc)
 	}
-	if secs, err := stringSlice(netw["secondary_cidrs"]); err == nil {
+	if secs, err := maputil.StringSlice(netw["secondary_cidrs"]); err == nil {
 		cidrs = append(cidrs, secs...)
 	}
 	for _, cidr := range cidrs {
@@ -149,7 +151,7 @@ func subnetTierCoversZones(subnets map[string]any, zones []string, wantRole stri
 			continue
 		}
 		nameMatch := tier == wantRole
-		roles, _ := stringSlice(tierMap["roles"])
+		roles, _ := maputil.StringSlice(tierMap["roles"])
 		for _, r := range roles {
 			if r == wantRole {
 				nameMatch = true
@@ -158,7 +160,7 @@ func subnetTierCoversZones(subnets map[string]any, zones []string, wantRole stri
 		if !nameMatch {
 			continue
 		}
-		cidrs, err := stringSlice(tierMap["cidrs"])
+		cidrs, err := maputil.StringSlice(tierMap["cidrs"])
 		if err != nil || len(cidrs) < 2 {
 			continue
 		}
@@ -169,17 +171,12 @@ func subnetTierCoversZones(subnets map[string]any, zones []string, wantRole stri
 	return false
 }
 
-func truthy(v any) bool {
-	b, ok := v.(bool)
-	return ok && b
-}
-
 func validateAWSSubnets(merged map[string]any) error {
 	netw, ok := merged["network"].(map[string]any)
 	if !ok {
 		return nil
 	}
-	zones, _ := stringSlice(netw["availability_zones"])
+	zones, _ := maputil.StringSlice(netw["availability_zones"])
 	if len(zones) > 0 && len(zones) < 2 {
 		return fmt.Errorf("network.availability_zones must list at least two zones for AWS")
 	}
@@ -188,7 +185,7 @@ func validateAWSSubnets(merged map[string]any) error {
 		return nil
 	}
 	vpcCIDR, _ := netw["vpc_cidr"].(string)
-	secondaries, _ := stringSlice(netw["secondary_cidrs"])
+	secondaries, _ := maputil.StringSlice(netw["secondary_cidrs"])
 	var allowed []*net.IPNet
 	if vpcCIDR != "" {
 		_, n, err := net.ParseCIDR(vpcCIDR)
@@ -210,7 +207,7 @@ func validateAWSSubnets(merged map[string]any) error {
 		if !ok {
 			continue
 		}
-		cidrs, err := stringSlice(tierMap["cidrs"])
+		cidrs, err := maputil.StringSlice(tierMap["cidrs"])
 		if err != nil {
 			return fmt.Errorf("network.subnets.%s.cidrs: %w", tier, err)
 		}

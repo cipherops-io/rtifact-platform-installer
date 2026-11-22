@@ -92,34 +92,34 @@ jobs:
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         run: |
-          chmod +x build/scripts/*.sh scripts/github-e2e-prepare-config.sh
-          ./scripts/github-e2e-prepare-config.sh examples/azure/github-e2e-azure.yaml "$RUNNER_TEMP/e2e-config.yaml"
+          chmod +x build/scripts/*.sh
+          ./build/scripts/github-e2e-prepare-config.sh examples/azure/github-e2e-azure.yaml "$RUNNER_TEMP/e2e-config.yaml"
           echo "E2E_AZURE_CONFIG=$RUNNER_TEMP/e2e-config.yaml" >> "$GITHUB_ENV"
 
       - name: Build rtifact (azure only)
         run: make build-dev PACKAGED_CLOUDS=azure
 
-      - name: rtifact azure validate
+      - name: rtifact validate
         if: env.RTIFACT_ACTION != 'destroy-all'
-        run: ./dist/rtifact azure validate "$E2E_AZURE_CONFIG" --check-quota=${{ env.CHECK_AZURE }}
+        run: ./dist/rtifact validate "$E2E_AZURE_CONFIG" --check-quota=${{ env.CHECK_AZURE }}
 
-      - name: rtifact azure plan
+      - name: rtifact plan
         if: env.RTIFACT_ACTION == 'plan'
-        run: ./dist/rtifact azure plan "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
+        run: ./dist/rtifact plan "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
 
       # Idempotent: no-ops when remote tfstate storage already exists (e.g. manual E2E setup).
-      - name: rtifact azure bootstrap
+      - name: rtifact bootstrap
         if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
-        run: ./dist/rtifact azure bootstrap "$E2E_AZURE_CONFIG" --yes
+        run: ./dist/rtifact bootstrap "$E2E_AZURE_CONFIG" --yes
 
-      - name: rtifact azure apply
+      - name: rtifact apply
         if: env.RTIFACT_ACTION == 'apply' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
-        run: ./dist/rtifact azure apply "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
+        run: ./dist/rtifact apply "$E2E_AZURE_CONFIG" --stack "${{ env.E2E_STACK }}" --yes
 
-      - name: rtifact azure destroy workloads
+      - name: rtifact destroy workloads
         if: env.RTIFACT_ACTION == 'destroy-all' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
-        run: ./dist/rtifact azure destroy "$E2E_AZURE_CONFIG" --stack all --yes --allow-destroy-stateful
+        run: ./dist/rtifact destroy "$E2E_AZURE_CONFIG" --stack all --yes --allow-destroy-stateful
 
       - name: rtifact destroy state-backend
         if: env.RTIFACT_ACTION == 'destroy-all' || env.RTIFACT_ACTION == 'bootstrap-apply-destroy'
-        run: ./dist/rtifact azure destroy "$E2E_AZURE_CONFIG" --stack state-backend --yes
+        run: ./dist/rtifact destroy "$E2E_AZURE_CONFIG" --stack state-backend --yes

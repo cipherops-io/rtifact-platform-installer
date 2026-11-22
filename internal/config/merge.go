@@ -10,6 +10,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloudconfig"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -172,7 +173,7 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 		}
 	}
 
-	merged := deepCopyMap(defaults)
+	merged := maputil.DeepCopyMap(defaults)
 	if tierMap != nil {
 		mergeSectionsInto(merged, tierMap, sections)
 	}
@@ -192,14 +193,14 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 		}
 		if childKeys, isReplace := replaceMergeSections[section]; isReplace {
 			if childKeys == nil {
-				merged[section] = deepCopyMap(src)
+				merged[section] = maputil.DeepCopyMap(src)
 				continue
 			}
 			existing, _ := merged[section].(map[string]any)
 			if existing == nil {
 				existing = make(map[string]any)
 			} else {
-				existing = deepCopyMap(existing)
+				existing = maputil.DeepCopyMap(existing)
 			}
 			for _, child := range childKeys {
 				if v, ok := src[child]; ok {
@@ -214,7 +215,7 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 		if existing, ok := merged[section].(map[string]any); ok {
 			deepMerge(existing, src)
 		} else {
-			merged[section] = deepCopyMap(src)
+			merged[section] = maputil.DeepCopyMap(src)
 		}
 	}
 
@@ -243,7 +244,7 @@ func mergeSectionsInto(merged, src map[string]any, sections []string) {
 			if existing == nil {
 				existing = make(map[string]any)
 			} else {
-				existing = deepCopyMap(existing)
+				existing = maputil.DeepCopyMap(existing)
 			}
 			for _, child := range childKeys {
 				if v, ok := sm[child]; ok {
@@ -258,7 +259,7 @@ func mergeSectionsInto(merged, src map[string]any, sections []string) {
 		if existing, ok := merged[section].(map[string]any); ok {
 			deepMerge(existing, sm)
 		} else {
-			merged[section] = deepCopyMap(sm)
+			merged[section] = maputil.DeepCopyMap(sm)
 		}
 	}
 }
@@ -315,7 +316,7 @@ func normalizeAnyMap(in map[string]any) map[string]any {
 func normalizeValue(v any) any {
 	switch t := v.(type) {
 	case map[interface{}]interface{}:
-		return yamlMapToAnyMap(t)
+		return maputil.YAMLMapToAnyMap(t)
 	case map[string]any:
 		m := make(map[string]any, len(t))
 		for k, val := range t {
@@ -338,40 +339,12 @@ func toStringMap(v any) (map[string]any, bool) {
 	case map[string]any:
 		return t, true
 	case map[interface{}]interface{}:
-		return yamlMapToAnyMap(t), true
+		return maputil.YAMLMapToAnyMap(t), true
 	default:
 		return nil, false
 	}
 }
 
-func deepCopyMap(in map[string]any) map[string]any {
-	out := make(map[string]any, len(in))
-	for k, v := range in {
-		switch t := v.(type) {
-		case map[string]any:
-			out[k] = deepCopyMap(t)
-		case map[interface{}]interface{}:
-			out[k] = yamlMapToAnyMap(t)
-		default:
-			out[k] = v
-		}
-	}
-	return out
-}
-
-func yamlMapToAnyMap(in map[interface{}]interface{}) map[string]any {
-	out := make(map[string]any, len(in))
-	for k, v := range in {
-		key, _ := k.(string)
-		switch t := v.(type) {
-		case map[interface{}]interface{}:
-			out[key] = yamlMapToAnyMap(t)
-		default:
-			out[key] = normalizeValue(v)
-		}
-	}
-	return out
-}
 
 func deepMerge(dst, src map[string]any) {
 	for k, v := range src {

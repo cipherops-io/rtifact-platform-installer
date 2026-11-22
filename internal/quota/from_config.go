@@ -72,7 +72,7 @@ func quotaInsufficientError(region string, t FamilyTotal, pools []PoolReq) error
 	}
 	return usererr.WithHint(
 		"Subscription vCPU quota is too low for this config.",
-		"Reduce kubernetes_cluster.node_pools (smaller vm_size or node_count), request a quota increase in Azure Portal, or run validate with --check-azure=false.",
+		"Reduce kubernetes_cluster.node_pools (smaller vm_size or node_count), request a quota increase in Azure Portal, or run validate with --check-quota=false.",
 		details...,
 	)
 }

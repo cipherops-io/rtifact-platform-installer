@@ -84,7 +84,7 @@ func validateSemantic(deployPath string, doc *Document) error {
 				// allowed if defined later; full check after loop
 			}
 		}
-		if err := validatePlaceholders(rel.Values); err != nil {
+		if err := validatePlaceholdersTree(rel.Values); err != nil {
 			return fmt.Errorf("release %q values: %w", rel.Name, err)
 		}
 		for _, vf := range rel.ValuesFiles {

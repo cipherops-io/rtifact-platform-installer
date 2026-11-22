@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
@@ -22,8 +23,11 @@ func compileCustomerSchema(cloud string) (*jsonschema.Schema, error) {
 	if err := compiler.AddResource(name, bytes.NewReader(cloudRaw)); err != nil {
 		return nil, err
 	}
-	// Azure ships a self-contained closed schema (legacy monolith split).
-	if cloud == "azure" {
+	hooks, err := registry.HooksFor(cloud)
+	if err != nil {
+		return nil, err
+	}
+	if !hooks.CustomerSchemaUsesCommonAllOf() {
 		return compiler.Compile(name)
 	}
 	commonRaw, err := assets.ReadSchemaFile("common.schema.json")

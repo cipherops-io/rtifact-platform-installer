@@ -58,8 +58,8 @@ func TestAzureSmoke(t *testing.T) {
 	if check == "" {
 		check = "false"
 	}
-	runRtifact(t, bin, root, "azure", "validate", cfg, "--check-quota="+check)
-	runRtifact(t, bin, root, "azure", "preflight", cfg)
+	runRtifact(t, bin, root, "validate", cfg, "--check-quota="+check)
+	runRtifact(t, bin, root, "preflight", cfg)
 }
 
 // TestAzureStackAction runs plan, apply, or destroy for one or all Azure stacks.
@@ -84,18 +84,18 @@ func TestAzureStackAction(t *testing.T) {
 	bin, root := rtifactBin(t)
 
 	if os.Getenv("E2E_AZURE_BOOTSTRAP") == "true" && action == "apply" {
-		runRtifact(t, bin, root, "azure", "bootstrap", cfg, "--yes")
+		runRtifact(t, bin, root, "bootstrap", cfg, "--yes")
 	}
 
 	layers := layersForStack(stack, action)
 	for _, layer := range layers {
 		switch action {
 		case "plan":
-			runRtifact(t, bin, root, "azure", "plan", cfg, "--stack", layer, "--yes")
+			runRtifact(t, bin, root, "plan", cfg, "--stack", layer, "--yes")
 		case "apply":
-			runRtifact(t, bin, root, "azure", "apply", cfg, "--stack", layer, "--yes")
+			runRtifact(t, bin, root, "apply", cfg, "--stack", layer, "--yes")
 		case "destroy":
-			runRtifact(t, bin, root, "azure", "destroy", cfg, "--stack", layer, "--yes")
+			runRtifact(t, bin, root, "destroy", cfg, "--stack", layer, "--yes")
 		default:
 			t.Fatalf("unknown E2E_AZURE_ACTION %q", action)
 		}

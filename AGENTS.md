@@ -83,6 +83,6 @@ Infrastructure YAML and deploy YAML are separate contracts and never share keys.
 | `make boilerplate-update` | Pull managed files from `rtifact-product` |
 | `make tofu-pre-commit-fast` | Run here (fmt, docs, modules, go tidy) |
 
-Read `AGENTS.local.md` for installer-specific rules (e.g. placement: `infra/AGENTS.md#placement`).
+Installer placement rules: `infra/AGENTS.md#placement`. Provider pins: `build/provider-versions.yml`.
 
 <!-- lint-agent-docs: Managed vs installer-owned; make boilerplate-update -->

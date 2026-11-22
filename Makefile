@@ -21,7 +21,7 @@ include boilerplate.mk
 
 validate-examples:
 	@test -f $(DIST) || $(MAKE) build-dev
-	@INSTALLER_CONTENT_ROOT=. ./$(DIST) validate examples/azure/sandbox.yaml --check-azure=false
+	@INSTALLER_CONTENT_ROOT=. ./$(DIST) validate examples/azure/sandbox.yaml --check-quota=false
 
 e2e-sandbox:
 	go test -tags=e2e -timeout=120m ./tests/e2e/ -run TestSandboxLifecycle
@@ -78,6 +78,32 @@ deploy-unit:
 deploy-e2e:
 	@echo "deploy-e2e requires throwaway cluster + OCI registry (S1+); use: make deploy-unit" >&2
 	@exit 1
+
+VERSION_CLOUDS := azure aws gcp
+VERSION_LAYERS := state-backend core-network data-platform app-platform network-edge ai-integrations
+
+.PHONY: bump-providers
+bump-providers:
+	@command -v boilerplate >/dev/null || (echo "boilerplate CLI required" && exit 1)
+	@set -e; \
+	repo=$$(pwd); \
+	profile=$$(grep '^ProfileID:' boilerplate-vars.yml | awk '{print $$2}'); \
+	for c in $(VERSION_CLOUDS); do \
+	  for l in $(VERSION_LAYERS); do \
+	    target="$$c/$$l"; \
+	    echo "==> versions $$target"; \
+	    boilerplate \
+	      --template-url "$$repo/build/boilerplate/stack-versions/layer-versions" \
+	      --output-folder "$$repo/infra/stacks/$$profile/$$target" \
+	      --non-interactive --disable-dependency-prompt --no-hooks \
+	      --var-file boilerplate-vars.yml \
+	      --var-file build/provider-versions.yml \
+	      --var "StackTarget=$$target" \
+	      --var "OpenTofuVersion=$(TOFU_VERSION)" \
+	      --var 'ProviderSources={azure: "$(PROVIDER_SOURCE_AZURE)", aws: "$(PROVIDER_SOURCE_AWS)", gcp: "$(PROVIDER_SOURCE_GCP)"}'; \
+	  done; \
+	done
+	@$(MAKE) tofu-lock
 
 test:
 	go test ./...

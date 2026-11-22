@@ -17,7 +17,7 @@ Use `<customer>-<environment>-<purpose>.yaml` (any path). Example: `tata-digital
 |---------|---------|
 | `schema_version` | Must be `1` |
 | `cloud` | Target cloud (`azure`) |
-| `profile` | Workload profile id (e.g. `ai-os-k8s`) |
+| `profile` | Workload profile id (e.g. `aios-infra`) |
 | `account.subscription_id`, `account.region` | Target subscription and region (`account` replaces the v1 `azure` block) |
 | `state.backend`, `state.air_gapped` | `local` or `azurerm`; `air_gapped` defaults to `true` (CLI-only checks; `false` is not implemented yet) |
 | `workload.name_prefix` | Resource naming prefix |

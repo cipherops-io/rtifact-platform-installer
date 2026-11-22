@@ -21,7 +21,7 @@ func requireDataPlatformForFoundry(prefix string, merged map[string]any) error {
 	if err != nil {
 		return usererr.WithHint(
 			"ai_foundry is enabled but data-platform outputs are not available.",
-			"Apply data-platform first: ./dist/rtifact azure apply <config> --stack data-platform --yes",
+			"Apply data-platform first: ./dist/rtifact apply <config> --stack data-platform --yes",
 			err.Error(),
 		)
 	}

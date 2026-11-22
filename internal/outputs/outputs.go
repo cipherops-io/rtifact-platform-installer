@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 )
 
@@ -48,7 +49,7 @@ func materializeCWD(prefix string, flat map[string]any, opts MaterializeOpts) ([
 	}
 	var written []string
 
-	kube := firstString(flat,
+	kube := maputil.FirstString(flat,
 		"kube_admin_config_raw",
 		"kubeconfig_raw",
 		"kubeconfig_yaml",
@@ -70,7 +71,7 @@ func materializeCWD(prefix string, flat map[string]any, opts MaterializeOpts) ([
 		}
 	}
 
-	pem := firstString(flat,
+	pem := maputil.FirstString(flat,
 		"bastion_ssh_private_key_pem",
 		"bastion_private_key_pem",
 	)
@@ -160,15 +161,6 @@ func Print(configPath string) error {
 		fmt.Fprintf(os.Stdout, "%-28s %s\n", r.key+":", r.val)
 	}
 	return nil
-}
-
-func firstString(m map[string]any, keys ...string) string {
-	for _, k := range keys {
-		if s := asString(m[k]); s != "" {
-			return s
-		}
-	}
-	return ""
 }
 
 func asString(v any) string {

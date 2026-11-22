@@ -7,8 +7,8 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/bootstrap"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/dataops"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/preflight"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/quota"
@@ -30,7 +30,7 @@ func NewRoot() *cobra.Command {
 
 	var stackFlag string
 	var yes bool
-	var checkAzure bool
+	var checkQuota bool
 	var explain bool
 	var allowDestroy bool
 	var ignoreRuntimeDeps bool
@@ -71,14 +71,13 @@ func NewRoot() *cobra.Command {
 	}
 	root.AddCommand(plan, apply, destroy, output)
 	addDeployGroup(root)
-	addCloudGroups(root)
 
 	validate := &cobra.Command{
 		Use:   "validate [config.yaml]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Validate config; optional Azure quota check",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			checkAzure, _ = cmd.Flags().GetBool("check-azure")
+			checkQuota, _ = cmd.Flags().GetBool("check-quota")
 			explain, _ = cmd.Flags().GetBool("explain")
 			if err := config.ValidateCustomerYAML(args[0]); err != nil {
 				return err
@@ -88,15 +87,25 @@ func NewRoot() *cobra.Command {
 					return err
 				}
 			}
-			if !checkAzure {
-				fmt.Fprintf(os.Stdout, "OK (skip quota; use --check-azure)\n")
+			if !cmd.Flags().Changed("check-quota") {
+				if peek, err := config.LoadCustomer(args[0]); err == nil {
+					if hooks, err := registry.HooksFor(peek.Cloud); err == nil {
+						checkQuota = hooks.DefaultQuotaCheckOnValidate()
+					}
+				}
+			}
+			if !checkQuota {
+				fmt.Fprintf(os.Stdout, "OK (skip quota; use --check-quota)\n")
 				return nil
+			}
+			cfg, err := config.LoadCustomer(args[0])
+			if err != nil {
+				return err
 			}
 			root, _, err := assets.ContentRoot()
 			if err != nil {
 				return err
 			}
-			cfg, _ := config.LoadCustomer(args[0])
 			def, err := config.LoadProfileDefaults(filepath.Join(root, "profiles"), cfg.Profile, cfg.Cloud)
 			if err != nil {
 				return err
@@ -108,7 +117,7 @@ func NewRoot() *cobra.Command {
 			return quota.ValidateMerged(args[0], merged)
 		},
 	}
-	validate.Flags().BoolVar(&checkAzure, "check-azure", true, "Check subscription vCPU quota")
+	validate.Flags().BoolVar(&checkQuota, "check-quota", false, "Run cloud quota checks when available (Azure)")
 	validate.Flags().BoolVar(&explain, "explain", false, "Print merge provenance")
 	root.AddCommand(validate)
 
@@ -151,30 +160,6 @@ func NewRoot() *cobra.Command {
 	initCfg.PersistentFlags().String("customer", "example", "customer code")
 	initCfg.PersistentFlags().String("out", "config.yaml", "output path")
 	root.AddCommand(initCfg)
-
-	data := &cobra.Command{Use: "data"}
-	data.AddCommand(&cobra.Command{
-		Use:  "backup [config.yaml]",
-		Args: cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			s, _ := cmd.Flags().GetString("name")
-			return dataops.Backup(args[0], s)
-		},
-	})
-	data.Commands()[0].Flags().String("name", "", "backup suffix")
-	for _, sub := range []struct {
-		use string
-		fn  func([]string) error
-	}{
-		{"provision [config.yaml]", func(a []string) error { return dataops.Provision(a[0], "") }},
-		{"migrate [config.yaml]", func(a []string) error { return dataops.Migrate(a[0], "", "") }},
-		{"retire [config.yaml]", func(a []string) error { return dataops.Retire(a[0], "", true) }},
-	} {
-		use := sub.use
-		fn := sub.fn
-		data.AddCommand(&cobra.Command{Use: use, Args: cobra.ExactArgs(1), RunE: func(_ *cobra.Command, args []string) error { return fn(args) }})
-	}
-	root.AddCommand(data)
 
 	root.AddCommand(&cobra.Command{
 		Use:   "version",

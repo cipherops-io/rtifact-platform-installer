@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Substitute Azure IDs into examples/github-e2e-azure.yaml for CI (writes to a temp file).
+# Substitute Azure IDs into examples/azure/github-e2e-azure.yaml for CI (writes to a temp file).
 set -euo pipefail
-SRC="${1:-examples/github-e2e-azure.yaml}"
+SRC="${1:-examples/azure/github-e2e-azure.yaml}"
 OUT="${2:-/tmp/github-e2e-azure.yaml}"
 : "${AZURE_SUBSCRIPTION_ID:?AZURE_SUBSCRIPTION_ID required}"
 : "${AZURE_TENANT_ID:?AZURE_TENANT_ID required}"

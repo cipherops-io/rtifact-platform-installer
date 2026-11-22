@@ -14,6 +14,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/checklist"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/guard"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
@@ -181,8 +182,12 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	if err := destroyDependencyGuard(opts, customer.NamePrefix(), layer); err != nil {
 		return err
 	}
+	lifecycle, err := registry.LifecycleHooksFor(customer.Cloud)
+	if err != nil {
+		return err
+	}
 	if opts.Action == "destroy" {
-		if err := awsDestroyOrphanGuard(customer, layer, merged); err != nil {
+		if err := lifecycle.DestroyOrphanGuard(layer, customer.Account.Region, customer.NamePrefix(), merged); err != nil {
 			return err
 		}
 	}
@@ -199,7 +204,7 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	}
 	stackWork := filepath.Join(infraWork, stackRel)
 
-	layerMerged := deepCopyMap(merged)
+	layerMerged := maputil.DeepCopyMap(merged)
 	upstream := map[string]any{}
 	for _, up := range stacks.Upstream(layer) {
 		ub, err := cloud.Backend(provider, spec, string(up))
@@ -214,7 +219,8 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	if err := injectAzureResourceGroupFlags(customer, provider, layerSpec(spec, layer), layer, layerMerged); err != nil {
 		return err
 	}
-	injectDNSDelegation(context.Background(), layer, customer, layerMerged)
+	edgeOut := filepath.Join(config.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
+	lifecycle.MutateDNSDelegation(context.Background(), layer, customer.Account.Region, customer.NamePrefix(), edgeOut, layerMerged)
 	if err := config.WriteAutoTofuVarsJSON(stackWork, layerMerged); err != nil {
 		return err
 	}
@@ -380,7 +386,11 @@ func captureOutputs(tofuPath, stackWork string, env []string, customer *config.C
 		}
 	}
 	if layer == stacks.LayerNetworkEdge {
-		if err := delegationPauseIfNeeded(customer.Cloud, merged, configPath, prefix, flat); err != nil {
+		lh, err := registry.LifecycleHooksFor(customer.Cloud)
+		if err != nil {
+			return err
+		}
+		if err := lh.DelegationPauseIfNeeded(merged, configPath, prefix, flat); err != nil {
 			return err
 		}
 	}
@@ -394,14 +404,3 @@ func tofuShowJSON(tofuPath, stackWork string, env []string, planFile string) ([]
 	return c.Output()
 }
 
-func deepCopyMap(in map[string]any) map[string]any {
-	out := make(map[string]any, len(in))
-	for k, v := range in {
-		if m, ok := v.(map[string]any); ok {
-			out[k] = deepCopyMap(m)
-		} else {
-			out[k] = v
-		}
-	}
-	return out
-}

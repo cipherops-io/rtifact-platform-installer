@@ -40,24 +40,7 @@ func MaskEnvPlaceholders(s string) string {
 
 // MaskEnvInValue returns a copy of v with string leaves masked (for explain output).
 func MaskEnvInValue(v any) any {
-	switch t := v.(type) {
-	case map[string]any:
-		out := make(map[string]any, len(t))
-		for k, val := range t {
-			out[k] = MaskEnvInValue(val)
-		}
-		return out
-	case []any:
-		out := make([]any, len(t))
-		for i, val := range t {
-			out[i] = MaskEnvInValue(val)
-		}
-		return out
-	case string:
-		return MaskEnvPlaceholders(t)
-	default:
-		return v
-	}
+	return transformYAMLStrings(v, MaskEnvPlaceholders)
 }
 
 // ExplainSummary returns a human-readable, secret-safe summary of the deploy file.

@@ -15,6 +15,7 @@ type CommandRunner func(ctx context.Context, name string, args ...string) ([]byt
 
 // Provider implements cloud.Provider for Azure.
 type Provider struct {
+	cloud.NoopLifecycle
 	run CommandRunner
 	// lookPath resolves the az executable (swapped in tests).
 	lookPath func(string) (string, error)

@@ -179,5 +179,3 @@ go-test:
 
 go-tidy:
 	@go mod tidy
-
--include local.mk

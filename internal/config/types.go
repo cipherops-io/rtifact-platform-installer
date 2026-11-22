@@ -1,6 +1,10 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
+)
 
 // SchemaVersion is the customer config schema version this build understands.
 const SchemaVersion = 1
@@ -111,17 +115,14 @@ type ProfileMeta struct {
 
 // CloudMaturityFor returns operational, preview, or unknown.
 func (m *ProfileMeta) CloudMaturityFor(cloud string) string {
-	if m == nil || m.CloudMaturity == nil {
-		if cloud == "azure" {
-			return "operational"
+	if m != nil && m.CloudMaturity != nil {
+		if v, ok := m.CloudMaturity[cloud]; ok && v != "" {
+			return v
 		}
+	}
+	hooks, err := registry.HooksFor(cloud)
+	if err != nil {
 		return "preview"
 	}
-	if v, ok := m.CloudMaturity[cloud]; ok && v != "" {
-		return v
-	}
-	if cloud == "azure" {
-		return "operational"
-	}
-	return "preview"
+	return hooks.DefaultMaturity()
 }

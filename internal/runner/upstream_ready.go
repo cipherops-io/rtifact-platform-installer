@@ -9,6 +9,7 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 )
 
@@ -79,7 +80,7 @@ func upstreamRemoteOutputsPresent(
 	stackRel := stackRelDir(meta.StackID, customer.Cloud, upstream)
 	stackWork := filepath.Join(infraWork, stackRel)
 
-	layerMerged := deepCopyMap(merged)
+	layerMerged := maputil.DeepCopyMap(merged)
 	upstreamMap := map[string]any{}
 	for _, up := range stacks.Upstream(upstream) {
 		ub, err := cloud.Backend(provider, layerSpec(spec, up), string(up))

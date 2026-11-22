@@ -21,12 +21,8 @@ func validatePlaceholdersInFile(path string) error {
 	return validatePlaceholdersTree(config.NormalizeYAML(data))
 }
 
-func validatePlaceholders(values map[string]any) error {
-	return validatePlaceholdersTree(values)
-}
-
 func validatePlaceholdersTree(v any) error {
-	return walkPlaceholders(v, checkPlaceholderString)
+	return walkYAML(v, checkPlaceholderString)
 }
 
 // checkPlaceholderString rejects only malformed ${env.*} or ${infra.*} references.
@@ -57,26 +53,6 @@ func checkPlaceholderString(s string) error {
 			}
 		}
 		i = start + end + 1
-	}
-	return nil
-}
-
-func walkPlaceholders(v any, check func(string) error) error {
-	switch t := v.(type) {
-	case map[string]any:
-		for _, val := range t {
-			if err := walkPlaceholders(val, check); err != nil {
-				return err
-			}
-		}
-	case []any:
-		for _, item := range t {
-			if err := walkPlaceholders(item, check); err != nil {
-				return err
-			}
-		}
-	case string:
-		return check(t)
 	}
 	return nil
 }

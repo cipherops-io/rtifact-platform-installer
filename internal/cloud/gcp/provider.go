@@ -13,6 +13,7 @@ import (
 type CommandRunner func(ctx context.Context, name string, args ...string) ([]byte, error)
 
 type Provider struct {
+	cloud.NoopLifecycle
 	run      CommandRunner
 	lookPath func(string) (string, error)
 }

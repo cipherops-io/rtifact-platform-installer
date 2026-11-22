@@ -74,7 +74,7 @@ func fetchUsages(ctx context.Context, subscriptionID, region string) (map[string
 	if placeholderSubscription(subscriptionID) {
 		return nil, usererr.WithHint(
 			"Cannot check Azure quota with a placeholder subscription.",
-			"Set account.subscription_id to your real subscription UUID, or run validate with --check-azure=false.",
+			"Set account.subscription_id to your real subscription UUID, or run validate with --check-quota=false.",
 			`The sample value 00000000-0000-0000-0000-000000000000 is not valid for live quota checks.`,
 		)
 	}
@@ -85,7 +85,7 @@ func fetchUsages(ctx context.Context, subscriptionID, region string) (map[string
 	if err != nil {
 		return nil, usererr.WithHint(
 			"Azure CLI (az) is not installed or not on PATH.",
-			"Install Azure CLI, sign in with az login, or run validate with --check-azure=false.",
+			"Install Azure CLI, sign in with az login, or run validate with --check-quota=false.",
 		)
 	}
 	_ = ctx
@@ -101,14 +101,14 @@ func fetchUsages(ctx context.Context, subscriptionID, region string) (map[string
 		if strings.Contains(low, "operation not permitted") && strings.Contains(low, ".azure") {
 			return nil, usererr.WithHint(
 				"Azure CLI could not write command logs under ~/.azure.",
-				"Fix permissions on your home directory, reinstall Azure CLI, or run validate with --check-azure=false.",
+				"Fix permissions on your home directory, reinstall Azure CLI, or run validate with --check-quota=false.",
 				detail,
 			)
 		}
 		if strings.Contains(low, "not logged in") || strings.Contains(low, "please run 'az login'") {
 			return nil, usererr.WithHint(
 				"You are not signed in to Azure CLI.",
-				"Run `az login`, confirm `az account show`, then retry — or use --check-azure=false.",
+				"Run `az login`, confirm `az account show`, then retry — or use --check-quota=false.",
 			)
 		}
 		if strings.Contains(low, "subscription") && strings.Contains(low, "not found") {
@@ -120,13 +120,13 @@ func fetchUsages(ctx context.Context, subscriptionID, region string) (map[string
 		}
 		return nil, usererr.WithHint(
 			"Azure quota API call failed.",
-			"Verify `az login`, subscription access, and region spelling — or use --check-azure=false.",
+			"Verify `az login`, subscription access, and region spelling — or use --check-quota=false.",
 			detail,
 		)
 	}
 	var page usagePage
 	if err := json.Unmarshal(out, &page); err != nil {
-		return nil, usererr.Wrap(err, "Azure quota API returned invalid JSON.", "Retry later or use --check-azure=false.")
+		return nil, usererr.Wrap(err, "Azure quota API returned invalid JSON.", "Retry later or use --check-quota=false.")
 	}
 	limits := map[string]struct{ current, limit int }{}
 	for _, u := range page.Value {
