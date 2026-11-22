@@ -198,9 +198,25 @@ func tofuRun(action string, stackFlag *string, yes, allowDestroy, checklist, ign
 	}
 }
 
-func Execute() {
-	if err := NewRoot().Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, usererr.Human(err))
-		os.Exit(1)
+// Main is the process entrypoint with typed exit codes.
+func Main() {
+	os.Exit(Run())
+}
+
+// Run executes the CLI and returns a process exit code.
+func Run() int {
+	err := NewRoot().Execute()
+	if err == nil {
+		return 0
 	}
+	if code, ok := planExitCode(err); ok {
+		return code
+	}
+	fmt.Fprintln(os.Stderr, usererr.Human(err))
+	return ExitCode(err)
+}
+
+// Execute is deprecated; use Main or Run.
+func Execute() {
+	Main()
 }

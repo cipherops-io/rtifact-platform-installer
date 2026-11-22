@@ -313,7 +313,7 @@ func decideRemovals(in Input, opts Options, wantedKeys map[string]bool, obsByKey
 		}
 		cands = append(cands, e)
 	}
-	cands = orderDependentsFirst(cands)
+	cands = RemovalOrder(cands)
 
 	rows := make([]Row, 0, len(cands))
 	for _, e := range cands {
@@ -355,6 +355,11 @@ func dataNote(purge bool) string {
 		return "--purge: PVCs, CRDs and namespaces will be deleted"
 	}
 	return "PVCs, CRDs and namespaces are kept (use --purge to delete)"
+}
+
+// RemovalOrder orders inventory entries for uninstall (dependents before requirements).
+func RemovalOrder(entries []Entry) []Entry {
+	return orderDependentsFirst(entries)
 }
 
 // orderDependentsFirst orders candidates so that a release comes before the

@@ -44,7 +44,7 @@ fmt:
 
 build-dev: package-content
 	@mkdir -p dist
-	go build -ldflags "-X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS)" -o $(DIST) ./cmd/installer
+	go build -ldflags "-X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS)" -o $(DIST) ./cmd/rtifact
 
 embed: fetch-tofu mirror-tofu
 	@echo "embed artifacts ready under build/embed/"
@@ -57,7 +57,7 @@ mirror-tofu:
 
 release: package-content embed
 	@mkdir -p dist
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="$(LDFLAGS)" -o $(DIST) ./cmd/installer
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="$(LDFLAGS)" -o $(DIST) ./cmd/rtifact
 
 release-all:
 	$(MAKE) release PACKAGED_CLOUDS=azure,aws,gcp

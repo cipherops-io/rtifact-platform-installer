@@ -9,4 +9,7 @@ fi
 export INSTALLER_CONTENT_ROOT="$ROOT"
 "$BIN" deploy validate "$ROOT/examples/deploy/minimal.yaml"
 "$BIN" deploy validate "$ROOT/examples/deploy/demo/demo.yaml"
+"$BIN" deploy plan --help | grep -q -- '--adopt'
+"$BIN" deploy status --help | grep -q -- '\-o'
+"$BIN" deploy plan --help | grep -q -- 'json'
 echo "rehearsal OK"
