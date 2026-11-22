@@ -21,3 +21,5 @@ jobs:
           go run ./cmd/installer validate examples/azure/minimal.yaml
           go run ./cmd/installer validate examples/aws/minimal.yaml
           go run ./cmd/installer validate examples/gcp/minimal.yaml
+      - name: Deploy validate smoke
+        run: make package-content && go run ./cmd/installer deploy validate examples/deploy/minimal.yaml

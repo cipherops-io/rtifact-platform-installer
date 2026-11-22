@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.4.0] - 2026-11-22
+
+Aligned with **boilerplates [v3.2.1](https://github.com/cipherops-io/boilerplates/releases/tag/v3.2.1)**.
+
+### Architect pass (W0–W2)
+
+- Golden fixtures for merge, tfvars, and backends; stop tracking packaged example artifacts.
+- Normalize paths and YAML helpers via `internal/maputil`; unified `cloud.Cloud` surface (drop `cloudconfig`).
+- Slim CLI (root lifecycle only), cloud `Hooks` / lifecycle on providers, provider pins in `build/provider-versions.yml`.
+
+### Refactor (W3–W5)
+
+- `PrepareLayerVars` on `cloud.Lifecycle`; Azure RG injection in the Azure provider; runner imports `cloud` + `registry` only.
+- `internal/engine` step orchestration and confirm prompts; `TofuRunner`; phased layer steps; `context` from CLI.
+- Profile-owned checklists and YAML `aliases`; `ResolveProfileID` from packaged profiles; packaging loops `profiles/*/profile.yaml`.
+
+### Managed sync (W6)
+
+- Pin **BoilerplatesRef v3.2.1**; `boilerplate-source.yaml` records template commit; verify fails on moved tags.
+
+### Tests and release (W7–W8)
+
+- `internal/archtest` import rules and cloud-string guards; engine and hook wiring tests (fake `Cloud` + `TofuRunner`).
+- ADR 0010: engine steps and cloud boundaries; release workflow `deploy validate` smoke.
+
 ## [0.3.0] - 2026-11-22
 
 Aligned with **boilerplates [v3.2.0](https://github.com/cipherops-io/boilerplates/releases/tag/v3.2.0)**.
