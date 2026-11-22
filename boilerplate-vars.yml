@@ -2,7 +2,7 @@ GitHubOwner: cipherops-io
 GitHubRepo: rtifact-platform-installer
 GoModulePath: github.com/cipherops-io/rtifact-platform-installer
 ProductName: rtifact
-BoilerplatesRef: v3.2.0
+BoilerplatesRef: v3.2.1
 Clouds:
   - azure
   - aws

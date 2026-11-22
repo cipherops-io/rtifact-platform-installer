@@ -45,6 +45,12 @@ Deploy content is packaged in every binary, regardless of the selected infrastru
 
 Managed workflow: `.github/workflows/build-binary.yml` (matrix targets from template `BuildTargets`).
 
+## Template source pin (`boilerplate-source.yaml`)
+
+After every `make boilerplate-update`, `record-boilerplate-source` writes `ref`, `commit`, and `template_url` to **`boilerplate-source.yaml`** (created by that step, not re-rendered from the template). Commit it with the sync so CI can detect a **moved tag** (same ref name, different commit).
+
+`verify-boilerplate-source` runs inside `make boilerplate-verify` for GitHub template URLs. It is **skipped** when `BOILERPLATES_TEMPLATE_URL` points at a local sibling checkout (`../boilerplates/...`).
+
 ## Verify
 
 CI checks managed files against `boilerplate-manifest.yaml` checksums (no cross-repo fetch):

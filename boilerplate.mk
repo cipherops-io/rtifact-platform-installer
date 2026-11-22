@@ -3,10 +3,10 @@
 
 # Generic boilerplate sync — rtifact-product managed template.
 
-BOILERPLATES_TEMPLATE_URL ?= github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.2.0
+BOILERPLATES_TEMPLATE_URL ?= github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.2.1
 # Local sibling: make boilerplate-update BOILERPLATES_TEMPLATE_URL=../boilerplates/devops-templates/rtifact-product
 BOILERPLATES_REPO ?= ../boilerplates
-BOILERPLATES_REF ?= v3.2.0
+BOILERPLATES_REF ?= v3.2.1
 BOILERPLATE_VAR_FILES ?= boilerplate-vars.yml
 
 ifndef REPO_ROOT
@@ -14,6 +14,7 @@ REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 endif
 
 .PHONY: boilerplate-update boilerplate-verify check-template-source print-tool-versions
+.PHONY: record-boilerplate-source verify-boilerplate-source
 
 boilerplate-update:
 	@command -v boilerplate >/dev/null || (echo "boilerplate CLI required (https://boilerplate.gruntwork.io)" && exit 1)
@@ -28,10 +29,66 @@ boilerplate-update:
 	  --non-interactive --disable-dependency-prompt --no-hooks \
 	  --manifest-file boilerplate-manifest.yaml \
 	  --output-folder . \
-	  $$args
+	  $$args; \
+	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) record-boilerplate-source
+
+record-boilerplate-source:
+	@set -e; \
+	ref="$(BOILERPLATES_REF)"; \
+	url="$(BOILERPLATES_TEMPLATE_URL)"; \
+	case "$$url" in \
+	  ../*|file:*|$(BOILERPLATES_REPO)/*|$(BOILERPLATES_REPO)) \
+	    commit=$$(git -C "$(BOILERPLATES_REPO)" rev-parse HEAD); \
+	    ;; \
+	  *) \
+	    if [ -d "$(BOILERPLATES_REPO)/.git" ]; then \
+	      commit=$$(git -C "$(BOILERPLATES_REPO)" rev-parse "refs/tags/$$ref^{commit}" 2>/dev/null \
+	        || git -C "$(BOILERPLATES_REPO)" rev-parse "$$ref^{commit}" 2>/dev/null); \
+	    fi; \
+	    if [ -z "$$commit" ]; then \
+	      remote="https://github.com/cipherops-io/boilerplates.git"; \
+	      commit=$$(git ls-remote "$$remote" "refs/tags/$$ref^{}" 2>/dev/null | awk '{print $$1}'); \
+	    fi; \
+	    [ -n "$$commit" ] || { echo "record-boilerplate-source: cannot resolve ref $$ref"; exit 1; }; \
+	    ;; \
+	esac; \
+	printf '%s\n' \
+	  "# DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product)." \
+	  "# commit is refreshed by make boilerplate-update (record-boilerplate-source)." \
+	  "ref: $$ref" \
+	  "commit: $$commit" \
+	  "template_url: $$url" > boilerplate-source.yaml
+
+verify-boilerplate-source:
+	@set -e; \
+	case "$(BOILERPLATES_TEMPLATE_URL)" in \
+	  ../*|file:*|$(BOILERPLATES_REPO)/*|$(BOILERPLATES_REPO)) \
+	    echo "verify-boilerplate-source: skip (local template)"; exit 0;; \
+	esac; \
+	[ -f boilerplate-source.yaml ] || { echo "missing boilerplate-source.yaml"; exit 1; }; \
+	ref=$$(awk '/^ref:/{print $$2; exit}' boilerplate-source.yaml); \
+	want=$$(awk '/^commit:/{print $$2; exit}' boilerplate-source.yaml); \
+	[ -n "$$ref" ] && [ -n "$$want" ] || { echo "boilerplate-source.yaml missing ref or commit"; exit 1; }; \
+	got=""; \
+	if [ -d "$(BOILERPLATES_REPO)/.git" ]; then \
+	  got=$$(git -C "$(BOILERPLATES_REPO)" rev-parse "refs/tags/$$ref^{commit}" 2>/dev/null \
+	    || git -C "$(BOILERPLATES_REPO)" rev-parse "$$ref^{commit}" 2>/dev/null); \
+	fi; \
+	if [ -z "$$got" ]; then \
+	  remote="https://github.com/cipherops-io/boilerplates.git"; \
+	  got=$$(git ls-remote "$$remote" "refs/tags/$$ref^{}" 2>/dev/null | awk '{print $$1}'); \
+	fi; \
+	[ -n "$$got" ] || { echo "verify-boilerplate-source: cannot resolve tag $$ref"; exit 1; }; \
+	if [ "$$got" != "$$want" ]; then \
+	  echo "boilerplate tag $$ref moved: recorded $$want, tag is now $$got"; \
+	  echo "Run make boilerplate-update with the intended ref and commit boilerplate-source.yaml."; \
+	  exit 1; \
+	fi; \
+	echo "verify-boilerplate-source: OK"
 
 boilerplate-verify:
 	@set -e; \
+	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) verify-boilerplate-source; \
 	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) boilerplate-update; \
 	git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'
 
@@ -52,7 +109,7 @@ print-tool-versions:
 # Scaffold targets — render skeleton templates once (init-only skip rules).
 
 BOILERPLATES_GITHUB ?= github.com/cipherops-io/boilerplates
-BOILERPLATES_GITHUB_REF ?= ?ref=v3.2.0
+BOILERPLATES_GITHUB_REF ?= ?ref=v3.2.1
 BOILERPLATES_REPO ?= ../boilerplates
 TPL_RTIFACT_STACK ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-stack$(BOILERPLATES_GITHUB_REF)
 TPL_RTIFACT_MODULE ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-module$(BOILERPLATES_GITHUB_REF)
@@ -94,7 +151,10 @@ TERRAFORM_DOCS_CONFIG ?= $(REPO_ROOT)/.terraform-docs.yml
 TERRAFORM_DOCS_GEN_CONFIG ?= $(REPO_ROOT)/.terraform-docs.gen.yml
 
 CLOUDS ?= azure aws gcp
-PROFILES ?= aios-infra
+# Profile ids discovered from profiles/*/profile.yaml (override: make PROFILES=id1 id2).
+PROFILES ?= $(shell set -e; for f in "$(REPO_ROOT)"/profiles/*/profile.yaml; do \
+	[ -f "$$f" ] || continue; basename "$$(dirname "$$f")"; \
+	done | tr '\n' ' ' | sed 's/[[:space:]]*$$//')
 
 .PHONY: help check-tools
 .PHONY: tofu-fmt tofu-fmt-check tofu-docs tofu-docs-check
