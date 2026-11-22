@@ -2,7 +2,7 @@ Variables:
     AirGapped: true
     ArtifactRegistryHost: ""
     BoilerplateCliVersion: 0.17.0
-    BoilerplatesRef: v3.2.1
+    BoilerplatesRef: v3.3.0
     BuildTargets:
         - linux/amd64
         - darwin/arm64
@@ -154,7 +154,7 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-22T18:01:42Z"
+Timestamp: "2026-11-22T19:26:12Z"
 TemplateURL: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.2.1
 BoilerplateVersion: v0.17.0
 SourceChecksum: git-sha1:a8c2b61cfe18733143a2d98e120b9416e6c19f7c
@@ -165,7 +165,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.2.1
+        BoilerplatesRef: v3.3.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -332,7 +332,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.2.1
+        BoilerplatesRef: v3.3.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -499,7 +499,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.2.1
+        BoilerplatesRef: v3.3.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -666,7 +666,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.2.1
+        BoilerplatesRef: v3.3.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -831,7 +831,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -999,7 +999,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1167,7 +1167,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1335,7 +1335,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1503,7 +1503,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1671,7 +1671,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1839,7 +1839,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.2.1
+        BoilerplatesRef: v3.3.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -2004,7 +2004,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2172,7 +2172,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2340,7 +2340,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2508,7 +2508,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2676,7 +2676,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2844,7 +2844,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3012,7 +3012,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.2.1
+        BoilerplatesRef: v3.3.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -3177,7 +3177,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3345,7 +3345,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3513,7 +3513,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3681,7 +3681,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3849,7 +3849,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -4017,7 +4017,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.2.1
+            BoilerplatesRef: v3.3.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -4192,11 +4192,11 @@ Files:
     - Path: .terraform-docs.yml
       Checksum: sha256:2ef73e4f08fcbd4b3ee01fe67c91b588ad1b0321bcb5e854e915ae2cc1447694
     - Path: AGENTS.md
-      Checksum: sha256:2723c63cd193c91f3546e8868f91ca12005d5cb766665fc3135fea2736e3ef99
+      Checksum: sha256:c7696d07ef5f2874a73d46299af91cec348060d2b9034c639fbde6fea536f513
     - Path: CLAUDE.md
       Checksum: sha256:a695d559cdc2e9e42ff21477bc97db4111eb0fd88a756ce232cc69d0d0a6ff7e
     - Path: boilerplate.mk
-      Checksum: sha256:8bb512a41fc891fdb40ae80c2e650e68d954fa0a6b2cb5eed6c3ea0970a362ed
+      Checksum: sha256:b747177df3d2e824d81e74d8f8a9e9be65bd08430f4887388c5fc3ca7ba75d24
     - Path: build/scripts/terraform-docs-module.sh
       Checksum: sha256:edf53e942fd1e54c1ebcb1610e1dba7e36223d67c14bdfe6af14ad46ae777395
     - Path: deploy/AGENTS.md

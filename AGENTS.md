@@ -66,7 +66,7 @@ Logic is edited **in this repo only**. Managed structure/tooling is edited in **
 
 ## Boilerplates checkout
 
-Use sibling `../boilerplates` for template development; before push set `BOILERPLATES_TEMPLATE_URL` to `github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.2.1`.
+Use sibling `../boilerplates` for template development; before push set `BOILERPLATES_TEMPLATE_URL` to `github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.3.0`.
 
 Templates: `rtifact-product` (managed sync), `rtifact-stack`, `rtifact-module`, `rtifact-cloud`, `rtifact-deploy` (one-shot scaffolds).
 

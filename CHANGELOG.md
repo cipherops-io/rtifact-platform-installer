@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.0] - 2026-11-23
+
+Aligned with **boilerplates [v3.3.0](https://github.com/cipherops-io/boilerplates/releases/tag/v3.3.0)**.
+
+### Deploy engine
+
+- `rtifact deploy plan|apply|status|rollback|destroy` with OCI charts, identity guard, inventory in `rtifact-system`, and lease locking.
+- Level-2 CI: `make deploy-e2e` (kind + Zot). See `tests/deploy/README.md` for scenario coverage.
+- **Gap (C6):** AWS `pod_identities` module and `aws-sbx2` golden refresh not included in this release cut.
+
 ## [0.4.1] - 2026-11-22
 
 - `boilerplate-source.yaml` records the canonical GitHub `template_url` so `make boilerplate-verify` matches CI.
