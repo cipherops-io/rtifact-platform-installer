@@ -12,6 +12,7 @@ Aligned with **boilerplates [v3.2.0](https://github.com/cipherops-io/boilerplate
 - Kubeconfig also written under `~/.rtifact/<prefix>/` for deploy discovery.
 - `validate --explain` with `${env.*}` masking; placeholder checks in `values_files`; `crds` defaults to `chart` on load; `--kubeconfig` relative paths use CWD.
 - CI: `deploy-unit` (not cluster e2e); `build-binary` prints binary size.
+- Pre-C2: Helm **v4.3.2** SDK (Go 1.26); chart-style `${...}` allowed; shared env placeholder regex; defaults for wait/rollback; `ResolvedSecretRedactor` stub for C2.
 
 ## [0.2.0] - 2026-11-22
 

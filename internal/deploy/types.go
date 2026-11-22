@@ -50,10 +50,10 @@ type PullSecretRef struct {
 }
 
 type Defaults struct {
-	Timeout             string `yaml:"timeout"`
-	Wait                bool   `yaml:"wait"`
-	RollbackOnFailure   bool   `yaml:"rollback_on_failure"`
-	HistoryMax          int    `yaml:"history_max"`
+	Timeout           string `yaml:"timeout"`
+	Wait              *bool  `yaml:"wait"`
+	RollbackOnFailure *bool  `yaml:"rollback_on_failure"`
+	HistoryMax        int    `yaml:"history_max"`
 }
 
 type Namespace struct {

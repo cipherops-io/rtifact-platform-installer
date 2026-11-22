@@ -3,16 +3,10 @@ package deploy
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
 	"gopkg.in/yaml.v3"
-)
-
-var (
-	envRef   = regexp.MustCompile(`^\$\{env\.[A-Z][A-Z0-9_]*\}$`)
-	infraRef = regexp.MustCompile(`^\$\{infra\.[a-zA-Z0-9_.-]+\}$`)
 )
 
 func validatePlaceholdersInFile(path string) error {
@@ -32,15 +26,39 @@ func validatePlaceholders(values map[string]any) error {
 }
 
 func validatePlaceholdersTree(v any) error {
-	return walkPlaceholders(v, func(s string) error {
-		if envRef.MatchString(s) || infraRef.MatchString(s) {
-			return nil
-		}
-		if strings.Contains(s, "${") {
-			return fmt.Errorf("invalid placeholder %q (use ${env.NAME} or ${infra.key})", s)
-		}
+	return walkPlaceholders(v, checkPlaceholderString)
+}
+
+// checkPlaceholderString rejects only malformed ${env.*} or ${infra.*} references.
+// Chart-owned tokens such as ${DS_PROMETHEUS} are left untouched.
+func checkPlaceholderString(s string) error {
+	if !strings.Contains(s, "${") {
 		return nil
-	})
+	}
+	for i := 0; i < len(s); {
+		j := strings.Index(s[i:], "${")
+		if j < 0 {
+			break
+		}
+		start := i + j
+		end := strings.Index(s[start:], "}")
+		if end < 0 {
+			break
+		}
+		token := s[start : start+end+1]
+		switch {
+		case strings.HasPrefix(token, "${env."):
+			if !EnvPlaceholderToken.MatchString(token) {
+				return fmt.Errorf("malformed env placeholder %q (use ${env.NAME} with uppercase NAME)", token)
+			}
+		case strings.HasPrefix(token, "${infra."):
+			if !InfraPlaceholderToken.MatchString(token) {
+				return fmt.Errorf("malformed infra placeholder %q (use ${infra.key})", token)
+			}
+		}
+		i = start + end + 1
+	}
+	return nil
 }
 
 func walkPlaceholders(v any, check func(string) error) error {

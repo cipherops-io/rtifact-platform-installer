@@ -25,6 +25,20 @@ func LoadFile(path string) (*Document, error) {
 }
 
 func applyDefaults(doc *Document) {
+	if doc.Defaults.Timeout == "" {
+		doc.Defaults.Timeout = "10m"
+	}
+	if doc.Defaults.Wait == nil {
+		t := true
+		doc.Defaults.Wait = &t
+	}
+	if doc.Defaults.RollbackOnFailure == nil {
+		t := true
+		doc.Defaults.RollbackOnFailure = &t
+	}
+	if doc.Defaults.HistoryMax == 0 {
+		doc.Defaults.HistoryMax = 5
+	}
 	for i := range doc.Releases {
 		if doc.Releases[i].CRDs == "" {
 			doc.Releases[i].CRDs = "chart"

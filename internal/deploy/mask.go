@@ -2,15 +2,40 @@ package deploy
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 )
 
-var envPlaceholderRE = regexp.MustCompile(`\$\{env\.[A-Z][A-Z0-9_]+\}`)
+// C2: Masking today only hides ${env.NAME} text in summaries. Once placeholders are resolved at apply time,
+// resolved secret literals must be redacted from every diff, log line, and error — the placeholder string is not the secret.
+// Use ResolvedSecretRedactor when wiring plan/apply in C2.
+
+// ResolvedSecretRedactor records literal values produced from ${env.*} resolution and redacts them from output.
+type ResolvedSecretRedactor struct {
+	literals []string
+}
+
+// RecordResolved registers a secret value that must never appear in user-visible output.
+func (r *ResolvedSecretRedactor) RecordResolved(value string) {
+	if value == "" {
+		return
+	}
+	r.literals = append(r.literals, value)
+}
+
+// RedactText replaces recorded literals and remaining env placeholder tokens with ***.
+func (r *ResolvedSecretRedactor) RedactText(s string) string {
+	out := MaskEnvPlaceholders(s)
+	for _, lit := range r.literals {
+		if lit != "" {
+			out = strings.ReplaceAll(out, lit, "***")
+		}
+	}
+	return out
+}
 
 // MaskEnvPlaceholders redacts ${env.NAME} references in text shown to the user.
 func MaskEnvPlaceholders(s string) string {
-	return envPlaceholderRE.ReplaceAllString(s, "***")
+	return EnvPlaceholderToken.ReplaceAllString(s, "***")
 }
 
 // MaskEnvInValue returns a copy of v with string leaves masked (for explain output).
@@ -43,6 +68,11 @@ func ExplainSummary(doc *Document) string {
 	}
 	var b strings.Builder
 	fmt.Fprintf(&b, "kind=%s name_prefix=%s environment=%s\n", doc.Kind, doc.NamePrefix, doc.Environment)
+	if doc.Defaults.Timeout != "" {
+		fmt.Fprintf(&b, "defaults: timeout=%s wait=%v rollback_on_failure=%v history_max=%d\n",
+			doc.Defaults.Timeout, boolVal(doc.Defaults.Wait, true),
+			boolVal(doc.Defaults.RollbackOnFailure, true), doc.Defaults.HistoryMax)
+	}
 	fmt.Fprintf(&b, "install order: %s\n", strings.Join(order, " → "))
 	for _, rel := range doc.Releases {
 		fmt.Fprintf(&b, "\nrelease %q (ns=%s chart=%s@%s crds=%s", rel.Name, rel.Namespace, rel.Chart, rel.Version, rel.CRDs)
@@ -59,4 +89,11 @@ func ExplainSummary(doc *Document) string {
 		}
 	}
 	return strings.TrimSpace(b.String())
+}
+
+func boolVal(p *bool, def bool) bool {
+	if p == nil {
+		return def
+	}
+	return *p
 }

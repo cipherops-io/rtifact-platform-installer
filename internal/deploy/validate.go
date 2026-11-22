@@ -47,6 +47,9 @@ func ValidateFile(path string) error {
 func validateSemantic(deployPath string, doc *Document) error {
 	nsSet := make(map[string]struct{}, len(doc.Namespaces))
 	for _, n := range doc.Namespaces {
+		if _, dup := nsSet[n.Name]; dup {
+			return fmt.Errorf("duplicate namespace %q", n.Name)
+		}
 		nsSet[n.Name] = struct{}{}
 	}
 	names := make(map[string]struct{}, len(doc.Releases))
