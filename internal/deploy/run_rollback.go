@@ -7,7 +7,6 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/lock"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/ocireg"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/engine"
 )
 
@@ -18,7 +17,7 @@ func Rollback(ctx context.Context, o RunOptions, release string) error {
 		return err
 	}
 	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
-	printBanner(o.out(), doc, disc, kcfg)
+	PrintBanner(o.err(), doc, disc, kcfg, sess.Identity)
 	if err := engine.ConfirmDeployRollback(o.Yes, release); err != nil {
 		return err
 	}
@@ -36,23 +35,7 @@ func Rollback(ctx context.Context, o RunOptions, release string) error {
 		defer cancel()
 		_ = h.Release(releaseCtx, kcfg, deployment)
 	}()
-	regCfg := registryFromDoc(doc)
-	cred, err := ocireg.LoadAuth(regCfg)
-	if err != nil {
-		return err
-	}
-	reg, err := ocireg.NewClient(regCfg, cred)
-	if err != nil {
-		return err
-	}
-	cs, err := helmclient.New(helmclient.Options{
-		Kube: kcfg, Deployment: deployment, RegistryClient: reg,
-		Defaults: helmclient.Defaults{
-			Timeout: doc.Defaults.Timeout, Wait: doc.Defaults.Wait,
-			RollbackOnFailure: doc.Defaults.RollbackOnFailure, HistoryMax: doc.Defaults.HistoryMax,
-		},
-		Registry: helmclient.RegistryOpts{PlainHTTP: doc.Registry.PlainHTTP},
-	})
+	cs, err := newHelmClient(kcfg, doc, nil, o)
 	if err != nil {
 		return err
 	}

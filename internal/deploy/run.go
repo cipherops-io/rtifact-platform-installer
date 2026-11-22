@@ -13,6 +13,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/ocireg"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/redact"
+	"helm.sh/helm/v4/pkg/registry"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,6 +34,9 @@ type RunOptions struct {
 	ForceUnlock       bool
 	Purge             bool
 	Debug             bool
+	JSONOutput        bool
+	// NeedsRegistry is true for plan/apply (OCI chart digests); status, destroy, and rollback leave it false.
+	NeedsRegistry     bool
 	Stdout            io.Writer
 	Stderr            io.Writer
 }
@@ -52,15 +56,6 @@ func (o *RunOptions) err() io.Writer {
 }
 
 
-func printBanner(w io.Writer, doc *Document, disc Discovery, kcfg kube.Config) {
-	server, _ := kube.ServerURL(kcfg)
-	fmt.Fprintf(w, "Cluster:    %s  %s\n", doc.NamePrefix, server)
-	fmt.Fprintf(w, "Kubeconfig: %s (%s)\n", disc.KubeconfigPath, disc.KubeconfigFrom)
-	if disc.OutputsPath != "" {
-		fmt.Fprintf(w, "Outputs:    %s (%s)\n", disc.OutputsPath, disc.OutputsFrom)
-	}
-}
-
 // Plan prints pending changes without mutating the cluster.
 func Plan(ctx context.Context, o RunOptions) (int, error) {
 	sess, err := OpenSession(ctx, o)
@@ -68,24 +63,20 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 		return 1, err
 	}
 	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
-	printBanner(o.out(), doc, disc, kcfg)
+	PrintBanner(o.err(), doc, disc, kcfg, sess.Identity)
+	rd := redact.New()
+	resolved, err := ResolveAllReleases(o.FilePath, doc, disc.OutputsPath, rd)
+	if err != nil {
+		return 1, err
+	}
+	debugf(o, "registry host=%s plain_http=%v", doc.Registry.Host, doc.Registry.PlainHTTP)
+	o.NeedsRegistry = true
 	regCfg := registryFromDoc(doc)
-	cred, err := ocireg.LoadAuth(regCfg)
+	reg, err := registryClient(ctx, doc, true)
 	if err != nil {
 		return 1, err
 	}
-	reg, err := ocireg.NewClient(regCfg, cred)
-	if err != nil {
-		return 1, err
-	}
-	cs, err := helmclient.New(helmclient.Options{
-		Kube: kcfg, Deployment: DeploymentID(doc),
-		Defaults: helmclient.Defaults{
-			Timeout: doc.Defaults.Timeout, Wait: doc.Defaults.Wait,
-			RollbackOnFailure: doc.Defaults.RollbackOnFailure, HistoryMax: doc.Defaults.HistoryMax,
-		},
-		Registry: helmclient.RegistryOpts{PlainHTTP: doc.Registry.PlainHTTP},
-	})
+	cs, err := newHelmClient(kcfg, doc, reg, o)
 	if err != nil {
 		return 1, err
 	}
@@ -113,7 +104,19 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 		AllowDowngrade: o.AllowDowngrade, AllowAdopt: o.AllowAdopt, Purge: o.Purge,
 		Only: o.Only, OnlyClosure: closure,
 	})
-	printPlan(o.out(), res)
+	if err := PrintPlan(o.out(), rd, res, o.JSONOutput); err != nil {
+		return 1, err
+	}
+	if err := printPlanManifestDiffs(ctx, planDiffOpts{
+		out: o.out(), stderr: o.err(), debug: o.Debug,
+		cs: cs, doc: doc, res: res, regCfg: regCfg,
+		resolved: resolved, rd: rd,
+	}); err != nil {
+		return 1, err
+	}
+	if refusedBlocking(res) != nil {
+		return 1, refusedBlocking(res)
+	}
 	if o.DetailedExitCode {
 		if res.HasChange {
 			return 2, nil
@@ -157,32 +160,26 @@ func refusedBlocking(res plan.Result) error {
 	return nil
 }
 
-func printPlan(w io.Writer, res plan.Result) {
-	removalsShown := false
-	for _, row := range res.Rows {
-		note := ""
-		if row.Note != "" {
-			note = "  [" + row.Note + "]"
-		}
-		switch row.Action {
-		case plan.ActionUnchanged:
-			fmt.Fprintf(w, "  %s/%s: unchanged (%s)\n", row.Namespace, row.Name, row.ToVersion)
-		case plan.ActionInstall:
-			fmt.Fprintf(w, "  %s/%s: install %s%s\n", row.Namespace, row.Name, row.ToVersion, note)
-		case plan.ActionUpgrade:
-			fmt.Fprintf(w, "  %s/%s: upgrade %s -> %s%s\n", row.Namespace, row.Name, row.FromVersion, row.ToVersion, note)
-		case plan.ActionRemove:
-			if !removalsShown {
-				fmt.Fprint(w, "\nRemovals:\n")
-				removalsShown = true
-			}
-			fmt.Fprintf(w, "  %s/%s: remove%s\n", row.Namespace, row.Name, note)
-		case plan.ActionRefused, plan.ActionStuck:
-			fmt.Fprintf(w, "  %s/%s: %s %s\n", row.Namespace, row.Name, row.Action, row.Note)
-		default:
-			fmt.Fprintf(w, "  %s/%s: %s%s\n", row.Namespace, row.Name, row.Action, note)
-		}
+func newHelmClient(kcfg kube.Config, doc *Document, reg *registry.Client, o RunOptions) (*helmclient.Client, error) {
+	deployment := DeploymentID(doc)
+	return helmclient.New(helmclient.Options{
+		Kube: kcfg, Deployment: deployment, RegistryClient: reg,
+		Defaults: helmDefaults(o, doc),
+		Registry: helmclient.RegistryOpts{PlainHTTP: doc.Registry.PlainHTTP},
+	})
+}
+
+func registryClient(ctx context.Context, doc *Document, needs bool) (*registry.Client, error) {
+	_ = ctx
+	if !needs {
+		return nil, nil
 	}
+	regCfg := registryFromDoc(doc)
+	cred, err := ocireg.LoadAuth(regCfg)
+	if err != nil {
+		return nil, err
+	}
+	return ocireg.NewClient(regCfg, cred)
 }
 
 func registryFromDoc(doc *Document) ocireg.Registry {

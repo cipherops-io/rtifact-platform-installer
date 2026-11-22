@@ -151,6 +151,23 @@ func resolveReleaseString(s string, rd *redact.Redactor, outputsDir string) (str
 	return b.String(), nil
 }
 
+// ResolveAllReleases resolves placeholders for every release into one redactor scope.
+func ResolveAllReleases(deployPath string, doc *Document, outputsDir string, rd *redact.Redactor) (map[string]map[string]any, error) {
+	out := make(map[string]map[string]any, len(doc.Releases))
+	for _, rel := range doc.Releases {
+		merged, err := MergeReleaseValues(deployPath, rel)
+		if err != nil {
+			return nil, err
+		}
+		resolved, err := ResolveReleaseValuesFrom(merged, rd, outputsDir)
+		if err != nil {
+			return nil, err
+		}
+		out[rel.Name] = resolved
+	}
+	return out, nil
+}
+
 // ValuesDigest returns a stable hash of merged release values (unresolved) for change detection.
 func ValuesDigest(v map[string]any) (string, error) {
 	b, err := json.Marshal(v)

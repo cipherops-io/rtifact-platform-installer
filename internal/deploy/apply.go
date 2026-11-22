@@ -72,6 +72,9 @@ type applyRun struct {
 
 	relByName map[string]Release
 	entries   map[string]inventory.Entry
+	identity  IdentityInfo
+	rd        *redact.Redactor
+	resolved  map[string]map[string]any
 }
 
 func entryKey(name, ns string) string { return ns + "/" + name }
@@ -85,7 +88,8 @@ func Apply(ctx context.Context, o RunOptions) error {
 	if err != nil {
 		return AsInterrupted(err)
 	}
-	printBanner(o.out(), ar.doc, ar.disc, ar.kcfg)
+	PrintBanner(o.err(), ar.doc, ar.disc, ar.kcfg, ar.identity)
+	debugf(o, "deployment=%s purge=%v timeout=%s", ar.deployID, o.Purge, helmDefaults(o, ar.doc).Timeout)
 
 	if !ar.res.HasChange {
 		fmt.Fprintln(o.out(), "No changes.")
@@ -94,8 +98,16 @@ func Apply(ctx context.Context, o RunOptions) error {
 	if err := refusedBlocking(ar.res); err != nil {
 		return AsInterrupted(err)
 	}
-	if err := engine.ConfirmDeployApply(o.Yes, len(removalRows(ar.res)) > 0); err != nil {
-		return AsInterrupted(err)
+	removals := removalRows(ar.res)
+	if hasNonRemovalChanges(ar.res) {
+		if err := engine.ConfirmDeployApply(o.Yes); err != nil {
+			return AsInterrupted(err)
+		}
+	}
+	if len(removals) > 0 {
+		if err := engine.ConfirmDeployRemovals(o.Yes); err != nil {
+			return AsInterrupted(err)
+		}
 	}
 	if err := ensureSystemNS(ctx, ar.kcfg); err != nil {
 		return AsInterrupted(err)
@@ -126,12 +138,14 @@ func prepareApplyRun(ctx context.Context, o RunOptions) (*applyRun, error) {
 		return nil, err
 	}
 	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
-	regCfg := registryFromDoc(doc)
-	cred, err := ocireg.LoadAuth(regCfg)
+	rd := redact.New()
+	resolved, err := ResolveAllReleases(o.FilePath, doc, disc.OutputsPath, rd)
 	if err != nil {
 		return nil, err
 	}
-	reg, err := ocireg.NewClient(regCfg, cred)
+	o.NeedsRegistry = true
+	regCfg := registryFromDoc(doc)
+	reg, err := registryClient(ctx, doc, true)
 	if err != nil {
 		return nil, err
 	}
@@ -142,14 +156,7 @@ func prepareApplyRun(ctx context.Context, o RunOptions) (*applyRun, error) {
 	if err != nil {
 		return nil, err
 	}
-	cs, err := helmclient.New(helmclient.Options{
-		Kube: kcfg, Deployment: DeploymentID(doc), RegistryClient: reg,
-		Defaults: helmclient.Defaults{
-			Timeout: doc.Defaults.Timeout, Wait: doc.Defaults.Wait,
-			RollbackOnFailure: doc.Defaults.RollbackOnFailure, HistoryMax: doc.Defaults.HistoryMax,
-		},
-		Registry: helmclient.RegistryOpts{PlainHTTP: doc.Registry.PlainHTTP},
-	})
+	cs, err := newHelmClient(kcfg, doc, reg, o)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +177,16 @@ func prepareApplyRun(ctx context.Context, o RunOptions) (*applyRun, error) {
 		AllowDowngrade: o.AllowDowngrade, AllowAdopt: o.AllowAdopt, Purge: o.Purge,
 		Only: o.Only, OnlyClosure: closure,
 	})
-	printPlan(o.out(), res)
+	if err := PrintPlan(o.out(), rd, res, o.JSONOutput); err != nil {
+		return nil, err
+	}
+	if err := printPlanManifestDiffs(ctx, planDiffOpts{
+		out: o.out(), stderr: o.err(), debug: o.Debug,
+		cs: cs, doc: doc, res: res, regCfg: regCfg,
+		resolved: resolved, rd: rd,
+	}); err != nil {
+		return nil, err
+	}
 
 	relByName := map[string]Release{}
 	for _, r := range doc.Releases {
@@ -185,6 +201,7 @@ func prepareApplyRun(ctx context.Context, o RunOptions) (*applyRun, error) {
 		ctx: ctx, o: o, doc: doc, disc: disc, kcfg: kcfg, regCfg: regCfg, reg: reg,
 		deployID: DeploymentID(doc), want: want, res: res, inv: inv, closure: closure,
 		helm: cs, relByName: relByName, entries: entries,
+		identity: sess.Identity, rd: rd, resolved: resolved,
 	}, nil
 }
 
@@ -261,14 +278,9 @@ func (ar *applyRun) stepReleases() engine.Step {
 			if w == nil {
 				return fmt.Errorf("release %q missing from wanted set", name)
 			}
-			merged, err := MergeReleaseValues(ar.o.FilePath, rel)
-			if err != nil {
-				return err
-			}
-			rd := redact.New()
-			resolved, err := ResolveReleaseValuesFrom(merged, rd, ar.disc.OutputsPath)
-			if err != nil {
-				return err
+			resolved, ok := ar.resolved[name]
+			if !ok {
+				return fmt.Errorf("release %q missing resolved values", name)
 			}
 			ref, err := ocireg.ChartRef(ar.regCfg, rel.Chart)
 			if err != nil {
@@ -330,9 +342,22 @@ func (ar *applyRun) stepRemovals() engine.Step {
 			if err := ar.writeInventory(); err != nil {
 				return err
 			}
+			if err := reportOrPurgeRemovalData(ctx, ar.kcfg, ar.doc, ar.entries, ns, ar.o.Purge, ar.o.out()); err != nil {
+				return err
+			}
 		}
 		return nil
 	})
+}
+
+func hasNonRemovalChanges(res plan.Result) bool {
+	for _, row := range res.Rows {
+		switch row.Action {
+		case plan.ActionInstall, plan.ActionUpgrade, plan.ActionAdopt, plan.ActionStuck:
+			return true
+		}
+	}
+	return false
 }
 
 func removalRows(res plan.Result) []plan.Row {

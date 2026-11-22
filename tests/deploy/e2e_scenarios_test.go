@@ -3,9 +3,11 @@
 package deploy_test
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy"
@@ -141,6 +143,56 @@ func TestE2E_S13_IdentityGuard(t *testing.T) {
 	_, err := deploy.Plan(context.Background(), e2eOpts(t, file))
 	if err == nil {
 		t.Fatal("expected identity refusal")
+	}
+}
+
+// Canary: resolved secret env must never appear in plan stdout/stderr.
+func TestE2E_Canary_SecretNotInPlanOutput(t *testing.T) {
+	const secret = "canary-e2e-secret-must-not-leak"
+	t.Setenv("RTIFACT_E2E_SECRET", secret)
+	dir := t.TempDir()
+	file := writeFixture(t, dir, func(doc *deploy.Document) {
+		doc.Namespaces = append(doc.Namespaces, deploy.Namespace{Name: doc.NamePrefix + "-sec"})
+		doc.Releases = append(doc.Releases, deploy.Release{
+			Name: "secretful", Namespace: doc.NamePrefix + "-sec",
+			Chart: "secretful", Version: "1.0.0", CRDs: "chart",
+			Values: map[string]any{"token": "${env.RTIFACT_E2E_SECRET}"},
+		})
+	})
+	var out, errOut bytes.Buffer
+	o := e2eOpts(t, file)
+	o.Stdout = &out
+	o.Stderr = &errOut
+	e2eCleanupDeploy(t, file, o)
+	if err := deploy.Apply(context.Background(), o); err != nil {
+		t.Fatal(err)
+	}
+	out.Reset()
+	errOut.Reset()
+	if _, err := deploy.Plan(context.Background(), o); err != nil {
+		t.Fatal(err)
+	}
+	combined := out.String() + errOut.String()
+	if strings.Contains(combined, secret) {
+		t.Fatalf("plan output leaked secret (len=%d)", len(combined))
+	}
+	if !strings.Contains(combined, "Identity:") {
+		t.Fatal("expected Identity banner line on stderr")
+	}
+}
+
+// S19 unknown --only release
+func TestE2E_S19_UnknownOnly(t *testing.T) {
+	dir := t.TempDir()
+	file := writeFixture(t, dir, func(*deploy.Document) {})
+	o := e2eOpts(t, file)
+	o.Only = "does-not-exist"
+	_, err := deploy.Plan(context.Background(), o)
+	if err == nil {
+		t.Fatal("expected unknown --only error")
+	}
+	if !strings.Contains(err.Error(), "does-not-exist") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 
