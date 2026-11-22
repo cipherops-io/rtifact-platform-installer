@@ -34,23 +34,25 @@ module "karpenter" {
 }
 
 locals {
-  pod_identity_entries = try({
-    for e in var.kubernetes_cluster.pod_identities : e.name => e
-  }, {})
+  pod_identity_list = coalesce(var.kubernetes_cluster.pod_identities, [])
+  pod_identity_entries = {
+    for e in local.pod_identity_list : e.name => e
+  }
 }
 
 module "pod_identity" {
-  count = var.features.pod_identities && length(local.pod_identity_entries) > 0 ? 1 : 0
+  count = var.features.pod_identities ? 1 : 0
 
   source       = "../../../../modules/aws/pod-identity"
+  name_prefix  = var.name_prefix
   cluster_name = module.eks[0].cluster_name
   tags         = try(var.tags, local.core.tags)
   entries = {
     for k, v in local.pod_identity_entries : k => {
       namespace       = v.namespace
       service_account = v.service_account
-      policy_arns     = try(v.policy_arns, [])
-      policy_json     = try(v.policy_json, "")
+      policy_arns     = coalesce(v.policy_arns, [])
+      policy_json     = coalesce(v.policy_json, "")
     }
   }
 

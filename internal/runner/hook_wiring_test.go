@@ -32,6 +32,7 @@ func (f *fakeHookCloud) DefaultMaturity() string                  { return "oper
 func (f *fakeHookCloud) CustomerSchemaUsesCommonAllOf() bool      { return true }
 func (f *fakeHookCloud) DefaultQuotaCheckOnValidate() bool        { return false }
 func (f *fakeHookCloud) TFVarSections() []string                  { return nil }
+func (f *fakeHookCloud) ExpandCustomerPaths(string, map[string]any) error { return nil }
 func (f *fakeHookCloud) Normalize(map[string]any)                 {}
 func (f *fakeHookCloud) Validate(map[string]any) error            { return nil }
 func (f *fakeHookCloud) Preflight(context.Context, map[string]any) error { return nil }

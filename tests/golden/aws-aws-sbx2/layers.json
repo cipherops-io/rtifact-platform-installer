@@ -35,7 +35,7 @@
         "karpenter": true,
         "kubernetes_cluster": true,
         "network": true,
-        "pod_identities": false,
+        "pod_identities": true,
         "public_dns": true
       },
       "kubernetes_cluster": {
@@ -124,6 +124,14 @@
           "AmazonEC2ContainerRegistryReadOnly",
           "AmazonSSMManagedInstanceCore",
           "AmazonEBSCSIDriverPolicy"
+        ],
+        "pod_identities": [
+          {
+            "name": "external-dns",
+            "namespace": "external-dns",
+            "policy_json": "{\"Statement\":[{\"Action\":[\"route53:ChangeResourceRecordSets\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:route53:::hostedzone/*\"]},{\"Action\":[\"route53:ListHostedZones\",\"route53:ListResourceRecordSets\",\"route53:ListTagsForResource\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+            "service_account": "external-dns"
+          }
         ],
         "secrets_encryption": {
           "mode": "none"
@@ -316,7 +324,7 @@
         "karpenter": true,
         "kubernetes_cluster": true,
         "network": true,
-        "pod_identities": false,
+        "pod_identities": true,
         "public_dns": true
       },
       "kubernetes_cluster": {
@@ -405,6 +413,14 @@
           "AmazonEC2ContainerRegistryReadOnly",
           "AmazonSSMManagedInstanceCore",
           "AmazonEBSCSIDriverPolicy"
+        ],
+        "pod_identities": [
+          {
+            "name": "external-dns",
+            "namespace": "external-dns",
+            "policy_json": "{\"Statement\":[{\"Action\":[\"route53:ChangeResourceRecordSets\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:route53:::hostedzone/*\"]},{\"Action\":[\"route53:ListHostedZones\",\"route53:ListResourceRecordSets\",\"route53:ListTagsForResource\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+            "service_account": "external-dns"
+          }
         ],
         "secrets_encryption": {
           "mode": "none"
@@ -587,7 +603,7 @@
         "karpenter": true,
         "kubernetes_cluster": true,
         "network": true,
-        "pod_identities": false,
+        "pod_identities": true,
         "public_dns": true
       },
       "kubernetes_cluster": {
@@ -676,6 +692,14 @@
           "AmazonEC2ContainerRegistryReadOnly",
           "AmazonSSMManagedInstanceCore",
           "AmazonEBSCSIDriverPolicy"
+        ],
+        "pod_identities": [
+          {
+            "name": "external-dns",
+            "namespace": "external-dns",
+            "policy_json": "{\"Statement\":[{\"Action\":[\"route53:ChangeResourceRecordSets\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:route53:::hostedzone/*\"]},{\"Action\":[\"route53:ListHostedZones\",\"route53:ListResourceRecordSets\",\"route53:ListTagsForResource\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+            "service_account": "external-dns"
+          }
         ],
         "secrets_encryption": {
           "mode": "none"
@@ -846,7 +870,7 @@
         "karpenter": true,
         "kubernetes_cluster": true,
         "network": true,
-        "pod_identities": false,
+        "pod_identities": true,
         "public_dns": true
       },
       "kubernetes_cluster": {
@@ -935,6 +959,14 @@
           "AmazonEC2ContainerRegistryReadOnly",
           "AmazonSSMManagedInstanceCore",
           "AmazonEBSCSIDriverPolicy"
+        ],
+        "pod_identities": [
+          {
+            "name": "external-dns",
+            "namespace": "external-dns",
+            "policy_json": "{\"Statement\":[{\"Action\":[\"route53:ChangeResourceRecordSets\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:route53:::hostedzone/*\"]},{\"Action\":[\"route53:ListHostedZones\",\"route53:ListResourceRecordSets\",\"route53:ListTagsForResource\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+            "service_account": "external-dns"
+          }
         ],
         "secrets_encryption": {
           "mode": "none"
@@ -1117,7 +1149,7 @@
         "karpenter": true,
         "kubernetes_cluster": true,
         "network": true,
-        "pod_identities": false,
+        "pod_identities": true,
         "public_dns": true
       },
       "kubernetes_cluster": {
@@ -1206,6 +1238,14 @@
           "AmazonEC2ContainerRegistryReadOnly",
           "AmazonSSMManagedInstanceCore",
           "AmazonEBSCSIDriverPolicy"
+        ],
+        "pod_identities": [
+          {
+            "name": "external-dns",
+            "namespace": "external-dns",
+            "policy_json": "{\"Statement\":[{\"Action\":[\"route53:ChangeResourceRecordSets\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:route53:::hostedzone/*\"]},{\"Action\":[\"route53:ListHostedZones\",\"route53:ListResourceRecordSets\",\"route53:ListTagsForResource\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+            "service_account": "external-dns"
+          }
         ],
         "secrets_encryption": {
           "mode": "none"
@@ -1388,7 +1428,7 @@
         "karpenter": true,
         "kubernetes_cluster": true,
         "network": true,
-        "pod_identities": false,
+        "pod_identities": true,
         "public_dns": true
       },
       "kubernetes_cluster": {
@@ -1477,6 +1517,14 @@
           "AmazonEC2ContainerRegistryReadOnly",
           "AmazonSSMManagedInstanceCore",
           "AmazonEBSCSIDriverPolicy"
+        ],
+        "pod_identities": [
+          {
+            "name": "external-dns",
+            "namespace": "external-dns",
+            "policy_json": "{\"Statement\":[{\"Action\":[\"route53:ChangeResourceRecordSets\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:route53:::hostedzone/*\"]},{\"Action\":[\"route53:ListHostedZones\",\"route53:ListResourceRecordSets\",\"route53:ListTagsForResource\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+            "service_account": "external-dns"
+          }
         ],
         "secrets_encryption": {
           "mode": "none"

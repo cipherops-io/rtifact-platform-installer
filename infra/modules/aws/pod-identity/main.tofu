@@ -16,17 +16,17 @@ data "aws_iam_policy_document" "trust" {
 }
 
 resource "aws_iam_role" "entry" {
-  for_each = local.entries
-  name     = "${each.key}-pod-identity"
+  for_each           = local.entries
+  name               = "${var.name_prefix}-${each.key}-pod-identity"
   assume_role_policy = data.aws_iam_policy_document.trust.json
-  tags                 = var.tags
+  tags               = var.tags
 }
 
 resource "aws_iam_role_policy" "inline" {
   for_each = {
     for k, v in local.entries : k => v if trimspace(try(v.policy_json, "")) != ""
   }
-  name   = "${each.key}-inline"
+  name   = "${var.name_prefix}-${each.key}-inline"
   role   = aws_iam_role.entry[each.key].id
   policy = each.value.policy_json
 }

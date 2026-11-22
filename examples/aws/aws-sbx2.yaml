@@ -19,7 +19,7 @@ features:
   bastion: true
   kubernetes_cluster: true
   karpenter: true
-  pod_identities: false
+  pod_identities: true
   public_dns: true
   certificates: true
 
@@ -107,6 +107,11 @@ kubernetes_cluster:
       max_unavailable: 1
       labels: { karpenter.sh/controller: "true", rtfc/node-type: initial }
       taints: []
+  pod_identities:
+    - name: external-dns
+      namespace: external-dns
+      service_account: external-dns
+      policy: external-dns
   karpenter:
     namespace: karpenter
     service_account: karpenter

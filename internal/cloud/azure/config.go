@@ -2,6 +2,8 @@ package azure
 
 import "context"
 
+func (*Provider) ExpandCustomerPaths(string, map[string]any) error { return nil }
+
 func (*Provider) TFVarSections() []string {
 	return []string{
 		"features", "state", "tags", "network", "kubernetes_cluster",

@@ -1,5 +1,7 @@
 package maputil
 
+import "fmt"
+
 // DeepCopyMap returns a shallow tree copy of nested maps.
 func DeepCopyMap(in map[string]any) map[string]any {
 	out := make(map[string]any, len(in))
@@ -73,6 +75,30 @@ func FlattenStringSlice(v any) []string {
 		}
 	}
 	return out
+}
+
+// SliceOfMaps converts a YAML/JSON list of mappings to []map[string]any.
+func SliceOfMaps(v any) ([]map[string]any, error) {
+	switch arr := v.(type) {
+	case []any:
+		return sliceOfMapsFromSlice(arr)
+	case []map[string]any:
+		return arr, nil
+	default:
+		return nil, fmt.Errorf("expected a list")
+	}
+}
+
+func sliceOfMapsFromSlice(arr []any) ([]map[string]any, error) {
+	out := make([]map[string]any, 0, len(arr))
+	for i, x := range arr {
+		m, ok := x.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("entry %d is not a mapping", i)
+		}
+		out = append(out, m)
+	}
+	return out, nil
 }
 
 // FirstString returns the first non-empty string value for keys in m.

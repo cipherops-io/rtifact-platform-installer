@@ -77,10 +77,21 @@
               "name": { "type": "string", "minLength": 1 },
               "namespace": { "type": "string", "minLength": 1 },
               "service_account": { "type": "string", "minLength": 1 },
-              "policy_arns": { "type": "array", "items": { "type": "string" } },
-              "policy_json_file": { "type": "string" },
-              "policy_json": { "type": "string" }
-            }
+              "policy_arns": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 },
+                "minItems": 1
+              },
+              "policy_json": { "type": "string", "minLength": 1 },
+              "policy_json_file": { "type": "string", "minLength": 1 },
+              "policy": { "type": "string", "enum": ["external-dns"] }
+            },
+            "oneOf": [
+              { "required": ["policy_arns"] },
+              { "required": ["policy_json"] },
+              { "required": ["policy_json_file"] },
+              { "required": ["policy"] }
+            ]
           }
         }
       }

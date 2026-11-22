@@ -10,6 +10,10 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 )
 
+func (*Provider) ExpandCustomerPaths(customerPath string, merged map[string]any) error {
+	return ResolvePodIdentities(customerPath, merged)
+}
+
 func (*Provider) TFVarSections() []string {
 	return []string{
 		"features", "state", "tags", "certificates", "network",
@@ -65,6 +69,7 @@ func (*Provider) Validate(merged map[string]any) error {
 			return fmt.Errorf("features.network: network.subnets is required")
 		}
 	}
+	var kc map[string]any
 	if maputil.Truthy(features["kubernetes_cluster"]) {
 		netw, _ := merged["network"].(map[string]any)
 		subnets, _ := netw["subnets"].(map[string]any)
@@ -72,7 +77,8 @@ func (*Provider) Validate(merged map[string]any) error {
 		if !subnetTierCoversZones(subnets, zones, "cluster") {
 			return fmt.Errorf("features.kubernetes_cluster: include a subnet tier with role cluster in two zones")
 		}
-		kc, ok := merged["kubernetes_cluster"].(map[string]any)
+		var ok bool
+		kc, ok = merged["kubernetes_cluster"].(map[string]any)
 		if !ok {
 			return fmt.Errorf("features.kubernetes_cluster is true: set kubernetes_cluster")
 		}
@@ -88,6 +94,12 @@ func (*Provider) Validate(merged map[string]any) error {
 				return fmt.Errorf("kubernetes_cluster.secrets_encryption.mode kms requires kms_key_arn")
 			}
 		}
+	}
+	if kc == nil {
+		kc, _ = merged["kubernetes_cluster"].(map[string]any)
+	}
+	if err := validatePodIdentities(features, kc); err != nil {
+		return err
 	}
 	return nil
 }

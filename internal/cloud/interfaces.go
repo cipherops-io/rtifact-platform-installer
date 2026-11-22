@@ -16,6 +16,7 @@ type Defaults interface {
 // Config supplies cloud-specific merge, validation, and preflight hooks.
 type Config interface {
 	TFVarSections() []string
+	ExpandCustomerPaths(customerPath string, merged map[string]any) error
 	Normalize(merged map[string]any)
 	Validate(merged map[string]any) error
 	Preflight(ctx context.Context, merged map[string]any) error

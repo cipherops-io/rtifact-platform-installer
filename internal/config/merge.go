@@ -220,6 +220,9 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 		}
 	}
 
+	if err := c.ExpandCustomerPaths(customerPath, merged); err != nil {
+		return nil, err
+	}
 	c.Normalize(merged)
 	if err := validateMergedFeaturesFromRegistry(merged, customer.Profile, customer.Cloud); err != nil {
 		return nil, err
