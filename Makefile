@@ -76,8 +76,8 @@ deploy-unit:
 	go test ./internal/deploy/... ./tests/deploy/...
 
 deploy-e2e:
-	@echo "deploy-e2e requires throwaway cluster + OCI registry (S1+); use: make deploy-unit" >&2
-	@exit 1
+	@chmod +x build/scripts/deploy-e2e.sh tests/deploy/rehearsal.sh 2>/dev/null || true
+	@./build/scripts/deploy-e2e.sh
 
 VERSION_CLOUDS := azure aws gcp
 VERSION_LAYERS := state-backend core-network data-platform app-platform network-edge ai-integrations

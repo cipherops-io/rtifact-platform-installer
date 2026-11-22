@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-never-ready
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: never-ready
+  template:
+    metadata:
+      labels:
+        app: never-ready
+    spec:
+      containers:
+      - name: pause
+        image: registry.k8s.io/pause:3.9
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 1
+          periodSeconds: 5

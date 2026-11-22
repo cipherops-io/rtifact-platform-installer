@@ -1,0 +1,39 @@
+schema_version: 1
+kind: deploy
+customer:
+  name: Rtifact
+  code: e2e
+environment: local
+name_prefix: e2e-local
+cluster:
+  kubeconfig: ""
+  expected_server: ""
+registry:
+  host: 127.0.0.1:5000
+  charts_path: charts
+  plain_http: true
+  auth:
+    username_env: RTIFACT_REGISTRY_USER
+    password_env: RTIFACT_REGISTRY_PASSWORD
+defaults:
+  timeout: 3m
+  wait: true
+  rollback_on_failure: true
+  history_max: 5
+namespaces:
+  - name: deploy-a
+  - name: deploy-b
+releases:
+  - name: ok-a
+    namespace: deploy-a
+    chart: ok-a
+    version: "1.0.0"
+    crds: chart
+    values:
+      msg: hello
+  - name: ok-b
+    namespace: deploy-b
+    chart: ok-b
+    version: "1.0.0"
+    crds: chart
+    requires: [ok-a]
