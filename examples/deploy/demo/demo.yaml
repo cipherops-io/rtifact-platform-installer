@@ -1,0 +1,36 @@
+# Demo deployment for `rtifact deploy plan|apply` walkthrough (charts live in your OCI registry).
+schema_version: 1
+kind: deploy
+customer:
+  name: Demo
+  code: demo
+environment: demo
+name_prefix: demo
+
+registry:
+  host: registry.example.com
+  charts_path: rtifact/charts
+  auth:
+    username_env: RTIFACT_REGISTRY_USER
+    password_env: RTIFACT_REGISTRY_PASSWORD
+
+defaults:
+  timeout: 10m
+  wait: true
+  rollback_on_failure: true
+  history_max: 5
+
+cluster:
+  kubeconfig: ~/.kube/config
+  expected_server: https://kubernetes.example.com
+
+namespaces:
+  - name: demo
+    pull_secret: true
+
+releases:
+  - name: demo-app
+    namespace: demo
+    chart: demo-app
+    version: 1.0.0
+    crds: chart

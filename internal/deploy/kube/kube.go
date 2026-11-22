@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -61,4 +62,13 @@ func Clientset(cfg Config) (*kubernetes.Clientset, error) {
 		return nil, err
 	}
 	return kubernetes.NewForConfig(restCfg)
+}
+
+// DynamicClient returns a dynamic client for CRD inspection in e2e.
+func DynamicClient(cfg Config) (dynamic.Interface, error) {
+	restCfg, err := RESTConfig(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return dynamic.NewForConfig(restCfg)
 }

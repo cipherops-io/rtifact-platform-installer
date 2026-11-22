@@ -1,0 +1,47 @@
+# Reference layout: multiple releases, requires, and protection flags.
+schema_version: 1
+kind: deploy
+customer:
+  name: Reference
+  code: ref
+environment: staging
+name_prefix: ref-stg
+
+registry:
+  host: oci.internal.example.com
+  charts_path: charts
+  plain_http: false
+
+defaults:
+  timeout: 15m
+  wait: true
+  rollback_on_failure: true
+  history_max: 10
+
+cluster:
+  kubeconfig: /path/to/kubeconfig
+  expected_server: https://k8s.staging.example.com
+
+namespaces:
+  - name: platform
+  - name: apps
+
+releases:
+  - name: platform-crds
+    namespace: platform
+    chart: platform-crds
+    version: 2.1.0
+    crds: upgrade
+    protect: true
+  - name: platform-core
+    namespace: platform
+    chart: platform-core
+    version: 3.0.0
+    requires: [platform-crds]
+  - name: sample-app
+    namespace: apps
+    chart: sample-app
+    version: 1.4.2
+    requires: [platform-core]
+    values:
+      replicas: 2

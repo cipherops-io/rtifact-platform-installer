@@ -205,6 +205,9 @@ func Apply(ctx context.Context, o RunOptions) error {
 		fmt.Fprintln(o.out(), "No changes.")
 		return nil
 	}
+	if err := refusedBlocking(res); err != nil {
+		return err
+	}
 	if err := engine.ConfirmDeployApply(o.Yes, len(res.Removals) > 0); err != nil {
 		return err
 	}
@@ -212,6 +215,9 @@ func Apply(ctx context.Context, o RunOptions) error {
 		return err
 	}
 	if err := ensureNamespaces(ctx, kcfg, doc); err != nil {
+		return err
+	}
+	if err := ensurePullSecrets(ctx, kcfg, doc, cred); err != nil {
 		return err
 	}
 	order, err := InstallOrder(doc.Releases)
@@ -352,6 +358,15 @@ func onlyClosure(doc *Document, only string) map[string]bool {
 		}
 	}
 	return set
+}
+
+func refusedBlocking(res plan.Result) error {
+	for _, row := range res.Rows {
+		if row.Action == plan.ActionRefused {
+			return fmt.Errorf("%s/%s: %s", row.Namespace, row.Name, row.Note)
+		}
+	}
+	return nil
 }
 
 func printPlan(w io.Writer, res plan.Result) {

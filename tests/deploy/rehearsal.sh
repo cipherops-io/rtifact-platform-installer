@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
-# C7 wires this script; stub until then.
-echo "rehearsal.sh stub (C7)"
-exit 0
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+BIN="${RTIFACT_BIN:-$ROOT/dist/rtifact}"
+if [ ! -x "$BIN" ]; then
+  echo "rehearsal: skip (build dist/rtifact first)"
+  exit 0
+fi
+export INSTALLER_CONTENT_ROOT="$ROOT"
+"$BIN" deploy validate "$ROOT/examples/deploy/minimal.yaml"
+"$BIN" deploy validate "$ROOT/examples/deploy/demo/demo.yaml"
+echo "rehearsal OK"

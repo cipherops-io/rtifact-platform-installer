@@ -1,6 +1,9 @@
 package plan
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestBuildInstallAndUnchanged(t *testing.T) {
 	in := Input{
@@ -21,6 +24,20 @@ func TestBuildInstallAndUnchanged(t *testing.T) {
 	res = Build(in, Options{})
 	if res.HasChange || res.Rows[0].Action != ActionUnchanged {
 		t.Fatalf("expected unchanged, got %#v", res)
+	}
+}
+
+func TestStuck_S11(t *testing.T) {
+	in := Input{
+		Wanted: []Wanted{{Name: "x", Namespace: "ns", Chart: "x", Version: "1.0.0", ValuesDigest: "d"}},
+		Observed: []Observed{{
+			Name: "x", Namespace: "ns", Chart: "x", Version: "1.0.0", ValuesDigest: "d",
+			Status: "pending-upgrade", ManagedByDeployment: true,
+		}},
+	}
+	res := Build(in, Options{})
+	if res.Rows[0].Action != ActionStuck || !strings.Contains(res.Rows[0].Note, "rollback") {
+		t.Fatalf("expected stuck with rollback hint, got %#v", res.Rows[0])
 	}
 }
 

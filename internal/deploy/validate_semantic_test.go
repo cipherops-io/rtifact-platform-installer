@@ -46,6 +46,28 @@ func writeDeploy(t *testing.T, dir, name, content string) string {
 	return p
 }
 
+func TestValidate_removeRequiredDependency_S8(t *testing.T) {
+	dir := t.TempDir()
+	content := `schema_version: 1
+kind: deploy
+customer: { name: X, code: x }
+environment: dev
+name_prefix: x-dev
+registry: { host: h, charts_path: p }
+namespaces: [{ name: a }, { name: b }]
+releases:
+  - name: ok-b
+    namespace: b
+    chart: ok-b
+    version: 1.0.0
+    requires: [ok-a]
+`
+	p := writeDeploy(t, dir, "d.yaml", content)
+	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "ok-a") {
+		t.Fatalf("expected missing require ok-a, got %v", err)
+	}
+}
+
 func TestValidate_unknownRequire(t *testing.T) {
 	dir := t.TempDir()
 	p := writeDeploy(t, dir, "d.yaml", minimalDeployYAML(`    requires: [missing]

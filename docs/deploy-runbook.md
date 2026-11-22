@@ -10,4 +10,3 @@ Use `rtifact deploy validate` before every plan. Run `plan` with `--detailed-exi
 | `deploy destroy` | Tear down all releases in the file (PVCs kept) |
 
 E2E: `make deploy-e2e` (kind + local OCI registry).
-EOF

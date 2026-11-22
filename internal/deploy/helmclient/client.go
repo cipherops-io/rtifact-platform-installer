@@ -154,6 +154,7 @@ func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chart
 		ins.Timeout = c.timeout
 		ins.WaitStrategy = waitStrategy(c.wait)
 		ins.RollbackOnFailure = c.rollback
+		ins.PostRenderer = pvcKeepRenderer()
 		ins.Labels = labels
 		ins.ChartPathOptions.Version = rel.Version
 		ins.ChartPathOptions.RepoURL = chartRef
@@ -176,6 +177,7 @@ func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chart
 	up.Timeout = c.timeout
 	up.WaitStrategy = waitStrategy(c.wait)
 	up.RollbackOnFailure = c.rollback
+	up.PostRenderer = pvcKeepRenderer()
 	up.Labels = labels
 	up.MaxHistory = c.historyMax
 	up.ChartPathOptions.Version = rel.Version
