@@ -9,6 +9,7 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 )
 
@@ -23,7 +24,7 @@ func bastionKeyFile(prefix string) string { return prefix + "-bastion.pem" }
 
 // MaterializeFromArtifacts reads saved layer outputs and writes kubeconfig / bastion PEM into cwd.
 func MaterializeFromArtifacts(prefix string, opts MaterializeOpts) ([]string, error) {
-	dir := config.ArtifactsDir(prefix)
+	dir := paths.ArtifactsDir(prefix)
 	layer := stacks.LayerAppPlatform
 	path := filepath.Join(dir, fmt.Sprintf("%s-outputs.json", layer))
 	b, err := os.ReadFile(path)
@@ -64,7 +65,7 @@ func materializeCWD(prefix string, flat map[string]any, opts MaterializeOpts) ([
 			return written, err
 		}
 		written = append(written, p)
-		artifactKube := filepath.Join(config.ArtifactsDir(prefix), kubeconfigFile(prefix))
+		artifactKube := filepath.Join(paths.ArtifactsDir(prefix), kubeconfigFile(prefix))
 		if err := os.MkdirAll(filepath.Dir(artifactKube), 0o700); err == nil {
 			_ = os.WriteFile(artifactKube, []byte(kube), 0o600)
 			written = append(written, artifactKube)
@@ -96,7 +97,7 @@ func Print(configPath string) error {
 		return err
 	}
 	prefix := cfg.NamePrefix()
-	dir := config.ArtifactsDir(prefix)
+	dir := paths.ArtifactsDir(prefix)
 	cwd, _ := os.Getwd()
 
 	_, _ = MaterializeFromArtifacts(prefix, MaterializeOpts{AWSRegion: cfg.Account.Region})

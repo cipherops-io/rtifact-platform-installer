@@ -1,0 +1,19 @@
+schema_version: 1
+cloud: aws
+profile: aios-infra
+customer: { name: Example, code: ex }
+account: { account_id: "123456789012", region: us-east-1 }
+workload: { name_prefix: ex-minimal }
+state:
+  backend: local
+  air_gapped: true
+features:
+  network: true
+network:
+  vpc_cidr: 10.30.0.0/16
+  availability_zones: [us-east-1a, us-east-1b]
+  nat_gateway: none
+  subnets:
+    public:
+      cidrs: [10.30.0.0/24, 10.30.1.0/24]
+      route: internet

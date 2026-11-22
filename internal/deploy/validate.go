@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 	"gopkg.in/yaml.v3"
 )
@@ -20,7 +20,7 @@ func ValidateFile(path string) error {
 	if err := yaml.Unmarshal(raw, &data); err != nil {
 		return usererr.Wrap(err, "Deploy file is not valid YAML.", "Fix indentation and quoting.")
 	}
-	data = config.NormalizeYAML(data)
+	data = maputil.NormalizeYAML(data)
 	sch, err := compileSchema()
 	if err != nil {
 		return err

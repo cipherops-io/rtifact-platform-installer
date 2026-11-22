@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 )
 
@@ -14,7 +15,7 @@ func Print(configPath string) error {
 	if err != nil {
 		return err
 	}
-	dir := config.ArtifactsDir(cfg.NamePrefix())
+	dir := paths.ArtifactsDir(cfg.NamePrefix())
 	for _, layer := range stacks.AllLayers() {
 		path := filepath.Join(dir, fmt.Sprintf("%s-outputs.json", layer))
 		state := "not_started"

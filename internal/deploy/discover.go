@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 )
 
@@ -47,7 +47,7 @@ func Discover(opts DiscoverOpts) (Discovery, error) {
 			d.KubeconfigPath = local
 			d.KubeconfigFrom = "discovered in working directory"
 		} else {
-			artifact := filepath.Join(config.ArtifactsDir(prefix), prefix+"-kubeconfig.yaml")
+			artifact := filepath.Join(paths.ArtifactsDir(prefix), prefix+"-kubeconfig.yaml")
 			if st, err := os.Stat(artifact); err == nil && !st.IsDir() {
 				d.KubeconfigPath = artifact
 				d.KubeconfigFrom = "discovered in artifact directory"
@@ -74,7 +74,7 @@ func Discover(opts DiscoverOpts) (Discovery, error) {
 		d.OutputsPath = opts.Doc.InfraOutputs
 		d.OutputsFrom = "infra_outputs in file"
 	} else {
-		artifact := config.ArtifactsDir(prefix)
+		artifact := paths.ArtifactsDir(prefix)
 		if st, err := os.Stat(artifact); err == nil && st.IsDir() {
 			d.OutputsPath = artifact
 			d.OutputsFrom = "discovered artifact directory"

@@ -1,0 +1,139 @@
+schema_version: 1
+cloud: aws
+profile: aios-infra
+tier: sandbox
+customer: { name: Rtifact, code: rtfc }
+account: { account_id: "635702036154", region: ap-south-1 }
+workload: { name: aios, environment: sbx2, name_prefix: rtfc-sbx2 }
+
+state:
+  backend: s3
+  bootstrap: true
+  air_gapped: false
+  bucket_name: rtfc-sbx2-tfstate-635702036154
+  encryption: AES256
+  versioning: true
+
+features:
+  network: true
+  bastion: true
+  kubernetes_cluster: true
+  karpenter: true
+  public_dns: true
+  certificates: true
+
+network:
+  vpc_cidr: 10.20.0.0/16
+  secondary_cidrs: [100.72.0.0/16]
+  availability_zones: [ap-south-1a, ap-south-1b]
+  nat_gateway: single
+  gateway_endpoints: [s3, dynamodb]
+  flow_logs: false
+  subnets:
+    public:
+      cidrs: [10.20.0.0/19, 10.20.32.0/19]
+      route: internet
+      public_ip_on_launch: true
+    private:
+      cidrs: [10.20.64.0/19, 10.20.96.0/19]
+      route: nat
+    datastore:
+      cidrs: [10.20.128.0/19, 10.20.160.0/19]
+      route: isolated
+    node:
+      cidrs: [100.72.0.0/20, 100.72.16.0/20]
+      route: nat
+      roles: [cluster, nodes, internal_lb, karpenter]
+    cluster_private:
+      cidrs: [100.72.64.0/20, 100.72.80.0/20]
+      route: nat
+      roles: [cluster, internal_lb]
+    cluster_public:
+      cidrs: [100.72.128.0/20, 100.72.144.0/20]
+      route: internet
+      roles: [public_lb]
+
+kubernetes_cluster:
+  name: rtfc-sbx2-eks
+  kubernetes_version: "1.37"
+  support_type: STANDARD
+  endpoint:
+    public: true
+    private: true
+    public_access_cidrs: [3.108.172.165/32, 13.235.189.88/32]
+  authentication_mode: API_AND_CONFIG_MAP
+  admin_principal_arns:
+    - arn:aws:iam::635702036154:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_sandbox-users-permission-set_165a60e6ca18f314
+  service_cidr: 172.20.0.0/16
+  log_types: []
+  secrets_encryption:
+    mode: none
+  deletion_protection: false
+  service_security_groups:
+    internal: { ports: [80, 443], cidrs: [vpc] }
+    public: { ports: [80, 443], cidrs: [0.0.0.0/0] }
+    office:
+      ports: [80, 443]
+      cidrs: [vpc, 3.108.172.165/32, 13.235.189.88/32]
+  addons:
+    vpc-cni: { version: v1.22.4-eksbuild.14 }
+    coredns: { version: v1.14.7-eksbuild.35 }
+    kube-proxy: { version: v1.37.0-eksbuild.39 }
+    eks-pod-identity-agent: { version: v1.4.1-eksbuild.3 }
+    aws-ebs-csi-driver:
+      version: v1.68.1-eksbuild.1
+      configuration:
+        controller:
+          nodeSelector:
+            rtfc/node-type: initial
+  node_role_policies:
+    - AmazonEKSWorkerNodePolicy
+    - AmazonEKS_CNI_Policy
+    - AmazonEC2ContainerRegistryReadOnly
+    - AmazonSSMManagedInstanceCore
+    - AmazonEBSCSIDriverPolicy
+  node_groups:
+    initial:
+      instance_types: [m6a.xlarge]
+      capacity_type: ON_DEMAND
+      ami_type: AL2023_x86_64_STANDARD
+      min_size: 2
+      desired_size: 2
+      max_size: 3
+      subnet_tier: node
+      disk: { size_gb: 100, type: gp3, encrypted: true }
+      metadata: { http_tokens: optional, hop_limit: 2 }
+      max_unavailable: 1
+      labels: { karpenter.sh/controller: "true", rtfc/node-type: initial }
+      taints: []
+  karpenter:
+    namespace: karpenter
+    service_account: karpenter
+    queue_retention_seconds: 300
+    node_role_policies:
+      - AmazonEKSWorkerNodePolicy
+      - AmazonEKS_CNI_Policy
+      - AmazonEC2ContainerRegistryReadOnly
+      - AmazonSSMManagedInstanceCore
+
+bastion:
+  access: ssm
+  instance_type: t3.medium
+  subnet_tier: public
+  public_ip: false
+  disk: { size_gb: 100, type: gp3, encrypted: true }
+  allowed_cidrs: [3.108.172.165/32, 13.235.189.88/32]
+  ssh_public_key: ""
+  iam_policy_arns: [arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore]
+
+public_dns:
+  zone_name: sbx2.rtifact.ai
+  parent_zone_id: ""
+  delegated: false
+
+certificates:
+  names: [sbx2.rtifact.ai, "*.sbx2.rtifact.ai"]
+  key_algorithm: RSA_2048
+  cloudfront: true
+
+tags: { Environment: sbx2, ManagedBy: rtifact }

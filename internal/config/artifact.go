@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 )
 
 func WriteMergedConfigArtifact(prefix, layer string, merged map[string]any) error {
-	dir := ArtifactsDir(prefix)
+	dir := paths.ArtifactsDir(prefix)
 	b, err := json.MarshalIndent(merged, "", "  ")
 	if err != nil {
 		return err

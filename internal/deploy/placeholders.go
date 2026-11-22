@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,7 +18,7 @@ func validatePlaceholdersInFile(path string) error {
 	if err := yaml.Unmarshal(raw, &data); err != nil {
 		return fmt.Errorf("not valid YAML: %w", err)
 	}
-	return validatePlaceholdersTree(config.NormalizeYAML(data))
+	return validatePlaceholdersTree(maputil.NormalizeYAML(data))
 }
 
 func validatePlaceholdersTree(v any) error {

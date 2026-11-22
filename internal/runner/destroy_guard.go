@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 )
 
 // layerDeploymentMarker uses saved stack outputs as a lightweight “still applied” signal.
 func layerDeploymentMarker(prefix string, layer stacks.Layer) bool {
-	path := filepath.Join(config.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
+	path := filepath.Join(paths.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return false
@@ -45,7 +45,7 @@ func downstreamAlreadyDestroyedInBatch(batch []stacks.Layer, layer, downstream s
 }
 
 func clearLayerOutputs(prefix string, layer stacks.Layer) error {
-	path := filepath.Join(config.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
+	path := filepath.Join(paths.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return err
 	}

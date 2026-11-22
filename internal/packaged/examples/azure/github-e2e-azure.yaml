@@ -1,0 +1,115 @@
+# GitHub Actions Azure E2E — Commotion-shaped sandbox (placeholders filled in CI).
+# See .github/workflows/azure-e2e.yml and scripts/github-e2e-prepare-config.sh
+
+schema_version: 1
+cloud: azure
+profile: aios-infra
+tier: sandbox
+
+customer:
+  name: GitHubE2E
+  code: ghe
+
+account:
+  subscription_id: "SUBSCRIPTION_ID_PLACEHOLDER"
+  tenant_id: "TENANT_ID_PLACEHOLDER"
+  region: centralindia
+  environment: public
+  auth:
+    use_msi: false
+
+workload:
+  name: aios
+  environment: e2e
+  name_prefix: gh-rtifact-e2e-sbx
+
+state:
+  backend: azurerm
+  air_gapped: true
+
+backend:
+  type: azurerm
+  resource_group_name: gh-rtifact-e2e-sbx-rg
+  storage_account_name: ghrtifacte2esbxtfstate
+  container_name: tfstate
+  key: aios-infra/gh-rtifact-e2e-sbx
+
+features:
+  resource_group: true
+  virtual_network: true
+  key_vault: true
+  key_vault_private_endpoint: true
+  postgresql_flexible_server: true
+  container_registry: true
+  storage_account: true
+  redis_cache: false
+  azure_files_share: true
+  azure_managed_redis: true
+  azure_files_share: true
+  communication_email: true
+  kubernetes_cluster: true
+  azure_bastion: false
+  private_dns_zones: true
+  azure_firewall: true
+  private_dns_resolver: true
+  disk_encryption_set: true
+  ai_foundry: true
+
+kubernetes_cluster:
+  kubernetes_version: "1.30"
+  availability_zones: []
+  node_pools:
+    system:
+      name: system
+      vm_size: Standard_D2ds_v5
+      node_count: 1
+
+network:
+  vnet_cidr: "10.21.0.0/20"
+  node_subnet_cidr: "10.21.0.0/22"
+  load_balancer_subnet_cidr: "10.21.4.0/24"
+  private_endpoint_subnet_cidr: "10.21.5.0/24"
+  management_subnet_cidr: "10.21.6.0/27"
+  azure_firewall_subnet_cidr: "10.21.7.0/26"
+  azure_bastion_subnet_cidr: "10.21.8.0/27"
+  gateway_subnet_cidr: "10.21.8.32/27"
+  dns_resolver_inbound_subnet_cidr: "10.21.9.0/28"
+  dns_resolver_outbound_subnet_cidr: "10.21.9.16/28"
+  pod_cidr: "10.247.0.0/16"
+  service_cidr: "172.23.0.0/16"
+  dns_service_ip: "172.23.0.10"
+
+postgresql_flexible_server:
+  sku_name: GP_Standard_D2s_v3
+  version: "16"
+  storage_mb: 32768
+
+azure_managed_redis:
+  sku_name: Balanced_B5
+
+storage_account:
+  corpus_gb: 50
+  backup_gb: 50
+
+azure_files:
+  share_name: aios-shared
+  quota_gb: 1024
+  zone_redundant: true
+
+container_registry:
+  sku: Premium
+
+key_vault:
+  sku: premium
+
+communication_services:
+  data_location: India
+
+ai_foundry:
+  public_network_access: Disabled
+
+azure_firewall:
+  sku_tier: Standard
+
+disk_encryption_set:
+  rotation_to_latest_version: true

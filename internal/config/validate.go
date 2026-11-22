@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 	"gopkg.in/yaml.v3"
 )
@@ -24,7 +25,7 @@ func ValidateCustomerYAML(path string) error {
 	if err := yaml.Unmarshal(raw, &data); err != nil {
 		return usererr.Wrap(err, "Config file is not valid YAML.", "Fix indentation, colons, and quoting in your YAML.")
 	}
-	data = NormalizeYAML(data)
+	data = maputil.NormalizeYAML(data)
 	cloud, _ := data.(map[string]any)["cloud"].(string)
 	sch, err := compileCustomerSchema(cloud)
 	if err != nil {
@@ -78,28 +79,3 @@ func checkProfileCloud(meta *ProfileMeta, cloudName string) error {
 	return fmt.Errorf("cloud %q is not supported (supported: %v)", cloudName, meta.Clouds)
 }
 
-// NormalizeYAML converts yaml.v3 decode trees into JSON-schema-friendly values.
-func NormalizeYAML(v any) any {
-	switch t := v.(type) {
-	case map[interface{}]interface{}:
-		m := make(map[string]any, len(t))
-		for k, val := range t {
-			m[fmt.Sprint(k)] = NormalizeYAML(val)
-		}
-		return m
-	case map[string]any:
-		m := make(map[string]any, len(t))
-		for k, val := range t {
-			m[k] = NormalizeYAML(val)
-		}
-		return m
-	case []interface{}:
-		s := make([]any, len(t))
-		for i, val := range t {
-			s[i] = NormalizeYAML(val)
-		}
-		return s
-	default:
-		return v
-	}
-}

@@ -14,8 +14,9 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/checklist"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/guard"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
@@ -146,7 +147,7 @@ func containsLayer(layers []stacks.Layer, want stacks.Layer) bool {
 func layerSpec(spec cloud.StateSpec, layer stacks.Layer) cloud.StateSpec {
 	if layer == stacks.LayerStateBackend {
 		spec.Local = true
-		spec.LocalDir = filepath.Join(config.ArtifactsDir(spec.NamePrefix), "state")
+		spec.LocalDir = filepath.Join(paths.ArtifactsDir(spec.NamePrefix), "state")
 		_ = os.MkdirAll(spec.LocalDir, 0o755)
 	}
 	return spec
@@ -219,7 +220,7 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	if err := injectAzureResourceGroupFlags(customer, provider, layerSpec(spec, layer), layer, layerMerged); err != nil {
 		return err
 	}
-	edgeOut := filepath.Join(config.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
+	edgeOut := filepath.Join(paths.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
 	lifecycle.MutateDNSDelegation(context.Background(), layer, customer.Account.Region, customer.NamePrefix(), edgeOut, layerMerged)
 	if err := config.WriteAutoTofuVarsJSON(stackWork, layerMerged); err != nil {
 		return err
@@ -372,7 +373,7 @@ func captureOutputs(tofuPath, stackWork string, env []string, customer *config.C
 		}
 	}
 	b, _ := json.MarshalIndent(flat, "", "  ")
-	path := filepath.Join(config.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
+	path := filepath.Join(paths.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
 	if err := os.WriteFile(path, b, 0o644); err != nil {
 		return err
 	}

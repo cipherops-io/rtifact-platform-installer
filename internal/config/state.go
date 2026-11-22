@@ -5,15 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/version"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 )
-
-// ArtifactsDir returns ~/.<ProductName>/<prefix> (created on demand).
-func ArtifactsDir(prefix string) string {
-	dir := filepath.Join(os.Getenv("HOME"), "."+version.ProductName, prefix)
-	_ = os.MkdirAll(dir, 0o755)
-	return dir
-}
 
 // UsesLocalState reports whether OpenTofu state is kept on local disk.
 func (c *CustomerConfig) UsesLocalState() bool {
@@ -53,7 +46,7 @@ func CloudStateSpec(c *CustomerConfig, profileID string) cloud.StateSpec {
 		AirGapped: c.IsAirGapped(),
 	}
 	if spec.Local {
-		spec.LocalDir = filepath.Join(ArtifactsDir(c.NamePrefix()), "state")
+		spec.LocalDir = filepath.Join(paths.ArtifactsDir(c.NamePrefix()), "state")
 		_ = os.MkdirAll(spec.LocalDir, 0o755)
 	}
 	if c.State != nil && c.State.BucketName != "" {

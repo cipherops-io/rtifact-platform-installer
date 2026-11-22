@@ -10,6 +10,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
@@ -108,7 +109,7 @@ func BuildSnapshot(repoRoot, configRel string) (*Snapshot, error) {
 			layerMerged["upstream_state"] = upstream
 		}
 		// injectAzureResourceGroupFlags calls Azure CLI — skipped for goldens; keys listed in ExcludedCloudKeys.
-		edgeOut := filepath.Join(config.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
+		edgeOut := filepath.Join(paths.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
 		lifecycle.MutateDNSDelegation(context.Background(), layer, customer.Account.Region, customer.NamePrefix(), edgeOut, layerMerged)
 		for _, k := range excludedCloudKeys {
 			delete(layerMerged, k)
@@ -125,7 +126,7 @@ func BuildSnapshot(repoRoot, configRel string) (*Snapshot, error) {
 func layerSpec(spec cloud.StateSpec, layer stacks.Layer) cloud.StateSpec {
 	if layer == stacks.LayerStateBackend {
 		spec.Local = true
-		spec.LocalDir = filepath.Join(config.ArtifactsDir(spec.NamePrefix), "state")
+		spec.LocalDir = filepath.Join(paths.ArtifactsDir(spec.NamePrefix), "state")
 		_ = os.MkdirAll(spec.LocalDir, 0o755)
 	}
 	return spec

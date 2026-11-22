@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 )
@@ -16,7 +16,7 @@ func requireDataPlatformForFoundry(prefix string, merged map[string]any) error {
 	if feats == nil || feats["ai_foundry"] != true {
 		return nil
 	}
-	path := filepath.Join(config.ArtifactsDir(prefix), "data-platform-outputs.json")
+	path := filepath.Join(paths.ArtifactsDir(prefix), "data-platform-outputs.json")
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return usererr.WithHint(

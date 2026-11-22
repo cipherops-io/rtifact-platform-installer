@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 )
 
 func TestDiscover_cwdKubeconfig(t *testing.T) {
@@ -119,7 +119,7 @@ func TestDiscover_flagWinsOverFile(t *testing.T) {
 func TestDiscover_artifactKubeconfig(t *testing.T) {
 	dir := t.TempDir()
 	prefix := "art-pfx"
-	artifact := config.ArtifactsDir(prefix)
+	artifact := paths.ArtifactsDir(prefix)
 	if err := os.MkdirAll(artifact, 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +187,7 @@ func TestDiscover_infraOutputs(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, prefix2+"-kubeconfig.yaml"), []byte("apiVersion: v1\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	artifact := config.ArtifactsDir(prefix2)
+	artifact := paths.ArtifactsDir(prefix2)
 	if err := os.MkdirAll(artifact, 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -209,5 +209,5 @@ func TestIdentityGuardRefusal_message(t *testing.T) {
 	if err := IdentityGuardRefusal("https://a", "https://b"); err == nil {
 		t.Fatal("expected error")
 	}
-	_ = config.ArtifactsDir("x")
+	_ = paths.ArtifactsDir("x")
 }

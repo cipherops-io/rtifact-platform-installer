@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 )
 
 func TestGuardDestroyDependenciesBlocks(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	prefix := "test-guard"
-	dir := config.ArtifactsDir(prefix)
+	dir := paths.ArtifactsDir(prefix)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +40,7 @@ func TestGuardDestroyDependenciesAllows(t *testing.T) {
 func TestGuardDestroyDependenciesAllowsDownstreamAlreadyInDestroyBatch(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	prefix := "test-guard-batch"
-	dir := config.ArtifactsDir(prefix)
+	dir := paths.ArtifactsDir(prefix)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
