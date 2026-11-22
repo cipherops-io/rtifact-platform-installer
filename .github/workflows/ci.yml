@@ -10,6 +10,32 @@ permissions:
   contents: read
 
 jobs:
+  deploy-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install kind
+        run: |
+          v=$(make -s print-tool-versions | sed -n 's/^KIND_VERSION=//p' | head -1)
+          curl -fsSL -o "${RUNNER_TEMP}/kind" "https://kind.sigs.k8s.io/dl/v${v}/kind-linux-amd64"
+          chmod +x "${RUNNER_TEMP}/kind"
+          sudo mv "${RUNNER_TEMP}/kind" /usr/local/bin/kind
+      - run: chmod +x build/scripts/*.sh 2>/dev/null || true
+      - run: make package-content
+      - run: make build-dev
+      - run: make deploy-e2e
+        continue-on-error: false
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deploy-e2e-logs
+          path: |
+            /tmp/rtifact-deploy-e2e*.log
+            /tmp/zot-*.log
+          if-no-files-found: ignore
   deploy-unit:
     runs-on: ubuntu-latest
     steps:

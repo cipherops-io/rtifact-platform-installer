@@ -2,7 +2,7 @@ Variables:
     AirGapped: true
     ArtifactRegistryHost: ""
     BoilerplateCliVersion: 0.17.0
-    BoilerplatesRef: v3.3.0
+    BoilerplatesRef: v0.0.1
     BuildTargets:
         - linux/amd64
         - darwin/arm64
@@ -117,6 +117,7 @@ Variables:
             - app-platform/eks
             - app-platform/compute
             - app-platform/karpenter-infra
+            - app-platform/pod-identity
             - network-edge/dns-public
             - network-edge/certificates
         azure:
@@ -154,10 +155,10 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-22T19:26:12Z"
-TemplateURL: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.2.1
+Timestamp: "2026-11-22T19:30:59Z"
+TemplateURL: ../boilerplates/devops-templates/rtifact-product
 BoilerplateVersion: v0.17.0
-SourceChecksum: git-sha1:a8c2b61cfe18733143a2d98e120b9416e6c19f7c
+SourceChecksum: sha256:b1537a804ca57268b1ae6d3aa23c908c721c279e1d00cb52fae376bd9ed2c754
 OutputDir: .
 Dependencies:
     - Variables:
@@ -165,7 +166,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.3.0
+        BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -281,6 +282,7 @@ Dependencies:
                 - app-platform/eks
                 - app-platform/compute
                 - app-platform/karpenter-infra
+                - app-platform/pod-identity
                 - network-edge/dns-public
                 - network-edge/certificates
             azure:
@@ -332,7 +334,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.3.0
+        BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -448,6 +450,7 @@ Dependencies:
                 - app-platform/eks
                 - app-platform/compute
                 - app-platform/karpenter-infra
+                - app-platform/pod-identity
                 - network-edge/dns-public
                 - network-edge/certificates
             azure:
@@ -491,7 +494,7 @@ Dependencies:
       ForEachReference: Clouds
       Files:
         - Path: AGENTS.md
-          Checksum: sha256:eba1933502836985016e0740d6ba129723ccabbbffeaee19852f3790d0fc6855
+          Checksum: sha256:00d905c7af17045adb17bcd3518673727bbfb26f54fda5c921f7f40a69d329be
       ForEach:
         - aws
     - Variables:
@@ -499,7 +502,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.3.0
+        BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -615,6 +618,7 @@ Dependencies:
                 - app-platform/eks
                 - app-platform/compute
                 - app-platform/karpenter-infra
+                - app-platform/pod-identity
                 - network-edge/dns-public
                 - network-edge/certificates
             azure:
@@ -666,7 +670,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.3.0
+        BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -782,6 +786,7 @@ Dependencies:
                 - app-platform/eks
                 - app-platform/compute
                 - app-platform/karpenter-infra
+                - app-platform/pod-identity
                 - network-edge/dns-public
                 - network-edge/certificates
             azure:
@@ -831,7 +836,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -948,6 +953,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -999,7 +1005,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1116,6 +1122,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -1167,7 +1174,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1284,6 +1291,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -1335,7 +1343,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1452,6 +1460,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -1503,7 +1512,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1620,6 +1629,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -1671,7 +1681,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1788,6 +1798,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -1839,7 +1850,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.3.0
+        BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -1955,6 +1966,7 @@ Dependencies:
                 - app-platform/eks
                 - app-platform/compute
                 - app-platform/karpenter-infra
+                - app-platform/pod-identity
                 - network-edge/dns-public
                 - network-edge/certificates
             azure:
@@ -2004,7 +2016,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2121,6 +2133,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -2172,7 +2185,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2289,6 +2302,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -2340,7 +2354,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2457,6 +2471,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -2508,7 +2523,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2625,6 +2640,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -2668,7 +2684,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:ac8f2693872fcb74c3be7c3b60a3eea776dc49c20f7d9e5df3266f3188365c76
+              Checksum: sha256:e8566277ee3edd508ef16db707b645532e83a23a3104871f2a752938e9345e2a
           ForEach:
             - app-platform
         - Variables:
@@ -2676,7 +2692,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2793,6 +2809,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -2844,7 +2861,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2961,6 +2978,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -3012,7 +3030,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.3.0
+        BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -3128,6 +3146,7 @@ Dependencies:
                 - app-platform/eks
                 - app-platform/compute
                 - app-platform/karpenter-infra
+                - app-platform/pod-identity
                 - network-edge/dns-public
                 - network-edge/certificates
             azure:
@@ -3177,7 +3196,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3294,6 +3313,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -3345,7 +3365,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3462,6 +3482,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -3513,7 +3534,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3630,6 +3651,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -3681,7 +3703,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3798,6 +3820,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -3849,7 +3872,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3966,6 +3989,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -4017,7 +4041,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.3.0
+            BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -4134,6 +4158,7 @@ Dependencies:
                     - app-platform/eks
                     - app-platform/compute
                     - app-platform/karpenter-infra
+                    - app-platform/pod-identity
                     - network-edge/dns-public
                     - network-edge/certificates
                 azure:
@@ -4186,21 +4211,21 @@ Files:
     - Path: .github/workflows/build-binary.yml
       Checksum: sha256:7823d1067daa03f821000aed4382ae3ce0d516071186204fb0be749a9db1e2a8
     - Path: .github/workflows/ci.yml
-      Checksum: sha256:7415688da030f1a965c1c09be70c502713dada4593a426e433563f2bcc0ff81b
+      Checksum: sha256:55c2a39092a55addf4860c0294f1dd5aa667ee0637ed77a7b88800a31333cec9
     - Path: .terraform-docs.gen.yml
       Checksum: sha256:7cba1689f7c088a1b9e208dfd0aeef31535f4dd321584f8e3a0e847365f584d0
     - Path: .terraform-docs.yml
       Checksum: sha256:2ef73e4f08fcbd4b3ee01fe67c91b588ad1b0321bcb5e854e915ae2cc1447694
     - Path: AGENTS.md
-      Checksum: sha256:c7696d07ef5f2874a73d46299af91cec348060d2b9034c639fbde6fea536f513
+      Checksum: sha256:2d9946bddfe46ae5196e868b2d9593b71b7ce1d42c62e6f3b4fc8170d9be3a18
     - Path: CLAUDE.md
       Checksum: sha256:a695d559cdc2e9e42ff21477bc97db4111eb0fd88a756ce232cc69d0d0a6ff7e
     - Path: boilerplate.mk
-      Checksum: sha256:b747177df3d2e824d81e74d8f8a9e9be65bd08430f4887388c5fc3ca7ba75d24
+      Checksum: sha256:773f9b69357b378cf330c42d90ed4a13cdba440301020e30de5bb237885d7591
     - Path: build/scripts/terraform-docs-module.sh
       Checksum: sha256:edf53e942fd1e54c1ebcb1610e1dba7e36223d67c14bdfe6af14ad46ae777395
     - Path: deploy/AGENTS.md
-      Checksum: sha256:7b92bd76d71b9d81e1f742794d361317de4150f69bcc1e11603a8c7b9c14e314
+      Checksum: sha256:229ac0136aae15ad3c0859da9c1dc45fc4d78aafc8a53a385159439c22c27e93
     - Path: docs/BOILERPLATE.md
       Checksum: sha256:2069c96b5e662444fc9c8e4db2330cbbebfe2fc99c3d765287d6b65c4dc553d7
     - Path: infra/AGENTS.md

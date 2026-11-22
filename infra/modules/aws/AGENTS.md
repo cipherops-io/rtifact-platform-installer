@@ -28,6 +28,7 @@ Registered modules (from `boilerplate-vars.yml` → `Modules`), grouped by layer
 - `eks/`
 - `compute/`
 - `karpenter-infra/`
+- `pod-identity/`
 
 
 ### network-edge

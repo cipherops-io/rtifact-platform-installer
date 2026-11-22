@@ -3,10 +3,10 @@
 
 # Generic boilerplate sync — rtifact-product managed template.
 
-BOILERPLATES_TEMPLATE_URL ?= github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.3.0
+BOILERPLATES_TEMPLATE_URL ?= github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v0.0.1
 # Local sibling: make boilerplate-update BOILERPLATES_TEMPLATE_URL=../boilerplates/devops-templates/rtifact-product
 BOILERPLATES_REPO ?= ../boilerplates
-BOILERPLATES_REF ?= v3.3.0
+BOILERPLATES_REF ?= v0.0.1
 BOILERPLATE_VAR_FILES ?= boilerplate-vars.yml
 
 ifndef REPO_ROOT
@@ -109,7 +109,7 @@ print-tool-versions:
 # Scaffold targets — render skeleton templates once (init-only skip rules).
 
 BOILERPLATES_GITHUB ?= github.com/cipherops-io/boilerplates
-BOILERPLATES_GITHUB_REF ?= ?ref=v3.3.0
+BOILERPLATES_GITHUB_REF ?= ?ref=v0.0.1
 BOILERPLATES_REPO ?= ../boilerplates
 TPL_RTIFACT_STACK ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-stack$(BOILERPLATES_GITHUB_REF)
 TPL_RTIFACT_MODULE ?= $(BOILERPLATES_GITHUB)//devops-templates/rtifact-module$(BOILERPLATES_GITHUB_REF)

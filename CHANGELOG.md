@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.1] - 2026-11-23
+
+First public release: full deploy engine plus v0.4 infra baseline. Aligned with **boilerplates [v0.0.1](https://github.com/cipherops-io/boilerplates/releases/tag/v0.0.1)**.
+
+### Deploy engine
+
+- `rtifact deploy plan|apply|status|rollback|destroy` with OCI charts, identity guard, inventory in `rtifact-system`, and lease locking.
+- Level-2 CI: `make deploy-e2e` (kind + Zot). See `tests/deploy/README.md` for scenario coverage.
+- AWS EKS **pod_identities** (preview): module, schema, `pod_identity_role_arns` output; `examples/aws/aws-sbx2.yaml` updated.
+
 ## [0.5.0] - 2026-11-23
 
 Aligned with **boilerplates [v3.3.0](https://github.com/cipherops-io/boilerplates/releases/tag/v3.3.0)**.
