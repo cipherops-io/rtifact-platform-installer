@@ -23,6 +23,7 @@ type Config interface {
 
 // Lifecycle covers cloud-specific apply/destroy helpers (DNS, orphan guard).
 type Lifecycle interface {
+	PrepareLayerVars(ctx context.Context, spec StateSpec, layer stacks.Layer, merged map[string]any) error
 	DestroyOrphanGuard(layer stacks.Layer, region, namePrefix string, merged map[string]any) error
 	MutateDNSDelegation(ctx context.Context, layer stacks.Layer, region, namePrefix, networkEdgeOutputsPath string, merged map[string]any)
 	DelegationPauseIfNeeded(merged map[string]any, configPath, namePrefix string, flat map[string]any) error

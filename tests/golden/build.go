@@ -103,7 +103,7 @@ func BuildSnapshot(repoRoot, configRel string) (*Snapshot, error) {
 		if len(upstream) > 0 {
 			layerMerged["upstream_state"] = upstream
 		}
-		// injectAzureResourceGroupFlags calls Azure CLI — skipped for goldens; keys listed in ExcludedCloudKeys.
+		// PrepareLayerVars calls Azure CLI — skipped for goldens; keys listed in ExcludedCloudKeys.
 		edgeOut := filepath.Join(paths.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
 		provider.MutateDNSDelegation(context.Background(), layer, customer.Account.Region, customer.NamePrefix(), edgeOut, layerMerged)
 		for _, k := range excludedCloudKeys {
@@ -152,7 +152,7 @@ func (s *Snapshot) WriteDir(dir string) error {
 	readme := `# Golden fixtures (W0)
 
 Layer tfvars omit Azure resource_group_create and resource_group_name because
-injectAzureResourceGroupFlags queries the live subscription (Azure CLI).
+PrepareLayerVars queries the live subscription (Azure CLI).
 All other preparation matches internal/runner before WriteAutoTofuVarsJSON.
 `
 	return os.WriteFile(filepath.Join(dir, "README.md"), []byte(readme), 0o644)

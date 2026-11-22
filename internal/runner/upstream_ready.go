@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 )
 
@@ -80,19 +80,12 @@ func upstreamRemoteOutputsPresent(
 	stackRel := stackRelDir(meta.StackID, customer.Cloud, upstream)
 	stackWork := filepath.Join(infraWork, stackRel)
 
-	layerMerged := maputil.DeepCopyMap(merged)
-	upstreamMap := map[string]any{}
-	for _, up := range stacks.Upstream(upstream) {
-		ub, err := cloud.Backend(provider, layerSpec(spec, up), string(up))
-		if err != nil {
-			return false, fmt.Errorf("upstream backend %s: %w", up, err)
-		}
-		upstreamMap[string(up)] = ub.RemoteState()
+	cl, ok := provider.(cloud.Lifecycle)
+	if !ok {
+		return false, fmt.Errorf("cloud %q: missing lifecycle hooks", customer.Cloud)
 	}
-	if len(upstreamMap) > 0 {
-		layerMerged["upstream_state"] = upstreamMap
-	}
-	if err := injectAzureResourceGroupFlags(customer, provider, layerSpec(spec, upstream), upstream, layerMerged); err != nil {
+	layerMerged, err := prepareLayerMerged(context.Background(), provider, cl, spec, upstream, merged, upstreamSpecPerLayer)
+	if err != nil {
 		return false, err
 	}
 	if err := config.WriteAutoTofuVarsJSON(stackWork, layerMerged); err != nil {

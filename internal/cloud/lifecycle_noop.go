@@ -10,6 +10,10 @@ import (
 // extra destroy/DNS behaviour.
 type NoopLifecycle struct{}
 
+func (NoopLifecycle) PrepareLayerVars(_ context.Context, _ StateSpec, _ stacks.Layer, _ map[string]any) error {
+	return nil
+}
+
 func (NoopLifecycle) DestroyOrphanGuard(_ stacks.Layer, _, _ string, _ map[string]any) error {
 	return nil
 }

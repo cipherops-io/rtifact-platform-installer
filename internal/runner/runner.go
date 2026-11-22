@@ -15,7 +15,6 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/guard"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/outputs"
@@ -201,19 +200,8 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	}
 	stackWork := filepath.Join(infraWork, stackRel)
 
-	layerMerged := maputil.DeepCopyMap(merged)
-	upstream := map[string]any{}
-	for _, up := range stacks.Upstream(layer) {
-		ub, err := cloud.Backend(provider, spec, string(up))
-		if err != nil {
-			return fmt.Errorf("upstream backend %s: %w", up, err)
-		}
-		upstream[string(up)] = ub.RemoteState()
-	}
-	if len(upstream) > 0 {
-		layerMerged["upstream_state"] = upstream
-	}
-	if err := injectAzureResourceGroupFlags(customer, provider, layerSpec(spec, layer), layer, layerMerged); err != nil {
+	layerMerged, err := prepareLayerMerged(context.Background(), provider, provider, spec, layer, merged, upstreamSpecFlat)
+	if err != nil {
 		return err
 	}
 	edgeOut := filepath.Join(paths.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
