@@ -19,7 +19,7 @@ func TestMergeBuildCustomerFields(t *testing.T) {
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.yaml")
 	body := `
-schema_version: 2
+schema_version: 1
 cloud: azure
 profile: aios-infra
 account:
@@ -81,7 +81,7 @@ func TestMergeReplaceNodePools(t *testing.T) {
 	dir := t.TempDir()
 	cfgPath := filepath.Join(dir, "config.yaml")
 	body := `
-schema_version: 2
+schema_version: 1
 cloud: azure
 profile: aios-infra
 account:
@@ -134,7 +134,7 @@ func writeCfg(t *testing.T, body string) string {
 }
 
 const v2Base = `
-schema_version: 2
+schema_version: 1
 cloud: azure
 profile: aios-infra
 account:
@@ -171,8 +171,23 @@ account:
 workload:
   name_prefix: demo
 `
-	if _, err := LoadCustomer(writeCfg(t, v1)); err == nil || !strings.Contains(err.Error(), "schema_version: 2 is required") {
-		t.Fatalf("expected v1 rejection: %v", err)
+	if _, err := LoadCustomer(writeCfg(t, v1)); err != nil {
+		t.Fatalf("schema_version 1 accepted: %v", err)
+	}
+	v2 := `
+schema_version: 2
+cloud: azure
+profile: aios-infra
+account:
+  subscription_id: "11111111-1111-1111-1111-111111111111"
+  region: centralindia
+workload:
+  name_prefix: demo
+features:
+  resource_group: true
+`
+	if _, err := LoadCustomer(writeCfg(t, v2)); err == nil || !strings.Contains(err.Error(), "schema_version must be 1") {
+		t.Fatalf("expected v2 rejection: %v", err)
 	}
 	wrong := `
 schema_version: 99
@@ -188,7 +203,7 @@ workload:
 		t.Fatal("expected schema_version error")
 	}
 	noCloud := `
-schema_version: 2
+schema_version: 1
 profile: aios-infra
 account:
   subscription_id: "11111111-1111-1111-1111-111111111111"

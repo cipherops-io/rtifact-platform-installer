@@ -11,7 +11,7 @@ Use `<customer>-<environment>-<purpose>.yaml` (any path). Example: `tata-digital
 - Quotas for chosen SKUs in the target region
 - **Release builds** bundle OpenTofu and an offline provider mirror. Dev builds use `tofu` on `PATH`.
 
-## Customer YAML layout (schema v2)
+## Customer YAML layout (schema v1)
 
 | Section | Purpose |
 |---------|---------|

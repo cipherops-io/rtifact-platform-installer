@@ -35,6 +35,6 @@ Scope, naming, core networking, egress control, hybrid connectivity, jump host.
 - `connectivity`
 
 
-**Provides:** `docs/layer-contracts.md#core-network`
+**Provides:** `tests/config/contracts/azure.yaml` (layer `core-network`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`

@@ -21,7 +21,7 @@ Instructions for humans and AI agents working in this repository.
 
 - **Do not add new `.tf` files.** All OpenTofu configuration must use the **`.tofu`** extension (e.g. `main.tofu`, `variables.tofu`, `providers.tofu`).
 - Variable files for customers stay **YAML** (e.g. `<customer>-<env>-<purpose>.yaml` **external** to the repo).
-- Customer contract (schema v2): top-level `cloud`, `account`, `workload`, and `features.*` booleans (validated against the profile registry).
+- Customer contract (schema v1): top-level `cloud`, `account`, `workload`, and explicit `features.*` booleans in the customer file (validated against the profile registry).
 - Generated at apply time: `installer.auto.tfvars.json` (passed via `-var-file`) and `backend.tofu` (from `cloud.Backend()`); local state lives under `~/.rtifact-installer/<prefix>/state/`.
 - New IaC modules/resources must be behind a `features.<name>` flag in the stack.
 
@@ -66,7 +66,7 @@ Logic is edited **in this repo only**. Managed structure/tooling is edited in **
 
 ## Boilerplates checkout
 
-Use sibling `../boilerplates` for template development; before push set `BOILERPLATES_TEMPLATE_URL` to `github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.1.0`.
+Use sibling `../boilerplates` for template development; before push set `BOILERPLATES_TEMPLATE_URL` to `github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.1.1`.
 
 Templates: `rtifact-product` (managed sync), `rtifact-stack`, `rtifact-module`, `rtifact-cloud` (one-shot scaffolds).
 

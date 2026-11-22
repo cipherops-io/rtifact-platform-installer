@@ -31,6 +31,6 @@ Kubernetes clusters, node pools, workload identity, compute VMs.
 
 **Reads from:** core-network, data-platform
 
-**Provides:** `docs/layer-contracts.md#app-platform`
+**Provides:** `tests/config/contracts/aws.yaml` (layer `app-platform`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`

@@ -43,6 +43,7 @@ features:
   container_registry: true
   storage_account: true
   redis_cache: false
+  azure_files_share: true
   azure_managed_redis: true
   azure_files_share: true
   communication_email: true

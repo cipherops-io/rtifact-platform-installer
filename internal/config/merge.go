@@ -24,9 +24,6 @@ func LoadCustomer(path string) (*CustomerConfig, error) {
 		return nil, fmt.Errorf("parse customer config: %w", err)
 	}
 	if cfg.SchemaVersion != SchemaVersion {
-		if cfg.SchemaVersion == 1 {
-			return nil, fmt.Errorf("%s", SchemaV1RetiredMessage(cfg.Cloud))
-		}
 		return nil, fmt.Errorf("schema_version must be %d (got %d)", SchemaVersion, cfg.SchemaVersion)
 	}
 	if cfg.Cloud == "" {
@@ -162,6 +159,10 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 	}
 	raw = normalizeAnyMap(raw)
 
+	if err := validateCustomerExplicitFeatures(raw, customer.Profile, customer.Cloud); err != nil {
+		return nil, err
+	}
+
 	contentRoot, _, _ := assets.ContentRootOptional()
 	var tierMap map[string]any
 	if customer.Tier != "" && contentRoot != "" {
@@ -219,9 +220,6 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 
 	cloudProfile.Normalize(merged)
 	if err := validateMergedFeaturesFromRegistry(merged, customer.Profile, customer.Cloud); err != nil {
-		return nil, err
-	}
-	if err := validateAtLeastOneFeature(merged); err != nil {
 		return nil, err
 	}
 	if err := cloudProfile.Validate(merged); err != nil {

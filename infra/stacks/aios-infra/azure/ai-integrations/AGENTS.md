@@ -25,6 +25,6 @@ Managed AI model access and transactional email / communications.
 
 **Reads from:** core-network, data-platform
 
-**Provides:** `docs/layer-contracts.md#ai-integrations`
+**Provides:** `tests/config/contracts/azure.yaml` (layer `ai-integrations`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`

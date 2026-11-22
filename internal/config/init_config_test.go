@@ -16,7 +16,7 @@ func TestWriteInitConfigValidates(t *testing.T) {
 		t.Fatalf("init output should validate: %v", err)
 	}
 	raw, _ := os.ReadFile(out)
-	if !containsAll(string(raw), "schema_version: 2", "cloud: aws", "tier: sandbox") {
+	if !containsAll(string(raw), "schema_version: 1", "cloud: aws", "tier: sandbox") {
 		t.Fatalf("unexpected init output:\n%s", raw)
 	}
 }

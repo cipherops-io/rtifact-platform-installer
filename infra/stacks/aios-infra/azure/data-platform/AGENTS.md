@@ -34,6 +34,6 @@ Stateful data, secrets, registries, private endpoints and private DNS.
 
 **Reads from:** core-network
 
-**Provides:** `docs/layer-contracts.md#data-platform`
+**Provides:** `tests/config/contracts/azure.yaml` (layer `data-platform`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`

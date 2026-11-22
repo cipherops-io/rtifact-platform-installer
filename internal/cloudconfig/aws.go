@@ -115,8 +115,15 @@ func (awsConfig) Preflight(ctx context.Context, merged map[string]any) error {
 		return fmt.Errorf("preflight: AWS credentials: %w (%s)", err, strings.TrimSpace(string(out)))
 	}
 	netw, _ := merged["network"].(map[string]any)
+	var cidrs []string
 	if vpc, _ := netw["vpc_cidr"].(string); vpc != "" {
-		if err := awsVPCCIDRFree(ctx, region, vpc); err != nil {
+		cidrs = append(cidrs, vpc)
+	}
+	if secs, err := stringSlice(netw["secondary_cidrs"]); err == nil {
+		cidrs = append(cidrs, secs...)
+	}
+	for _, cidr := range cidrs {
+		if err := awsVPCCIDRFree(ctx, region, cidr); err != nil {
 			return err
 		}
 	}
@@ -125,9 +132,9 @@ func (awsConfig) Preflight(ctx context.Context, merged map[string]any) error {
 
 func awsVPCCIDRFree(ctx context.Context, region, vpcCIDR string) error {
 	cmd := exec.CommandContext(ctx, "aws", "ec2", "describe-vpcs", "--region", region, "--filters", "Name=cidr-block-association-set.cidr-block,Values="+vpcCIDR)
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil // skip when API unavailable
+		return fmt.Errorf("preflight: describe-vpcs for %s: %w (%s)", vpcCIDR, err, strings.TrimSpace(string(out)))
 	}
 	if strings.Contains(string(out), vpcCIDR) {
 		return fmt.Errorf("preflight: an existing VPC already uses CIDR %s in %s", vpcCIDR, region)

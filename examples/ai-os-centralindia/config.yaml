@@ -26,6 +26,7 @@ features:
   container_registry: true
   storage_account: true
   redis_cache: false
+  azure_files_share: true
   kubernetes_cluster: true
   azure_bastion: true
   private_dns_zones: true

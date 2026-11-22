@@ -27,3 +27,33 @@ state:
   air_gapped: false
   versioning: true
   encryption: AES256
+
+kubernetes_cluster:
+  node_role_policies:
+    - AmazonEKSWorkerNodePolicy
+    - AmazonEKS_CNI_Policy
+    - AmazonEC2ContainerRegistryReadOnly
+  node_groups:
+    initial:
+      instance_types: [m6a.large]
+      capacity_type: ON_DEMAND
+      ami_type: AL2023_x86_64_STANDARD
+      min_size: 1
+      desired_size: 2
+      max_size: 3
+      max_unavailable: 1
+      subnet_tier: node
+      disk:
+        size_gb: 100
+        type: gp3
+        encrypted: true
+      metadata:
+        http_tokens: optional
+        hop_limit: 2
+  service_security_groups:
+    internal:
+      ports: [80, 443]
+      cidrs: [vpc]
+    public:
+      ports: [80, 443]
+      cidrs: [0.0.0.0/0]

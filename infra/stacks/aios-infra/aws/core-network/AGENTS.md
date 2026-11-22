@@ -31,6 +31,6 @@ Scope, naming, core networking, egress control, hybrid connectivity, jump host.
 - `bastion`
 
 
-**Provides:** `docs/layer-contracts.md#core-network`
+**Provides:** `tests/config/contracts/aws.yaml` (layer `core-network`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`

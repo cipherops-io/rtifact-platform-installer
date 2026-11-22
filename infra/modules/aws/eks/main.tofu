@@ -59,7 +59,7 @@ resource "aws_security_group" "service" {
   vpc_id = var.vpc_id
 
   dynamic "ingress" {
-    for_each = try(each.value.ports, [80, 443])
+    for_each = each.value.ports
     content {
       from_port = ingress.value
       to_port   = ingress.value
@@ -183,17 +183,17 @@ resource "aws_launch_template" "node" {
   block_device_mappings {
     device_name = "/dev/xvda"
     ebs {
-      volume_size           = try(each.value.disk.size_gb, 100)
-      volume_type           = try(each.value.disk.type, "gp3")
-      encrypted             = try(each.value.disk.encrypted, true)
+      volume_size           = each.value.disk.size_gb
+      volume_type           = each.value.disk.type
+      encrypted             = each.value.disk.encrypted
       delete_on_termination = true
     }
   }
 
   metadata_options {
     http_endpoint               = "enabled"
-    http_tokens                 = try(each.value.metadata.http_tokens, "optional")
-    http_put_response_hop_limit = try(each.value.metadata.hop_limit, 2)
+    http_tokens                 = each.value.metadata.http_tokens
+    http_put_response_hop_limit = each.value.metadata.hop_limit
   }
 
   tag_specifications {
@@ -209,8 +209,8 @@ resource "aws_eks_node_group" "pool" {
   node_group_name = each.key
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = try(var.subnet_ids_by_tier[each.value.subnet_tier], local.node_subnet_ids)
-  capacity_type  = try(each.value.capacity_type, "ON_DEMAND")
-  instance_types = try(each.value.instance_types, ["m6a.large"])
+  capacity_type  = each.value.capacity_type
+  instance_types = each.value.instance_types
   labels          = try(each.value.labels, {})
   tags            = var.tags
 
@@ -220,13 +220,13 @@ resource "aws_eks_node_group" "pool" {
   }
 
   scaling_config {
-    desired_size = try(each.value.desired_size, 2)
-    max_size     = try(each.value.max_size, 3)
-    min_size     = try(each.value.min_size, 1)
+    desired_size = each.value.desired_size
+    max_size     = each.value.max_size
+    min_size     = each.value.min_size
   }
 
   update_config {
-    max_unavailable = try(each.value.max_unavailable, 1)
+    max_unavailable = each.value.max_unavailable
   }
 
   depends_on = [aws_iam_role_policy_attachment.node]

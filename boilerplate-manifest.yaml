@@ -2,7 +2,7 @@ Variables:
     AirGapped: true
     ArtifactRegistryHost: ""
     BoilerplateCliVersion: 0.17.0
-    BoilerplatesRef: v3.1.0
+    BoilerplatesRef: v3.1.1
     BuildTargets:
         - linux/amd64
         - darwin/arm64
@@ -153,10 +153,10 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-21T06:28:13Z"
-TemplateURL: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.1.0
+Timestamp: "2026-11-22T04:23:44Z"
+TemplateURL: ../boilerplates/devops-templates/rtifact-product
 BoilerplateVersion: v0.17.0
-SourceChecksum: git-sha1:c912bbe93ea54ef5531cdb86bed1660136f8e7a6
+SourceChecksum: sha256:59bbed6b6e45a9801aa0818a7be0ec8e374e7758e2309c20a4817a7d3328d8d0
 OutputDir: .
 Dependencies:
     - Variables:
@@ -164,7 +164,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.0
+        BoilerplatesRef: v3.1.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -330,7 +330,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.0
+        BoilerplatesRef: v3.1.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -496,7 +496,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.0
+        BoilerplatesRef: v3.1.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -662,7 +662,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.0
+        BoilerplatesRef: v3.1.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -826,7 +826,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -985,7 +985,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:efa7bf5970418ec3951a8927a02dbce5c11a5193db8a9dfeed66f5240013e29a
+              Checksum: sha256:a5d3ad00d9f815307ec09b1e638c3a2734ee5c16dfc3518a279ecd6638fde023
           ForEach:
             - state-backend
         - Variables:
@@ -993,7 +993,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1152,7 +1152,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:35c2fc167f89e74d80929d14781ad1d06b30b19de3357df53fda3cad48abab63
+              Checksum: sha256:bc5ba226eba15e6f6c5a4a67ad50b2d20b5f6feab24b6248db6e6fc22eaa26d6
           ForEach:
             - core-network
         - Variables:
@@ -1160,7 +1160,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1319,7 +1319,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:983b340ea622aac0071b423341fe9e7dbdc4f1df28a694d87aba33b70ec4622f
+              Checksum: sha256:0304073b246d55f1b439634d71bc9251bcdbf60a5ed495d0df627e5dcb160217
           ForEach:
             - data-platform
         - Variables:
@@ -1327,7 +1327,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1486,7 +1486,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:58c60cd2130087e5e91b650431179e4f566c0172157d371175c2cf4e3df2cf9d
+              Checksum: sha256:351693d2318bf4e6eafc753bd30a7d7c8264f21d745db0d9ec2825dda4032dc8
           ForEach:
             - app-platform
         - Variables:
@@ -1494,7 +1494,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1653,7 +1653,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:7568a2b4b83513a235e9fdc94f2b148c5b90d2c11f7c84844f63b66b83b4fb8d
+              Checksum: sha256:8e073d1c45c81565a942f7bb195cd526ee9eaf1e55ff698dd6cd8bd9ab54774f
           ForEach:
             - network-edge
         - Variables:
@@ -1661,7 +1661,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1820,7 +1820,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:2cbe8aacb573d4f2235b470e13978c2e684f9845c6890e3d6f64e81dd0195972
+              Checksum: sha256:acf7ec3fef36e1ecbebe704ae63b3b475488feca36458c03093246b2ef3dd3e5
           ForEach:
             - ai-integrations
     - Variables:
@@ -1828,7 +1828,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.0
+        BoilerplatesRef: v3.1.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -1992,7 +1992,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2151,7 +2151,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:9f22273add69569513a3deb479cd2349df98940de9070959130328ce61b9bac6
+              Checksum: sha256:b3382930719680ab469934c82cb831075c4e8097171a92e8c5b05982727bd690
           ForEach:
             - state-backend
         - Variables:
@@ -2159,7 +2159,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2318,7 +2318,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:66a8f082f9ceec2d586465d3fc6d5f060d8cae473cd53ca5a8c6ffd045a1f3d9
+              Checksum: sha256:be8c1a233a03285e8c21c2024557d57af7c4ba1d399259b47f37a43ef4924025
           ForEach:
             - core-network
         - Variables:
@@ -2326,7 +2326,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2485,7 +2485,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:b121aca04ba0641b5d03bc0737d7299b7f6acd39c7d1fb847d23b60d5b1b9c8a
+              Checksum: sha256:ab1f1e43b6d6f57689385d80a88d7603db5628f946c90b4d59a59a8fe1ae6684
           ForEach:
             - data-platform
         - Variables:
@@ -2493,7 +2493,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2652,7 +2652,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:67ccd838e333c2b1fd30341433b6925b6fa2e85e5dd19dbb46d1c205812c5f70
+              Checksum: sha256:ac8f2693872fcb74c3be7c3b60a3eea776dc49c20f7d9e5df3266f3188365c76
           ForEach:
             - app-platform
         - Variables:
@@ -2660,7 +2660,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2819,7 +2819,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:1cbdcbeea35b611944df1034230736baa1cdb4368d78b035b3cfdc596db77bd8
+              Checksum: sha256:44d2b8335fd345e77e611536f4c0467f88ccc79b083f9a118f7e3ac2744fa434
           ForEach:
             - network-edge
         - Variables:
@@ -2827,7 +2827,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2986,7 +2986,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:efa0813c51c5decd389111a23a02003a509d4248798f1c3fa22e0edf44758e29
+              Checksum: sha256:632e2ce36e9a346201b8b924c1f06f0400615b494ae9511a286f255f141c138c
           ForEach:
             - ai-integrations
     - Variables:
@@ -2994,7 +2994,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.0
+        BoilerplatesRef: v3.1.1
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -3158,7 +3158,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3317,7 +3317,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:b19f90906fbd17762763515c26bb30b8260380b4eb402d4966402d733f77e18f
+              Checksum: sha256:796aabced8e7a9e7dead885061d0a9fc48a08392ea6662e7f915d9224c94338b
           ForEach:
             - state-backend
         - Variables:
@@ -3325,7 +3325,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3484,7 +3484,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:e341439ab065888fe223708b98096f03d5b773c4a3ea9022d3eea7cc1a857b78
+              Checksum: sha256:9fa20fd9375cf807bf30fdcf0f47baebdd0ccc6e3a96f783e7aad9455e9e3b2a
           ForEach:
             - core-network
         - Variables:
@@ -3492,7 +3492,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3651,7 +3651,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:f9d73b232f60817c867027428ca7e20653d7de38b0ecadeada87783dbd3a7af8
+              Checksum: sha256:3fdb537d47e75791b857ac40e4332db790d4edc35a4a35fb37daebbcee0db25a
           ForEach:
             - data-platform
         - Variables:
@@ -3659,7 +3659,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3818,7 +3818,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:c7346f65d8e9cc9b5a18299cc1d4a60168762230611f02991537d3d614237473
+              Checksum: sha256:ca4edf972b0d3948232050c8618ebe6eae3062cbeca1d0b683b8a4c37d989d47
           ForEach:
             - app-platform
         - Variables:
@@ -3826,7 +3826,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3985,7 +3985,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:31309c825341c49753754a8ab43213a46e751433502ba065e380da3b6068fed9
+              Checksum: sha256:269b2112e6b210f4f60830cdb2b350e35936c9b0091416ce21786da05afcd5d6
           ForEach:
             - network-edge
         - Variables:
@@ -3993,7 +3993,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.0
+            BoilerplatesRef: v3.1.1
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -4152,7 +4152,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:56e6f0f5ab6e3a09c35048f7164f0947d903eb6630d2dd3561005fee644b07cc
+              Checksum: sha256:81ca02c1ccad5f54c49e80c15abe2662b90e6eebe25ff336c9eb3d1ac980c56e
           ForEach:
             - ai-integrations
 Files:
@@ -4167,17 +4167,17 @@ Files:
     - Path: .terraform-docs.yml
       Checksum: sha256:2ef73e4f08fcbd4b3ee01fe67c91b588ad1b0321bcb5e854e915ae2cc1447694
     - Path: AGENTS.md
-      Checksum: sha256:97ffb369c371a456f6f76b96c3af3bf32551e946a09ee9d5a9708d4a4432775e
+      Checksum: sha256:21d7c5cd295ba464cf7b0e7a2c9f8748d34e5609b750316545d42bcdc04bfa4f
     - Path: CLAUDE.md
       Checksum: sha256:c54ba6a2cf5a7404006d2da37d3e66950d240149b1ebe2c709d2c248ef25c876
     - Path: boilerplate.mk
-      Checksum: sha256:03e39270578eded20b3c0f5015dfa772aff4433b5565254566b4c88a09e6b9b9
+      Checksum: sha256:7b6f7bc5383665f1186c253067079ac9962f9941fca5d2493d9819ecd973b980
     - Path: build/scripts/terraform-docs-module.sh
       Checksum: sha256:edf53e942fd1e54c1ebcb1610e1dba7e36223d67c14bdfe6af14ad46ae777395
     - Path: docs/BOILERPLATE.md
       Checksum: sha256:b8bb92e3bdf1589d541439780b0eb38c16ec9d53620f8bb39da961079b67678e
     - Path: infra/AGENTS.md
-      Checksum: sha256:5e4dd57d8cc075d9a94aadb554ca3cdebbabd10eea330100a0f02bed55935f89
+      Checksum: sha256:483d3ddc0f18a2cd11197f74bedc3f2fc41ddbf16f6637c0e826c388befe35fb
     - Path: infra/modules/AGENTS.md
       Checksum: sha256:0e68896ce28d591b9a9e77002b05a2027752852a7d3b957c05ac860a5c975c7f
     - Path: tooling.mk

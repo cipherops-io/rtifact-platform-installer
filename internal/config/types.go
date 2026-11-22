@@ -3,12 +3,9 @@ package config
 import "fmt"
 
 // SchemaVersion is the customer config schema version this build understands.
-const SchemaVersion = 2
+const SchemaVersion = 1
 
-// SchemaV1RetiredHint is shown when schema_version is 1 (unsafe under default-off features).
-const SchemaV1RetiredHint = `schema_version: 2 is required. Under v2 every feature defaults to off in the profile; enable features explicitly in your YAML (see examples/ for your cloud).`
-
-// CustomerConfig is the external customer-supplied YAML contract (schema v2).
+// CustomerConfig is the external customer-supplied YAML contract (schema v1).
 type CustomerConfig struct {
 	SchemaVersion            int              `yaml:"schema_version"`
 	Cloud                    string           `yaml:"cloud"`

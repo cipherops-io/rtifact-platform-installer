@@ -29,6 +29,6 @@ Public ingress, edge security, public DNS, edge TLS termination.
 
 **Reads from:** core-network, app-platform
 
-**Provides:** `docs/layer-contracts.md#network-edge`
+**Provides:** `tests/config/contracts/aws.yaml` (layer `network-edge`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`

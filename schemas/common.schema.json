@@ -4,7 +4,7 @@
   "type": "object",
   "required": ["schema_version", "cloud", "profile", "account", "workload"],
   "properties": {
-    "schema_version": { "type": "integer", "const": 2 },
+    "schema_version": { "type": "integer", "const": 1 },
     "cloud": { "type": "string", "enum": ["azure", "aws", "gcp"] },
     "tier": { "type": "string", "minLength": 1 },
     "customer": {

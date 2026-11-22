@@ -24,6 +24,6 @@ None yet (stub layer). Create with `make scaffold-module CLOUD=aws MODULE=<name>
 
 **Reads from:** core-network, data-platform
 
-**Provides:** `docs/layer-contracts.md#ai-integrations`
+**Provides:** `tests/config/contracts/aws.yaml` (layer `ai-integrations`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`

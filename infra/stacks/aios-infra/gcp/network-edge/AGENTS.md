@@ -26,6 +26,6 @@ None yet (stub layer). Create with `make scaffold-module CLOUD=gcp MODULE=<name>
 
 **Reads from:** core-network, app-platform
 
-**Provides:** `docs/layer-contracts.md#network-edge`
+**Provides:** `tests/config/contracts/gcp.yaml` (layer `network-edge`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`

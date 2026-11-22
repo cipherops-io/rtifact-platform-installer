@@ -38,7 +38,7 @@ func awsDestroyOrphanGuard(customer *config.CustomerConfig, layer stacks.Layer, 
 	ctx := context.Background()
 	hits, err := awsClusterOrphans(ctx, region, clusterName)
 	if err != nil {
-		return nil
+		return fmt.Errorf("aws destroy guard: %w", err)
 	}
 	if len(hits) == 0 {
 		return nil
@@ -51,29 +51,75 @@ func awsDestroyOrphanGuard(customer *config.CustomerConfig, layer stacks.Layer, 
 }
 
 func awsClusterOrphans(ctx context.Context, region, clusterName string) ([]string, error) {
-	tagFilter := fmt.Sprintf("tag:kubernetes.io/cluster/%s", clusterName)
+	tagKey := fmt.Sprintf("kubernetes.io/cluster/%s", clusterName)
 	var hits []string
-	cmd := exec.CommandContext(ctx, "aws", "ec2", "describe-instances",
+
+	instOut, err := exec.CommandContext(ctx, "aws", "ec2", "describe-instances",
 		"--region", region,
-		"--filters", fmt.Sprintf("Name=tag-key,Values=kubernetes.io/cluster/%s", clusterName), "Name=instance-state-name,Values=running")
-	out, err := cmd.Output()
+		"--filters",
+		"Name=tag-key,Values="+tagKey,
+		"Name=instance-state-name,Values=running,stopped",
+	).Output()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("describe-instances: %w", err)
 	}
-	var resp struct {
+	var instResp struct {
 		Reservations []struct {
 			Instances []struct {
 				InstanceID string `json:"InstanceId"`
 			} `json:"Instances"`
 		} `json:"Reservations"`
 	}
-	if json.Unmarshal(out, &resp) == nil {
-		for _, r := range resp.Reservations {
+	if json.Unmarshal(instOut, &instResp) == nil {
+		for _, r := range instResp.Reservations {
 			for _, i := range r.Instances {
 				hits = append(hits, "EC2 instance "+i.InstanceID)
 			}
 		}
 	}
-	_ = tagFilter
+
+	lbOut, err := exec.CommandContext(ctx, "aws", "elbv2", "describe-load-balancers", "--region", region).Output()
+	if err != nil {
+		return nil, fmt.Errorf("describe-load-balancers: %w", err)
+	}
+	var lbResp struct {
+		LoadBalancers []struct {
+			Name string `json:"LoadBalancerName"`
+			ARN  string `json:"LoadBalancerArn"`
+		} `json:"LoadBalancers"`
+	}
+	if json.Unmarshal(lbOut, &lbResp) == nil {
+		for _, lb := range lbResp.LoadBalancers {
+			tagsOut, err := exec.CommandContext(ctx, "aws", "elbv2", "describe-tags",
+				"--region", region,
+				"--resource-arns", lb.ARN,
+			).Output()
+			if err != nil {
+				continue
+			}
+			if strings.Contains(string(tagsOut), tagKey) || strings.Contains(string(tagsOut), clusterName) {
+				hits = append(hits, "Load balancer "+lb.Name)
+			}
+		}
+	}
+
+	volOut, err := exec.CommandContext(ctx, "aws", "ec2", "describe-volumes",
+		"--region", region,
+		"--filters", "Name=tag-key,Values="+tagKey,
+	).Output()
+	if err != nil {
+		return nil, fmt.Errorf("describe-volumes: %w", err)
+	}
+	var volResp struct {
+		Volumes []struct {
+			VolumeID string `json:"VolumeId"`
+		} `json:"Volumes"`
+	}
+	if json.Unmarshal(volOut, &volResp) == nil {
+		for _, v := range volResp.Volumes {
+			hits = append(hits, "EBS volume "+v.VolumeID)
+		}
+	}
+
 	return hits, nil
 }

@@ -30,4 +30,4 @@
 6. **Finish.** Gate with `features.<name>`, register `layer/module` in `boilerplate-vars.yml`, run `make tofu-pre-commit-fast`.
 7. **Never add logic to boilerplates** — resources and logic live in this installer repo only.
 
-Per-layer summaries: `infra/stacks/<profile>/<cloud>/<layer>/AGENTS.md`. Output contracts: `docs/layer-contracts.md`.
+Per-layer summaries: `infra/stacks/<profile>/<cloud>/<layer>/AGENTS.md`. Output contracts: `tests/config/contracts/<cloud>.yaml`.

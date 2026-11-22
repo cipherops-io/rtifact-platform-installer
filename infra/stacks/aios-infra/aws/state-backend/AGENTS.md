@@ -24,6 +24,6 @@ Remote state storage for OpenTofu (bootstrap may use local state).
 - `state-backend`
 
 
-**Provides:** `docs/layer-contracts.md#state-backend`
+**Provides:** `tests/config/contracts/aws.yaml` (layer `state-backend`)
 
 **How to place a new service:** `infra/AGENTS.md#placement`
