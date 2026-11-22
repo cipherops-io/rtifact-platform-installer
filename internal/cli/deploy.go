@@ -37,18 +37,26 @@ func addDeployGroup(root *cobra.Command) {
 	validateCmd.Flags().Bool("explain", false, "Print merge-style summary with ${env.*} masked")
 	grp.AddCommand(validateCmd)
 
+	writeInit := func(cmd *cobra.Command) error {
+		out, _ := cmd.Flags().GetString("out")
+		force, _ := cmd.Flags().GetBool("force")
+		return deploy.WriteInitConfig(out, force)
+	}
 	initCfg := &cobra.Command{
 		Use:   "init-config",
 		Short: "Write a minimal deploy file",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			return writeInit(cmd)
+		},
 	}
 	initCfg.AddCommand(&cobra.Command{
 		Use: "write",
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			out, _ := cmd.Flags().GetString("out")
-			return deploy.WriteInitConfig(out)
+			return writeInit(cmd)
 		},
 	})
 	initCfg.PersistentFlags().String("out", "releases.yaml", "output path")
+	initCfg.PersistentFlags().Bool("force", false, "Overwrite an existing file")
 	grp.AddCommand(initCfg)
 
 	runFlags := func(cmd *cobra.Command) deploy.RunOptions {

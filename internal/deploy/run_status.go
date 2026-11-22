@@ -12,10 +12,11 @@ import (
 
 // Status prints per-release wanted vs live versions.
 func Status(ctx context.Context, o RunOptions, asJSON bool) error {
-	doc, disc, kcfg, err := loadRuntime(o)
+	sess, err := OpenSession(ctx, o)
 	if err != nil {
 		return err
 	}
+	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
 	if !asJSON {
 		printBanner(o.out(), doc, disc, kcfg)
 	}

@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -117,6 +118,107 @@ releases:
 	p := writeDeploy(t, dir, "d.yaml", content)
 	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "duplicate") {
 		t.Fatalf("expected duplicate release error, got %v", err)
+	}
+}
+
+func TestValidate_defaultsTimeoutInvalid(t *testing.T) {
+	dir := t.TempDir()
+	yaml := strings.Replace(minimalDeployYAML(""), "name_prefix: x-dev", `name_prefix: x-dev
+defaults:
+  timeout: not-a-duration
+`, 1)
+	p := writeDeploy(t, dir, "d.yaml", yaml)
+	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "timeout") {
+		t.Fatalf("expected timeout error, got %v", err)
+	}
+}
+
+func TestValidate_releaseVersionNotSemver(t *testing.T) {
+	dir := t.TempDir()
+	yaml := strings.Replace(minimalDeployYAML(""), "version: 1.0.0", "version: latest", 1)
+	p := writeDeploy(t, dir, "d.yaml", yaml)
+	if err := ValidateFile(p); err == nil {
+		t.Fatalf("expected semver error, got nil")
+	}
+}
+
+func TestValidate_chartRefInvalidOCI(t *testing.T) {
+	dir := t.TempDir()
+	yaml := strings.Replace(minimalDeployYAML(""), "chart: c", "chart: oci://", 1)
+	p := writeDeploy(t, dir, "d.yaml", yaml)
+	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "oci://") {
+		t.Fatalf("expected chart error, got %v", err)
+	}
+}
+
+func TestValidate_pullSecretRequiresRegistryAuth(t *testing.T) {
+	dir := t.TempDir()
+	content := `schema_version: 1
+kind: deploy
+customer: { name: X, code: x }
+environment: dev
+name_prefix: x-dev
+registry: { host: h, charts_path: p }
+namespaces:
+  - name: x
+    pull_secret: true
+releases:
+  - name: app
+    namespace: x
+    chart: c
+    version: 1.0.0
+`
+	p := writeDeploy(t, dir, "d.yaml", content)
+	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "registry.auth") {
+		t.Fatalf("expected registry.auth error, got %v", err)
+	}
+}
+
+func TestValidate_attachPullSecretRequiresPullSecret(t *testing.T) {
+	dir := t.TempDir()
+	content := `schema_version: 1
+kind: deploy
+customer: { name: X, code: x }
+environment: dev
+name_prefix: x-dev
+registry:
+  host: h
+  charts_path: p
+  auth: { username_env: U, password_env: P }
+namespaces:
+  - name: x
+    attach_pull_secret_to_default_sa: true
+releases:
+  - name: app
+    namespace: x
+    chart: c
+    version: 1.0.0
+`
+	p := writeDeploy(t, dir, "d.yaml", content)
+	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "attach_pull_secret") {
+		t.Fatalf("expected attach error, got %v", err)
+	}
+}
+
+func TestValidate_deploymentNameTooLong(t *testing.T) {
+	dir := t.TempDir()
+	longEnv := strings.Repeat("a", 62)
+	content := fmt.Sprintf(`schema_version: 1
+kind: deploy
+customer: { name: X, code: x }
+environment: %s
+name_prefix: x-dev
+registry: { host: h, charts_path: p }
+namespaces: [{ name: x }]
+releases:
+  - name: app
+    namespace: x
+    chart: c
+    version: 1.0.0
+`, longEnv)
+	p := writeDeploy(t, dir, "d.yaml", content)
+	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "63") {
+		t.Fatalf("expected length error, got %v", err)
 	}
 }
 

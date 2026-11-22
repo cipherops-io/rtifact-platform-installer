@@ -11,10 +11,11 @@ import (
 
 // Rollback rolls back a single release to its previous revision.
 func Rollback(ctx context.Context, o RunOptions, release string) error {
-	doc, disc, kcfg, err := loadRuntime(o)
+	sess, err := OpenSession(ctx, o)
 	if err != nil {
 		return err
 	}
+	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
 	printBanner(o.out(), doc, disc, kcfg)
 	if err := engine.ConfirmDeployRollback(o.Yes, release); err != nil {
 		return err

@@ -57,26 +57,6 @@ func (o *RunOptions) err() io.Writer {
 	return os.Stderr
 }
 
-func loadRuntime(o RunOptions) (*Document, Discovery, kube.Config, error) {
-	doc, err := LoadFile(o.FilePath)
-	if err != nil {
-		return nil, Discovery{}, kube.Config{}, err
-	}
-	disc, err := Discover(DiscoverOpts{
-		FilePath: o.FilePath, Doc: doc, KubeconfigCLI: o.KubeconfigCLI,
-	})
-	if err != nil {
-		return nil, disc, kube.Config{}, err
-	}
-	kcfg := kube.Config{
-		Kubeconfig: disc.KubeconfigPath,
-		Context:    doc.Cluster.Context,
-	}
-	if err := CheckIdentity(kcfg, doc, disc); err != nil {
-		return nil, disc, kcfg, err
-	}
-	return doc, disc, kcfg, nil
-}
 
 func printBanner(w io.Writer, doc *Document, disc Discovery, kcfg kube.Config) {
 	server, _ := kube.ServerURL(kcfg)

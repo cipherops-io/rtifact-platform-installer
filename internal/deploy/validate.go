@@ -4,10 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 	"gopkg.in/yaml.v3"
+)
+
+var (
+	chartNamePattern = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$`)
 )
 
 // ValidateFile runs JSON Schema plus semantic checks for a deploy config.
@@ -45,12 +53,34 @@ func ValidateFile(path string) error {
 }
 
 func validateSemantic(deployPath string, doc *Document) error {
+	if dep := DeploymentID(doc); len(dep) > 63 {
+		return usererr.WithHint(
+			fmt.Sprintf("Deployment name %q is too long for Kubernetes labels (63 character limit).", dep),
+			"Shorten customer.code or environment.",
+			fmt.Sprintf("length %d", len(dep)),
+		)
+	}
+	if doc.Defaults.Timeout != "" {
+		if _, err := time.ParseDuration(doc.Defaults.Timeout); err != nil {
+			return fmt.Errorf("defaults.timeout %q: %w", doc.Defaults.Timeout, err)
+		}
+	}
+	if err := validateRegistryAuth(doc); err != nil {
+		return err
+	}
 	nsSet := make(map[string]struct{}, len(doc.Namespaces))
 	for _, n := range doc.Namespaces {
 		if _, dup := nsSet[n.Name]; dup {
 			return fmt.Errorf("duplicate namespace %q", n.Name)
 		}
 		nsSet[n.Name] = struct{}{}
+		if n.AttachPullSecretToDefaultSA && !n.PullSecret {
+			return usererr.WithHint(
+				fmt.Sprintf("Namespace %q has attach_pull_secret_to_default_sa without pull_secret.", n.Name),
+				"Set pull_secret: true on that namespace, or disable attach_pull_secret_to_default_sa.",
+				"",
+			)
+		}
 	}
 	names := make(map[string]struct{}, len(doc.Releases))
 	dir := filepath.Dir(deployPath)
@@ -66,6 +96,12 @@ func validateSemantic(deployPath string, doc *Document) error {
 			return fmt.Errorf("duplicate release name %q", rel.Name)
 		}
 		names[rel.Name] = struct{}{}
+		if err := validateChartRef(rel.Chart); err != nil {
+			return fmt.Errorf("release %q: %w", rel.Name, err)
+		}
+		if err := validateReleaseVersion(rel.Version); err != nil {
+			return fmt.Errorf("release %q: %w", rel.Name, err)
+		}
 		for _, vf := range rel.ValuesFiles {
 			p := vf
 			if !filepath.IsAbs(p) {
@@ -77,11 +113,6 @@ func validateSemantic(deployPath string, doc *Document) error {
 					"Paths are relative to the deploy file directory.",
 					err.Error(),
 				)
-			}
-		}
-		for _, req := range rel.Requires {
-			if _, ok := names[req]; !ok {
-				// allowed if defined later; full check after loop
 			}
 		}
 		if err := validatePlaceholdersTree(rel.Values); err != nil {
@@ -114,6 +145,54 @@ func validateSemantic(deployPath string, doc *Document) error {
 	}
 	if len(order) != len(doc.Releases) {
 		return fmt.Errorf("release graph: incomplete ordering")
+	}
+	return nil
+}
+
+func validateRegistryAuth(doc *Document) error {
+	needsAuth := false
+	for _, n := range doc.Namespaces {
+		if n.PullSecret {
+			needsAuth = true
+			break
+		}
+	}
+	if !needsAuth {
+		return nil
+	}
+	if doc.Registry.Auth == nil {
+		return usererr.WithHint(
+			"A namespace sets pull_secret: true but registry.auth is missing.",
+			"Add registry.auth with username_env and password_env.",
+			"",
+		)
+	}
+	if doc.Registry.Auth.UsernameEnv == "" || doc.Registry.Auth.PasswordEnv == "" {
+		return fmt.Errorf("registry.auth requires username_env and password_env when pull_secret is enabled")
+	}
+	return nil
+}
+
+func validateChartRef(chart string) error {
+	if chart == "" {
+		return fmt.Errorf("chart is required")
+	}
+	if strings.HasPrefix(chart, "oci://") {
+		rest := strings.TrimPrefix(chart, "oci://")
+		if rest == "" || !strings.Contains(rest, "/") {
+			return fmt.Errorf("chart %q: invalid oci:// reference (expected oci://host/path/chart)", chart)
+		}
+		return nil
+	}
+	if !chartNamePattern.MatchString(chart) {
+		return fmt.Errorf("chart %q: must be a chart name under registry.charts_path or an oci:// reference", chart)
+	}
+	return nil
+}
+
+func validateReleaseVersion(version string) error {
+	if _, err := semver.NewVersion(version); err != nil {
+		return fmt.Errorf("version %q: exact semver required (%v)", version, err)
 	}
 	return nil
 }

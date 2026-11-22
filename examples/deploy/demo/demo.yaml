@@ -21,7 +21,7 @@ defaults:
   history_max: 5
 
 cluster:
-  kubeconfig: ~/.kube/config
+  kubeconfig: ./demo-kubeconfig.yaml
   expected_server: https://kubernetes.example.com
 
 namespaces:

@@ -8,6 +8,24 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 )
 
+func TestExpandHomePath(t *testing.T) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := expandHomePath("~/foo/kube.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(home, "foo", "kube.yaml")
+	if got != want {
+		t.Fatalf("got %q want %q", got, want)
+	}
+	if _, err := expandHomePath("/abs/path"); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestDiscover_cwdKubeconfig(t *testing.T) {
 	dir := t.TempDir()
 	prefix := "rtfc-sbx2"

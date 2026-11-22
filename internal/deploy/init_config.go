@@ -9,7 +9,10 @@ import (
 )
 
 // WriteInitConfig copies the packaged minimal deploy example to out.
-func WriteInitConfig(out string) error {
+func WriteInitConfig(out string, force bool) error {
+	if _, err := os.Stat(out); err == nil && !force {
+		return fmt.Errorf("file %s already exists (use --force to overwrite)", out)
+	}
 	root, _, err := assets.ContentRoot()
 	if err != nil {
 		return err

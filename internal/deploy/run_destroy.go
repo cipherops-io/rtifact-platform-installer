@@ -13,10 +13,11 @@ import (
 
 // Destroy removes managed releases in reverse dependency order (S18).
 func Destroy(ctx context.Context, o RunOptions) error {
-	doc, disc, kcfg, err := loadRuntime(o)
+	sess, err := OpenSession(ctx, o)
 	if err != nil {
 		return err
 	}
+	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
 	printBanner(o.out(), doc, disc, kcfg)
 	deployment := DeploymentID(doc)
 	if err := engine.ConfirmDeployDestroy(o.Yes, deployment); err != nil {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/paths"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
@@ -61,6 +62,11 @@ func Discover(opts DiscoverOpts) (Discovery, error) {
 			"",
 		)
 	}
+	expanded, err := expandHomePath(d.KubeconfigPath)
+	if err != nil {
+		return d, err
+	}
+	d.KubeconfigPath = expanded
 	if !filepath.IsAbs(d.KubeconfigPath) {
 		base := filepath.Dir(file)
 		if kubeFromFlag {
@@ -88,6 +94,23 @@ func Discover(opts DiscoverOpts) (Discovery, error) {
 
 // IdentityGuardRefusal is used when kubeconfig server does not match expected (S13).
 // C2 must call identity guard (read kubeconfig server) before any cluster read in plan/apply.
+func expandHomePath(p string) (string, error) {
+	if p == "" || !strings.HasPrefix(p, "~") {
+		return p, nil
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("kubeconfig path %q: %w", p, err)
+	}
+	if p == "~" {
+		return home, nil
+	}
+	if strings.HasPrefix(p, "~/") {
+		return filepath.Join(home, p[2:]), nil
+	}
+	return p, nil
+}
+
 func IdentityGuardRefusal(expected, got string) error {
 	return usererr.WithHint(
 		"The kubeconfig points at a different API server than expected.",

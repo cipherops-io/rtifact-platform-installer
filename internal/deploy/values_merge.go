@@ -42,13 +42,25 @@ func mergeValMaps(base, overlay map[string]any) map[string]any {
 	if base == nil {
 		base = map[string]any{}
 	}
-	for k, v := range overlay {
-		base[k] = v
+	out := make(map[string]any, len(base)+len(overlay))
+	for k, v := range base {
+		out[k] = v
 	}
-	return base
+	for k, ov := range overlay {
+		if bv, ok := out[k]; ok {
+			bm, ok1 := bv.(map[string]any)
+			om, ok2 := ov.(map[string]any)
+			if ok1 && ok2 {
+				out[k] = mergeValMaps(bm, om)
+				continue
+			}
+		}
+		out[k] = ov
+	}
+	return out
 }
 
-// ResolveReleaseValues substitutes ${env.NAME} and rejects ${infra.*} until C5.
+// ResolveReleaseValues substitutes ${env.NAME} and ${infra.key} placeholders.
 func ResolveReleaseValues(tree map[string]any, rd *redact.Redactor) (map[string]any, error) {
 	return ResolveReleaseValuesFrom(tree, rd, "")
 }
@@ -126,11 +138,10 @@ func resolveReleaseString(s string, rd *redact.Redactor, outputsDir string) (str
 			if outputsDir == "" {
 				return "", fmt.Errorf("${infra.%s} requires infra_outputs or discovered outputs", key)
 			}
-			val, err := resolveInfraKey(outputsDir, key)
+			val, err := LookupInfraScalar(outputsDir, key)
 			if err != nil {
 				return "", err
 			}
-			rd.Record(val)
 			b.WriteString(val)
 		} else {
 			b.WriteString(token)
