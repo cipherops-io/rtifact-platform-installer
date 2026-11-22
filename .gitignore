@@ -35,4 +35,5 @@ config.local.yaml
 # OS / tooling
 .DS_Store
 __MACOSX/
-.cursor/internal/packaged/examples/
+.cursor/
+internal/packaged/examples/

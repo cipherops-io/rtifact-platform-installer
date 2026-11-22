@@ -3,7 +3,6 @@ package runner
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,7 +18,7 @@ func upstreamReadyForPlan(
 	ctx context.Context,
 	customer *config.CustomerConfig,
 	meta *config.ProfileMeta,
-	provider cloud.Provider,
+	provider cloud.Cloud,
 	spec cloud.StateSpec,
 	contentRoot string,
 	merged map[string]any,
@@ -56,7 +55,7 @@ func upstreamRemoteOutputsPresent(
 	customer *config.CustomerConfig,
 	meta *config.ProfileMeta,
 	contentRoot string,
-	provider cloud.Provider,
+	provider cloud.Cloud,
 	spec cloud.StateSpec,
 	merged map[string]any,
 	upstream stacks.Layer,
@@ -82,11 +81,7 @@ func upstreamRemoteOutputsPresent(
 	stackRel := stackRelDir(meta.StackID, customer.Cloud, upstream)
 	stackWork := filepath.Join(infraWork, stackRel)
 
-	cl, ok := provider.(cloud.Lifecycle)
-	if !ok {
-		return false, fmt.Errorf("cloud %q: missing lifecycle hooks", customer.Cloud)
-	}
-	layerMerged, err := prepareLayerMerged(ctx, provider, cl, spec, upstream, merged, upstreamSpecPerLayer)
+	layerMerged, err := prepareLayerMerged(ctx, provider, spec, upstream, merged, upstreamSpecPerLayer)
 	if err != nil {
 		return false, err
 	}

@@ -3,7 +3,6 @@ package runner
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,7 +20,7 @@ type deployProbe struct {
 	contentRoot string
 	customer    *config.CustomerConfig
 	meta        *config.ProfileMeta
-	provider    cloud.Provider
+	provider    cloud.Cloud
 	spec        cloud.StateSpec
 	merged      map[string]any
 
@@ -35,7 +34,7 @@ func newDeployProbe(
 	contentRoot string,
 	customer *config.CustomerConfig,
 	meta *config.ProfileMeta,
-	provider cloud.Provider,
+	provider cloud.Cloud,
 	spec cloud.StateSpec,
 	merged map[string]any,
 ) *deployProbe {
@@ -100,11 +99,7 @@ func (p *deployProbe) layerHasState(layer stacks.Layer) (bool, error) {
 	stackRel := stackRelDir(p.meta.StackID, p.customer.Cloud, layer)
 	stackWork := filepath.Join(infraWork, stackRel)
 
-	cl, ok := p.provider.(cloud.Lifecycle)
-	if !ok {
-		return false, fmt.Errorf("cloud %q: missing lifecycle hooks", p.customer.Cloud)
-	}
-	layerMerged, err := prepareLayerMerged(p.ctx, p.provider, cl, p.spec, layer, p.merged, upstreamSpecPerLayer)
+	layerMerged, err := prepareLayerMerged(p.ctx, p.provider, p.spec, layer, p.merged, upstreamSpecPerLayer)
 	if err != nil {
 		return false, err
 	}

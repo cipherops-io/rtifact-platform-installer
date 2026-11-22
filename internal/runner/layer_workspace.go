@@ -41,7 +41,7 @@ func (s *layerWorkspaceStep) Run(ctx context.Context) error {
 }
 
 func writeLayerVars(ctx context.Context, lr *layerRun) error {
-	layerMerged, err := prepareLayerMerged(ctx, lr.provider, lr.provider, lr.spec, lr.layer, lr.merged, upstreamSpecFlat)
+	layerMerged, err := prepareLayerMerged(ctx, lr.provider, lr.spec, lr.layer, lr.merged, upstreamSpecFlat)
 	if err != nil {
 		return err
 	}

@@ -76,7 +76,7 @@ func TestHookWiringPrepareLayerMergedUsesCloudLifecycle(t *testing.T) {
 	fc := &fakeHookCloud{name: "test"}
 	merged := map[string]any{"features": map[string]any{}}
 	spec := cloud.StateSpec{Profile: "aios-infra", NamePrefix: "demo"}
-	_, err := prepareLayerMerged(context.Background(), fc, fc, spec, stacks.LayerCoreNetwork, merged, upstreamSpecFlat)
+	_, err := prepareLayerMerged(context.Background(), fc, spec, stacks.LayerCoreNetwork, merged, upstreamSpecFlat)
 	if err != nil {
 		t.Fatal(err)
 	}

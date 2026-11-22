@@ -1,8 +1,32 @@
 # Changelog
 
+## [0.4.1] - 2026-11-22
+
+- `boilerplate-source.yaml` records the canonical GitHub `template_url` so `make boilerplate-verify` matches CI.
+- `prepareLayerMerged` takes `cloud.Cloud` directly (no `Lifecycle` type assertions in the runner).
+- `.gitignore`: `.cursor/` and generated `internal/packaged/examples/`.
+
 ## [0.4.0] - 2026-11-22
 
-Aligned with **boilerplates [v3.2.1](https://github.com/cipherops-io/boilerplates/releases/tag/v3.2.1)**.
+Aligned with **boilerplates [v3.2.1](https://github.com/cipherops-io/boilerplates/releases/tag/v3.2.1)** (`a8c2b61` in `boilerplate-source.yaml`).
+
+No customer config contract changes (`schema_version: 1`). Generated tfvars, backends, and layer order unchanged (golden tests).
+
+### Structure (this release)
+
+- One `cloud.Cloud` interface; `internal/cloudconfig` and runtime hook lookups removed.
+- Azure resource-group handling behind `PrepareLayerVars`; shared `internal/engine` plan/confirm/act/record path.
+- Profiles are data: checklists, aliases, and packaging read from `profiles/<id>/`.
+- `internal/deploy` no longer depends on `internal/config`; template commit pinned in `boilerplate-source.yaml`.
+
+### Removed or renamed (operator-visible)
+
+Applies to anyone upgrading from the **first** published **v0.3.0** (`46fa3de`) or any build before **v0.4.0**:
+
+- `rtifact aws|azure|gcp …` command groups removed — use root commands (`rtifact apply`, `rtifact validate`, …); cloud comes from YAML `cloud:`.
+- `dataops` command group removed — use deploy `protect` / engine flags (C2+).
+- `validate --check-azure` renamed to **`validate --check-quota`** (default from cloud hooks when the flag is omitted).
+- **`vars/versions.yml`** moved to **`build/provider-versions.yml`** (`make bump-providers`).
 
 ### Architect pass (W0–W2)
 

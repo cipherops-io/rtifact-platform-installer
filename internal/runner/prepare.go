@@ -14,7 +14,7 @@ type upstreamStateSpec func(cloud.StateSpec, stacks.Layer) cloud.StateSpec
 
 // prepareLayerMerged copies merged config, attaches upstream remote state, and
 // runs cloud-specific layer var preparation.
-func prepareLayerMerged(ctx context.Context, provider cloud.Provider, lifecycle cloud.Lifecycle, spec cloud.StateSpec, layer stacks.Layer, merged map[string]any, upSpec upstreamStateSpec) (map[string]any, error) {
+func prepareLayerMerged(ctx context.Context, provider cloud.Cloud, spec cloud.StateSpec, layer stacks.Layer, merged map[string]any, upSpec upstreamStateSpec) (map[string]any, error) {
 	if upSpec == nil {
 		upSpec = layerSpec
 	}
@@ -30,7 +30,7 @@ func prepareLayerMerged(ctx context.Context, provider cloud.Provider, lifecycle 
 	if len(upstream) > 0 {
 		layerMerged["upstream_state"] = upstream
 	}
-	if err := lifecycle.PrepareLayerVars(ctx, layerSpec(spec, layer), layer, layerMerged); err != nil {
+	if err := provider.PrepareLayerVars(ctx, layerSpec(spec, layer), layer, layerMerged); err != nil {
 		return nil, err
 	}
 	return layerMerged, nil
