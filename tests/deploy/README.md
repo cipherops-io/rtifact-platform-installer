@@ -1,25 +1,33 @@
 # Deploy end-to-end scenarios
 
-Test charts used by these scenarios live in `tests/deploy/charts/`.
+Test charts: `tests/deploy/charts/`. Cluster suite: `go test -tags e2e -count=1 ./tests/deploy/...` via `make deploy-e2e`.
 
-| Done | ID | Scenario | Expected result |
-|---|---|---|---|
-| [x] | S1 | Fresh apply of `ok-a`, `ok-b` | Installed in order; inventory lists both |
-| [x] | S2 | Apply again | “No changes”; no new Helm revision |
-| [x] | S3 | Raise a chart version | Plan shows upgrade and diff; one new revision |
-| [x] | S4 | Change only a value | Plan shows upgrade; other release unchanged |
-| [x] | S5 | Upgrade to `broken`, with a release after it | Rolled back to the previous revision; run stops; later release untouched; non-zero exit |
-| [x] | S6 | `crd` 1 to 2 with `crds: upgrade` | The new field exists in the cluster’s CRD |
-| [x] | S7 | Remove `ok-b` from the file | Only `ok-b` uninstalled; inventory updated |
-| [x] | S8 | Remove `ok-a` while `ok-b` requires it | Refused at validate |
-| [x] | S9 | Remove a `protect: true` release | Refused without `--allow-destroy` |
-| [x] | S10 | Apply a file with an empty releases list | Refused without `--allow-mass-removal`; nothing removed |
-| [x] | S11 | Leave a release in a pending state | Plan reports it with the recovery command |
-| [x] | S12 | Two applies at once | The second stops on the lock and names the holder |
-| [x] | S13 | Kubeconfig for another cluster than `expected_server` | Refused before any cluster read |
-| [x] | S14 | Misspelt key in the file | Rejected by `validate` |
-| [x] | S15 | `pull_secret: true` | Secret exists; password change is picked up on the next apply |
-| [x] | S16 | Lower a version | Refused without `--allow-downgrade` |
-| [x] | S17 | Wrong registry password | Clear message naming the registry and the variable; nothing changed |
-| [x] | S18 | `destroy` | Reverse order; persistent volume claim remains |
-| [x] | S19 | Single-cloud binary | In `build-binary`: deploy validates the example |
+| Done | ID | Scenario | Test function | Assertions |
+|---|---|---|---|---|
+| [x] | S1 | Fresh apply `ok-a`, `ok-b` | `TestE2E_S1_FreshApply` | Helm rev 1 each; inventory lists both |
+| [x] | S2 | Re-apply | `TestE2E_S2_ReapplyNoChanges` | No new Helm revision; plan exit 0 |
+| [x] | S3 | Version bump | `TestE2E_S3_VersionBump` | Plan exit 2; upgrade text; rev +1 on apply |
+| [x] | S4 | Value-only change | `TestE2E_S4_ValueChange` | Plan exit 2; ok-a rev +1; ok-b unchanged |
+| [x] | S5 | `broken` rollback | `TestE2E_S5_BrokenRollback` | Apply error; ok-b rev unchanged; inventory ok-a, ok-b |
+| [x] | S6 | CRD 1→2 `crds: upgrade` | `TestE2E_S6_CRDUpgrade` | CRD schema gains `color` |
+| [x] | S7 | Remove `ok-b` | `TestE2E_S7_RemoveRelease` | ok-b uninstalled; inventory only ok-a |
+| [x] | S8 | Remove required `ok-a` | `TestValidate_removeRequiredDependency_S8` | Validate refuses (unit) |
+| [x] | S9 | Remove `protect: true` | `TestE2E_S9_ProtectedRefusal` | Apply refused; inventory unchanged |
+| [x] | S10 | Empty releases list | `TestE2E_S10_MassRemovalGuard` | Plan exit 2; apply refused; releases remain |
+| [x] | S11 | Pending + recovery | `TestE2E_S11_StuckReportsRecovery` | Plan shows rollback command; `deploy rollback` OK |
+| [x] | S12 | Concurrent apply | `TestE2E_S12_DeployLock` | Second apply refused; lock holder named |
+| [x] | S13 | Wrong `expected_server` | `TestE2E_S13_IdentityGuard` | Refused before cluster writes; empty inventory |
+| [x] | S14 | Invalid values file | `TestE2E_S14_InvalidValuesFile` / `TestValidateFile_unknownKey` | Plan and apply fail; validate rejects typo (unit) |
+| [x] | S15 | Pull secret refresh | `TestE2E_S15_PullSecretRefresh` | Secret digest changes after password change |
+| [x] | S16 | Downgrade guard | `TestE2E_S16_DowngradeGuard` | Plan exit 2; apply refused; `--allow-downgrade` applies |
+| [x] | S17 | Bad registry password | `TestE2E_S17_BadRegistryPassword` | Error names registry; no Helm releases |
+| [x] | S18 | Destroy keeps PVC | `TestE2E_S18_DestroyKeepsPVC` | Release removed; PVC remains |
+| [x] | S19 | Single-cloud binary | `TestDeployValidateExample` / `build-binary` workflow | `deploy validate` on examples in CI smoke |
+
+### Extras
+
+| Test function | Purpose |
+|---|---|
+| `TestE2E_Canary_SecretNotInPlanOutput` | Resolved secret never appears in plan output |
+| `TestE2E_Adopt_UnmanagedRelease` | `--adopt` plan + apply for pre-existing release |
+| `TestE2E_Interrupt_CancelApply` | Cancelled apply returns `ErrInterrupted` |

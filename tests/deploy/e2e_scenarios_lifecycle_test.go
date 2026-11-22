@@ -5,12 +5,15 @@ package deploy_test
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/lock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -25,9 +28,11 @@ func TestE2E_S5_BrokenRollback(t *testing.T) {
 		doc.Defaults.Timeout = "2m"
 	})
 	o := e2eOpts(t, file)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
+	nsB := e2eReleaseNS(t, file, "ok-b")
+	revB0 := e2eHelmRevision(t, "ok-b", nsB)
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		doc.Defaults.Timeout = "90s"
 		okA, okB := doc.Releases[0], doc.Releases[1]
@@ -42,6 +47,11 @@ func TestE2E_S5_BrokenRollback(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected broken release failure")
 	}
+	e2eIntEq(t, "ok-b revision unchanged", e2eHelmRevision(t, "ok-b", nsB), revB0)
+	e2eAssertInventory(t, file, "ok-a", "ok-b")
+	if rev := e2eHelmRevision(t, "ok-a", nsA); rev < 1 {
+		t.Fatalf("ok-a should remain installed, rev=%d", rev)
+	}
 }
 
 func TestE2E_S6_CRDUpgrade(t *testing.T) {
@@ -53,9 +63,8 @@ func TestE2E_S6_CRDUpgrade(t *testing.T) {
 		})
 	})
 	o := e2eOpts(t, file)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		doc.Namespaces = append(doc.Namespaces, deploy.Namespace{Name: "crd-ns"})
 		doc.Releases = append(doc.Releases, deploy.Release{
@@ -63,9 +72,7 @@ func TestE2E_S6_CRDUpgrade(t *testing.T) {
 		})
 	})
 	o.FilePath = file
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eMustApply(t, o)
 	cs, err := kube.DynamicClient(k8s(t))
 	if err != nil {
 		t.Fatal(err)
@@ -86,14 +93,16 @@ func TestE2E_S7_RemoveRelease(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
-	_ = deploy.Apply(context.Background(), o)
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	nsB := e2eReleaseNS(t, file, "ok-b")
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		doc.Releases = doc.Releases[:1]
 	})
 	o.FilePath = file
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eMustApply(t, o)
+	e2eAssertInventory(t, file, "ok-a")
+	e2eHelmReleaseMissing(t, "ok-b", nsB)
 }
 
 func TestE2E_S9_ProtectedRefusal(t *testing.T) {
@@ -102,14 +111,18 @@ func TestE2E_S9_ProtectedRefusal(t *testing.T) {
 		doc.Releases[0].Protect = true
 	})
 	o := e2eOpts(t, file)
-	_ = deploy.Apply(context.Background(), o)
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	nsB := e2eReleaseNS(t, file, "ok-b")
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		doc.Releases = doc.Releases[1:]
 	})
 	o.FilePath = file
 	err := deploy.Apply(context.Background(), o)
-	if err == nil {
-		t.Fatal("expected protected removal refusal")
+	e2eAssertErrContains(t, err, "protect")
+	e2eAssertInventory(t, file, "ok-a", "ok-b")
+	if e2eHelmRevision(t, "ok-b", nsB) < 1 {
+		t.Fatal("ok-b should remain installed")
 	}
 }
 
@@ -117,41 +130,114 @@ func TestE2E_S10_MassRemovalGuard(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
-	_ = deploy.Apply(context.Background(), o)
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		doc.Releases = nil
 	})
 	o.FilePath = file
-	code, err := deploy.Plan(context.Background(), o)
-	if err != nil || code != 2 {
-		t.Fatalf("plan mass removal: code=%d err=%v", code, err)
-	}
-	err = deploy.Apply(context.Background(), o)
+	o.DetailedExitCode = true
+	code, _ := e2ePlan(t, o)
+	e2eIntEq(t, "plan exit", code, 2)
+	err := deploy.Apply(context.Background(), o)
 	if err == nil {
 		t.Fatal("expected apply to refuse mass removal")
 	}
+	e2eAssertInventory(t, file, "ok-a", "ok-b")
+	e2eIntEq(t, "ok-a still installed", e2eHelmRevision(t, "ok-a", nsA), 1)
 }
 
 func TestE2E_S12_DeployLock(t *testing.T) {
 	dir := t.TempDir()
+	file := writeFixture(t, dir, func(doc *deploy.Document) {
+		doc.Defaults.Timeout = "5m"
+	})
+	o := e2eOpts(t, file)
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	file = writeFixture(t, dir, func(doc *deploy.Document) {
+		for i := range doc.Releases {
+			if doc.Releases[i].Name == "ok-a" {
+				doc.Releases[i].Version = "1.0.1"
+			}
+		}
+	})
+	oo1 := e2eOpts(t, file)
+	oo1.FilePath = file
+	oo2 := e2eOpts(t, file)
+	oo2.FilePath = file
+	var wg sync.WaitGroup
+	errCh := make(chan error, 2)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		errCh <- deploy.Apply(context.Background(), oo1)
+	}()
+	time.Sleep(400 * time.Millisecond)
+	errCh <- deploy.Apply(context.Background(), oo2)
+	wg.Wait()
+	close(errCh)
+	var first, second error
+	for e := range errCh {
+		if first == nil {
+			first = e
+		} else {
+			second = e
+		}
+	}
+	if first != nil {
+		t.Fatalf("first concurrent apply: %v", first)
+	}
+	e2eLockHeldInErr(t, second)
+}
+
+func TestE2E_S11_StuckReportsRecovery(t *testing.T) {
+	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
-	doc, err := deploy.LoadFile(file)
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
+	e2eHelmUpgradeNoWait(t, "ok-a", nsA, "ok-a", "1.0.1")
+	o.DetailedExitCode = true
+	var buf strings.Builder
+	oo := e2eOpts(t, file)
+	oo.Stdout = &buf
+	code, err := deploy.Plan(context.Background(), oo)
 	if err != nil {
+		t.Fatalf("plan: %v", err)
+	}
+	if code == 0 {
+		t.Fatalf("expected plan pending changes, exit 0 with:\n%s", buf.String())
+	}
+	e2eAssertPlanStuckRecovery(t, buf.String(), file, "ok-a")
+	if err := deploy.Rollback(context.Background(), o, "ok-a"); err != nil {
+		t.Fatalf("rollback: %v", err)
+	}
+	e2eIntEq(t, "ok-a revision after rollback", e2eHelmRevision(t, "ok-a", nsA), 1)
+}
+
+func TestE2E_S14_InvalidValuesFile(t *testing.T) {
+	dir := t.TempDir()
+	bad := filepath.Join(dir, "bad-values.yaml")
+	if err := os.WriteFile(bad, []byte("{unterminated"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	kcfg := k8s(t)
-	h1, err := lock.Acquire(context.Background(), kcfg, deploy.DeploymentID(doc), "holder-a", false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer h1.Release(context.Background(), kcfg, deploy.DeploymentID(doc))
-	_, err = lock.Acquire(context.Background(), kcfg, deploy.DeploymentID(doc), "holder-b", false)
+	file := writeFixture(t, dir, func(doc *deploy.Document) {
+		doc.Releases[0].ValuesFiles = []string{"bad-values.yaml"}
+	})
+	o := e2eOpts(t, file)
+	_, err := deploy.Plan(context.Background(), o)
 	if err == nil {
-		t.Fatal("expected lock refusal for second holder")
+		t.Fatal("expected plan to fail on invalid values file")
+	}
+	if !strings.Contains(err.Error(), "bad-values.yaml") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	err = deploy.Apply(context.Background(), o)
+	if err == nil {
+		t.Fatal("expected apply to fail on invalid values file")
 	}
 }
 
@@ -162,23 +248,21 @@ func TestE2E_S15_PullSecretRefresh(t *testing.T) {
 		doc.Namespaces[0].PullSecret = true
 	})
 	o := e2eOpts(t, file)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
 	cs, err := kube.Clientset(k8s(t))
 	if err != nil {
 		t.Fatal(err)
 	}
-	s1, err := cs.CoreV1().Secrets("deploy-a").Get(context.Background(), secretName, metav1.GetOptions{})
+	s1, err := cs.CoreV1().Secrets(nsA).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("RTIFACT_REGISTRY_PASSWORD", "newpass")
 	o.FilePath = file
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
-	s2, err := cs.CoreV1().Secrets("deploy-a").Get(context.Background(), secretName, metav1.GetOptions{})
+	e2eMustApply(t, o)
+	s2, err := cs.CoreV1().Secrets(nsA).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,19 +277,24 @@ func TestE2E_S16_DowngradeGuard(t *testing.T) {
 		doc.Releases[0].Version = "1.0.1"
 	})
 	o := e2eOpts(t, file)
-	_ = deploy.Apply(context.Background(), o)
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		doc.Releases[0].Version = "1.0.0"
 	})
 	o.FilePath = file
-	code, err := deploy.Plan(context.Background(), o)
-	if err != nil || code != 2 {
-		t.Fatalf("plan downgrade: code=%d err=%v", code, err)
+	o.DetailedExitCode = true
+	code, _ := e2ePlan(t, o)
+	e2eIntEq(t, "plan downgrade exit", code, 2)
+	err := deploy.Apply(context.Background(), o)
+	if err == nil {
+		t.Fatal("expected downgrade refusal")
 	}
+	revHigh := e2eHelmRevision(t, "ok-a", nsA)
 	o.AllowDowngrade = true
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eMustApply(t, o)
+	e2eIntEq(t, "ok-a revision after downgrade", e2eHelmRevision(t, "ok-a", nsA), revHigh+1)
 }
 
 func TestE2E_S18_DestroyKeepsPVC(t *testing.T) {
@@ -218,17 +307,18 @@ func TestE2E_S18_DestroyKeepsPVC(t *testing.T) {
 		}
 	})
 	o := e2eOpts(t, file)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	ns := e2eReleaseNS(t, file, "stateful")
 	if err := deploy.Destroy(context.Background(), o); err != nil {
 		t.Fatal(err)
 	}
+	e2eHelmReleaseMissing(t, "stateful", ns)
 	cs, err := kube.Clientset(k8s(t))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = cs.CoreV1().PersistentVolumeClaims("state").Get(context.Background(), pvcName, metav1.GetOptions{})
+	_, err = cs.CoreV1().PersistentVolumeClaims(ns).Get(context.Background(), pvcName, metav1.GetOptions{})
 	if err != nil {
 		t.Fatalf("expected PVC to remain after destroy: %v", err)
 	}

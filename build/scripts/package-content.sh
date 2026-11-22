@@ -24,7 +24,9 @@ for profile_dir in "$ROOT/profiles"/*/; do
 
   mkdir -p "$PKG/profiles/$profile_id"
   cp "$profile_yaml" "$PKG/profiles/$profile_id/"
-  cp -f "$profile_dir/README.md" "$PKG/profiles/$profile_id/" 2>/dev/null || true
+  if [ -f "$profile_dir/README.md" ]; then
+    cp -f "$profile_dir/README.md" "$PKG/profiles/$profile_id/"
+  fi
   if [ -f "$profile_dir/checklist.md" ]; then
     cp "$profile_dir/checklist.md" "$PKG/profiles/$profile_id/"
   fi

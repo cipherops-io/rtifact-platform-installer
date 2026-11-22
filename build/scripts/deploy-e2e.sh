@@ -16,9 +16,13 @@ REG_PASS="${DEPLOY_E2E_REGISTRY_PASSWORD:-deploypass}"
 
 cleanup() {
   local ec=$?
-  docker rm -f rtifact-deploy-zot >/dev/null 2>&1 || true
-  kind delete cluster --name "$CLUSTER_NAME" >/dev/null 2>&1 || true
-  rm -f "${ZOT_CONFIG:-}" "${ZOT_HTPASSWD:-}" "${KIND_CONFIG:-}" 2>/dev/null || true
+  if docker inspect rtifact-deploy-zot >/dev/null 2>&1; then
+    docker rm -f rtifact-deploy-zot >/dev/null 2>&1
+  fi
+  if kind get clusters 2>/dev/null | grep -qx "$CLUSTER_NAME"; then
+    kind delete cluster --name "$CLUSTER_NAME" >/dev/null 2>&1
+  fi
+  rm -f "${ZOT_CONFIG:-}" "${ZOT_HTPASSWD:-}" "${KIND_CONFIG:-}" 2>/dev/null
   if [ "$ec" -ne 0 ]; then
     echo "deploy-e2e FAILED (exit $ec); see $LOG"
   fi
@@ -81,7 +85,9 @@ cat >"$ZOT_CONFIG" <<EOF
 EOF
 
 echo "==> zot ${ZOT_VERSION} on :${REG_PORT} (authenticated)"
-docker rm -f rtifact-deploy-zot >/dev/null 2>&1 || true
+if docker inspect rtifact-deploy-zot >/dev/null 2>&1; then
+  docker rm -f rtifact-deploy-zot >/dev/null 2>&1
+fi
 docker run -d --name rtifact-deploy-zot -p "${REG_PORT}:5000" \
   -v "$ZOT_CONFIG:/etc/zot/config.json:ro" \
   -v "$ZOT_HTPASSWD:/etc/zot/htpasswd:ro" \
@@ -94,7 +100,9 @@ for i in $(seq 1 60); do
   fi
   if [ "$i" -eq 60 ]; then
     echo "zot failed to become ready"
-    docker logs rtifact-deploy-zot 2>"$ZOT_LOG" || true
+    if docker inspect rtifact-deploy-zot >/dev/null 2>&1; then
+      docker logs rtifact-deploy-zot 2>"$ZOT_LOG"
+    fi
     exit 1
   fi
   sleep 1
@@ -113,7 +121,9 @@ containerdConfigPatches:
 EOF
 
 echo "==> kind cluster ${CLUSTER_NAME}"
-kind delete cluster --name "$CLUSTER_NAME" >/dev/null 2>&1 || true
+if kind get clusters 2>/dev/null | grep -qx "$CLUSTER_NAME"; then
+  kind delete cluster --name "$CLUSTER_NAME" >/dev/null 2>&1
+fi
 kind create cluster --name "$CLUSTER_NAME" --config "$KIND_CONFIG"
 export KIND_PID=1
 kind get kubeconfig --name "$CLUSTER_NAME" >"$KUBECONFIG"

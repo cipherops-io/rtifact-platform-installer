@@ -59,41 +59,47 @@ func writeFixture(t *testing.T, dir string, mutate func(*deploy.Document)) strin
 	return out
 }
 
-// S1 fresh apply ok-a, ok-b
 func TestE2E_S1_FreshApply(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
 	e2eCleanupDeploy(t, file, o)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eMustApply(t, o)
+	e2eAssertInventory(t, file, "ok-a", "ok-b")
+	nsA := e2eReleaseNS(t, file, "ok-a")
+	nsB := e2eReleaseNS(t, file, "ok-b")
+	e2eIntEq(t, "ok-a revision", e2eHelmRevision(t, "ok-a", nsA), 1)
+	e2eIntEq(t, "ok-b revision", e2eHelmRevision(t, "ok-b", nsB), 1)
 }
 
-// S2 apply again — no changes
 func TestE2E_S2_ReapplyNoChanges(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
 	e2eCleanupDeploy(t, file, o)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
+	revA := e2eHelmRevision(t, "ok-a", nsA)
+	e2eMustApply(t, o)
+	if got := e2eHelmRevision(t, "ok-a", nsA); got != revA {
+		t.Fatalf("ok-a revision changed %d -> %d", revA, got)
 	}
-	code, err := deploy.Plan(context.Background(), o)
-	if err != nil || code != 0 {
-		t.Fatalf("plan after apply: code=%d err=%v", code, err)
+	o.DetailedExitCode = true
+	code, out := e2ePlan(t, o)
+	e2eIntEq(t, "plan exit", code, 0)
+	if strings.Contains(out, "upgrade") {
+		t.Fatalf("expected no changes in plan, got:\n%s", out)
 	}
 }
 
-// S3 version bump shows upgrade
 func TestE2E_S3_VersionBump(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
 	e2eCleanupDeploy(t, file, o)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
+	rev0 := e2eHelmRevision(t, "ok-a", nsA)
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		for i := range doc.Releases {
 			if doc.Releases[i].Name == "ok-a" {
@@ -103,24 +109,25 @@ func TestE2E_S3_VersionBump(t *testing.T) {
 	})
 	o.FilePath = file
 	o.DetailedExitCode = true
-	code, err := deploy.Plan(context.Background(), o)
-	if err != nil {
-		t.Fatal(err)
+	code, out := e2ePlan(t, o)
+	e2eIntEq(t, "plan exit", code, 2)
+	if !strings.Contains(out, "upgrade") {
+		t.Fatalf("expected upgrade in plan:\n%s", out)
 	}
-	if code != 2 {
-		t.Fatalf("expected detailed-exitcode 2, got %d", code)
-	}
+	e2eMustApply(t, o)
+	e2eIntEq(t, "ok-a revision after bump", e2eHelmRevision(t, "ok-a", nsA), rev0+1)
 }
 
-// S4 value-only change upgrades ok-a only
 func TestE2E_S4_ValueChange(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
 	e2eCleanupDeploy(t, file, o)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
+	nsB := e2eReleaseNS(t, file, "ok-b")
+	revB := e2eHelmRevision(t, "ok-b", nsB)
+	revA0 := e2eHelmRevision(t, "ok-a", nsA)
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		for i := range doc.Releases {
 			if doc.Releases[i].Name == "ok-a" {
@@ -129,32 +136,43 @@ func TestE2E_S4_ValueChange(t *testing.T) {
 		}
 	})
 	o.FilePath = file
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
+	o.DetailedExitCode = true
+	code, out := e2ePlan(t, o)
+	e2eIntEq(t, "plan exit", code, 2)
+	if !strings.Contains(out, "ok-a") {
+		t.Fatalf("expected ok-a in plan:\n%s", out)
 	}
+	if strings.Contains(out, "ok-b") && strings.Contains(out, "upgrade") {
+		// ok-b should not need upgrade when only ok-a values change.
+		for _, line := range strings.Split(out, "\n") {
+			if strings.Contains(line, "ok-b") && strings.Contains(line, "upgrade") {
+				t.Fatalf("unexpected ok-b upgrade:\n%s", out)
+			}
+		}
+	}
+	e2eMustApply(t, o)
+	e2eIntEq(t, "ok-a revision", e2eHelmRevision(t, "ok-a", nsA), revA0+1)
+	e2eIntEq(t, "ok-b revision unchanged", e2eHelmRevision(t, "ok-b", nsB), revB)
 }
 
-// S13 wrong expected_server refused before cluster reads
 func TestE2E_S13_IdentityGuard(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(doc *deploy.Document) {
 		doc.Cluster.ExpectedServer = "https://wrong.example"
 	})
 	_, err := deploy.Plan(context.Background(), e2eOpts(t, file))
-	if err == nil {
-		t.Fatal("expected identity refusal")
-	}
+	e2eAssertErrContains(t, err, "wrong.example")
+	e2eAssertInventory(t, file) // empty
 }
 
-// Canary: resolved secret env must never appear in plan stdout/stderr.
 func TestE2E_Canary_SecretNotInPlanOutput(t *testing.T) {
 	const secret = "canary-e2e-secret-must-not-leak"
 	t.Setenv("RTIFACT_E2E_SECRET", secret)
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(doc *deploy.Document) {
-		doc.Namespaces = append(doc.Namespaces, deploy.Namespace{Name: doc.NamePrefix + "-sec"})
+		doc.Namespaces = append(doc.Namespaces, deploy.Namespace{Name: "sec-ns"})
 		doc.Releases = append(doc.Releases, deploy.Release{
-			Name: "secretful", Namespace: doc.NamePrefix + "-sec",
+			Name: "secretful", Namespace: "sec-ns",
 			Chart: "secretful", Version: "1.0.0", CRDs: "chart",
 			Values: map[string]any{"token": "${env.RTIFACT_E2E_SECRET}"},
 		})
@@ -164,9 +182,7 @@ func TestE2E_Canary_SecretNotInPlanOutput(t *testing.T) {
 	o.Stdout = &out
 	o.Stderr = &errOut
 	e2eCleanupDeploy(t, file, o)
-	if err := deploy.Apply(context.Background(), o); err != nil {
-		t.Fatal(err)
-	}
+	e2eMustApply(t, o)
 	out.Reset()
 	errOut.Reset()
 	if _, err := deploy.Plan(context.Background(), o); err != nil {
@@ -176,33 +192,27 @@ func TestE2E_Canary_SecretNotInPlanOutput(t *testing.T) {
 	if strings.Contains(combined, secret) {
 		t.Fatalf("plan output leaked secret (len=%d)", len(combined))
 	}
-	if !strings.Contains(combined, "Identity:") {
+	if !strings.Contains(errOut.String(), "Identity:") {
 		t.Fatal("expected Identity banner line on stderr")
 	}
 }
 
-// S19 unknown --only release
 func TestE2E_S19_UnknownOnly(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
 	o.Only = "does-not-exist"
 	_, err := deploy.Plan(context.Background(), o)
-	if err == nil {
-		t.Fatal("expected unknown --only error")
-	}
-	if !strings.Contains(err.Error(), "does-not-exist") {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	e2eAssertErrContains(t, err, "does-not-exist")
 }
 
-// S17 wrong registry password
 func TestE2E_S17_BadRegistryPassword(t *testing.T) {
 	dir := t.TempDir()
 	t.Setenv("RTIFACT_REGISTRY_PASSWORD", "bad")
 	file := writeFixture(t, dir, func(*deploy.Document) {})
+	host := e2eRegistryHost(t, file)
 	_, err := deploy.Plan(context.Background(), e2eOpts(t, file))
-	if err == nil {
-		t.Fatal("expected registry auth error")
-	}
+	e2eAssertErrContains(t, err, host)
+	nsA := e2eReleaseNS(t, file, "ok-a")
+	e2eHelmReleaseMissing(t, "ok-a", nsA)
 }

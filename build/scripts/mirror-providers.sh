@@ -34,7 +34,9 @@ TOFU="$(pick_tofu)"
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-cp -R "$ROOT/infra/modules" "$WORK/infra/" 2>/dev/null || true
+if [ -d "$ROOT/infra/modules" ]; then
+  cp -R "$ROOT/infra/modules" "$WORK/infra/"
+fi
 
 IFS=',' read -ra CLOUDS <<< "$PACKAGED_CLOUDS"
 
