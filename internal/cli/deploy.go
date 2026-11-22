@@ -119,21 +119,45 @@ func addDeployGroup(root *cobra.Command) {
 	addClusterFlags(applyCmd)
 	grp.AddCommand(applyCmd)
 
-	grp.AddCommand(&cobra.Command{
-		Use:    "status [releases.yaml]",
-		Args:   cobra.ExactArgs(1),
-		Hidden: false,
-		RunE: func(_ *cobra.Command, args []string) error {
-			return deploy.NotImplemented("status " + args[0])
+	statusCmd := &cobra.Command{
+		Use:   "status [releases.yaml]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Show per-release wanted vs deployed versions",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			o := runFlags(cmd)
+			o.FilePath = args[0]
+			j, _ := cmd.Flags().GetBool("json")
+			return deploy.Status(context.Background(), o, j)
 		},
-	})
-	grp.AddCommand(&cobra.Command{
-		Use:    "destroy [releases.yaml]",
-		Args:   cobra.ExactArgs(1),
-		RunE: func(_ *cobra.Command, args []string) error {
-			return deploy.NotImplemented("destroy " + args[0])
+	}
+	statusCmd.Flags().Bool("json", false, "JSON output")
+	grp.AddCommand(statusCmd)
+
+	destroyCmd := &cobra.Command{
+		Use:   "destroy [releases.yaml]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Uninstall all releases in reverse order",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			o := runFlags(cmd)
+			o.FilePath = args[0]
+			return deploy.Destroy(context.Background(), o)
 		},
-	})
+	}
+	addClusterFlags(destroyCmd)
+	grp.AddCommand(destroyCmd)
+
+	rollbackCmd := &cobra.Command{
+		Use:   "rollback [releases.yaml] [release]",
+		Args:  cobra.ExactArgs(2),
+		Short: "Roll back one release to the previous revision",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			o := runFlags(cmd)
+			o.FilePath = args[0]
+			return deploy.Rollback(context.Background(), o, args[1])
+		},
+	}
+	rollbackCmd.Flags().Bool("yes", false, "Skip confirmation prompts")
+	grp.AddCommand(rollbackCmd)
 
 	root.AddCommand(grp)
 }

@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"sort"
+	"syscall"
 	"time"
 
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/crds"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
@@ -112,7 +115,7 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 	if err != nil {
 		return 1, err
 	}
-	want, err := buildWanted(o.FilePath, doc)
+	want, err := buildWanted(o.FilePath, doc, disc.OutputsPath)
 	if err != nil {
 		return 1, err
 	}
@@ -144,6 +147,8 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 
 // Apply installs or upgrades releases.
 func Apply(ctx context.Context, o RunOptions) error {
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
 	doc, disc, kcfg, err := loadRuntime(o)
 	if err != nil {
 		return err
@@ -175,7 +180,7 @@ func Apply(ctx context.Context, o RunOptions) error {
 	if err != nil {
 		return err
 	}
-	want, err := buildWanted(o.FilePath, doc)
+	want, err := buildWanted(o.FilePath, doc, disc.OutputsPath)
 	if err != nil {
 		return err
 	}
@@ -249,7 +254,7 @@ func Apply(ctx context.Context, o RunOptions) error {
 			return err
 		}
 		rd := redact.New()
-		resolved, err := ResolveReleaseValues(merged, rd)
+		resolved, err := ResolveReleaseValuesFrom(merged, rd, disc.OutputsPath)
 		if err != nil {
 			return err
 		}
@@ -261,6 +266,9 @@ func Apply(ctx context.Context, o RunOptions) error {
 		if err != nil {
 			return err
 		}
+		if rel.CRDs == "upgrade" {
+			_ = crds.Upgrade(ctx, rel.CRDs, nil)
+		}
 		if err := cs.InstallOrUpgrade(ctx, helmclient.ReleaseRequest{
 			Name: rel.Name, Namespace: rel.Namespace, Chart: rel.Chart, Version: rel.Version,
 		}, ref, resolved, digest); err != nil {
@@ -270,6 +278,18 @@ func Apply(ctx context.Context, o RunOptions) error {
 			Name: rel.Name, Namespace: rel.Namespace, Chart: rel.Chart,
 			Version: rel.Version, ValuesDigest: digest, Protect: rel.Protect,
 		})
+	}
+	removeOrder, _ := RemoveOrder(doc.Releases)
+	for _, name := range removeOrder {
+		row, ok := rowByName[name]
+		if !ok || row.Action != plan.ActionRemove {
+			continue
+		}
+		rel := relByName[name]
+		if err := cs.Uninstall(ctx, rel.Name, rel.Namespace); err != nil {
+			return err
+		}
+		entries = filterEntry(entries, name)
 	}
 	// Keep unchanged releases in inventory.
 	for _, w := range want {
@@ -285,7 +305,7 @@ func Apply(ctx context.Context, o RunOptions) error {
 	return inventory.Write(ctx, kcfg, DeploymentID(doc), entries)
 }
 
-func buildWanted(path string, doc *Document) ([]plan.Wanted, error) {
+func buildWanted(path string, doc *Document, outputsDir string) ([]plan.Wanted, error) {
 	var out []plan.Wanted
 	for _, rel := range doc.Releases {
 		merged, err := MergeReleaseValues(path, rel)
@@ -293,7 +313,7 @@ func buildWanted(path string, doc *Document) ([]plan.Wanted, error) {
 			return nil, err
 		}
 		rd := redact.New()
-		resolved, err := ResolveReleaseValues(merged, rd)
+		resolved, err := ResolveReleaseValuesFrom(merged, rd, outputsDir)
 		if err != nil {
 			return nil, err
 		}
@@ -420,6 +440,16 @@ func wantByName(want []plan.Wanted, name string) *plan.Wanted {
 		}
 	}
 	return nil
+}
+
+func filterEntry(entries []inventory.Entry, name string) []inventory.Entry {
+	var out []inventory.Entry
+	for _, e := range entries {
+		if e.Name != name {
+			out = append(out, e)
+		}
+	}
+	return out
 }
 
 func findEntry(entries []inventory.Entry, name string) bool {

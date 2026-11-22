@@ -50,7 +50,11 @@ func mergeValMaps(base, overlay map[string]any) map[string]any {
 
 // ResolveReleaseValues substitutes ${env.NAME} and rejects ${infra.*} until C5.
 func ResolveReleaseValues(tree map[string]any, rd *redact.Redactor) (map[string]any, error) {
-	v, err := resolveReleaseNode(tree, rd)
+	return ResolveReleaseValuesFrom(tree, rd, "")
+}
+
+func ResolveReleaseValuesFrom(tree map[string]any, rd *redact.Redactor, outputsDir string) (map[string]any, error) {
+	v, err := resolveReleaseNode(tree, rd, outputsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +65,12 @@ func ResolveReleaseValues(tree map[string]any, rd *redact.Redactor) (map[string]
 	return out, nil
 }
 
-func resolveReleaseNode(v any, rd *redact.Redactor) (any, error) {
+func resolveReleaseNode(v any, rd *redact.Redactor, outputsDir string) (any, error) {
 	switch t := v.(type) {
 	case map[string]any:
 		out := make(map[string]any, len(t))
 		for k, val := range t {
-			nv, err := resolveReleaseNode(val, rd)
+			nv, err := resolveReleaseNode(val, rd, outputsDir)
 			if err != nil {
 				return nil, err
 			}
@@ -76,7 +80,7 @@ func resolveReleaseNode(v any, rd *redact.Redactor) (any, error) {
 	case []any:
 		out := make([]any, len(t))
 		for i, val := range t {
-			nv, err := resolveReleaseNode(val, rd)
+			nv, err := resolveReleaseNode(val, rd, outputsDir)
 			if err != nil {
 				return nil, err
 			}
@@ -84,13 +88,13 @@ func resolveReleaseNode(v any, rd *redact.Redactor) (any, error) {
 		}
 		return out, nil
 	case string:
-		return resolveReleaseString(t, rd)
+		return resolveReleaseString(t, rd, outputsDir)
 	default:
 		return v, nil
 	}
 }
 
-func resolveReleaseString(s string, rd *redact.Redactor) (string, error) {
+func resolveReleaseString(s string, rd *redact.Redactor, outputsDir string) (string, error) {
 	if !strings.Contains(s, "${") {
 		return s, nil
 	}
@@ -119,7 +123,15 @@ func resolveReleaseString(s string, rd *redact.Redactor) (string, error) {
 			b.WriteString(val)
 		} else if InfraPlaceholderToken.MatchString(token) {
 			key := strings.TrimSuffix(strings.TrimPrefix(token, "${infra."), "}")
-			return "", fmt.Errorf("${infra.%s} is not supported in this build (infrastructure outputs wiring lands in C5)", key)
+			if outputsDir == "" {
+				return "", fmt.Errorf("${infra.%s} requires infra_outputs or discovered outputs", key)
+			}
+			val, err := resolveInfraKey(outputsDir, key)
+			if err != nil {
+				return "", err
+			}
+			rd.Record(val)
+			b.WriteString(val)
 		} else {
 			b.WriteString(token)
 		}
