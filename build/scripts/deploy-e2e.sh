@@ -51,15 +51,20 @@ install_helm() {
   if command -v helm >/dev/null && helm version --short 2>/dev/null | grep -q "v${HELM_VERSION}"; then
     return
   fi
-  local tgz="/tmp/helm-v${HELM_VERSION}-linux-amd64.tar.gz"
+  local arch=os
+  case "$(uname -m)" in
+    aarch64 | arm64) arch=arm64 ;;
+    *) arch=amd64 ;;
+  esac
+  local os=linux
   if [ "$(uname -s)" = "Darwin" ]; then
-    tgz="/tmp/helm-v${HELM_VERSION}-darwin-amd64.tar.gz"
-    curl -fsSL "https://get.helm.sh/helm-v${HELM_VERSION}-darwin-amd64.tar.gz" -o "$tgz"
-  else
-    curl -fsSL "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" -o "$tgz"
+    os=darwin
   fi
+  local platform="${os}-${arch}"
+  local tgz="/tmp/helm-v${HELM_VERSION}-${platform}.tar.gz"
+  curl -fsSL "https://get.helm.sh/helm-v${HELM_VERSION}-${platform}.tar.gz" -o "$tgz"
   tar -xzf "$tgz" -C /tmp
-  export PATH="/tmp/linux-amd64:/tmp/darwin-amd64:$PATH"
+  export PATH="/tmp/${platform}:$PATH"
   helm version --short
 }
 install_helm
