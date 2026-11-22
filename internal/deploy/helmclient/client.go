@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
@@ -16,6 +18,8 @@ import (
 	release "helm.sh/helm/v4/pkg/release/v1"
 	"helm.sh/helm/v4/pkg/registry"
 )
+
+const helmDriver = "secret"
 
 // ReleaseRequest is one install/upgrade target.
 type ReleaseRequest struct {
@@ -36,10 +40,17 @@ type RegistryOpts struct {
 	PlainHTTP bool
 }
 
-// Client wraps Helm SDK install/upgrade/list for deploy.
+// ObserveOptions selects releases to read from the cluster.
+type ObserveOptions struct {
+	Wanted []plan.Wanted
+}
+
+// Client wraps Helm SDK install/upgrade/get for deploy.
 type Client struct {
-	cfg        *action.Configuration
-	settings   *cli.EnvSettings
+	kube       *kubeAccess
+	chartEnv   *cli.EnvSettings
+	cfgMu      sync.Mutex
+	cfgByNS    map[string]*action.Configuration
 	reg        *registry.Client
 	deployment string
 	def        Defaults
@@ -59,21 +70,11 @@ type Options struct {
 	Deployment     string
 }
 
-// New builds a Helm client from explicit kubeconfig (not ambient KUBECONFIG).
+// New builds a Helm client from explicit kubeconfig (not ambient KUBECONFIG or HELM_KUBEAPISERVER).
 func New(opts Options) (*Client, error) {
-	settings := cli.New()
-	settings.KubeConfig = opts.Kube.Kubeconfig
-	settings.KubeContext = opts.Kube.Context
-	cfg := action.NewConfiguration()
-	driver := os.Getenv("HELM_DRIVER")
-	if driver == "" {
-		driver = "secret"
-	}
-	if err := cfg.Init(settings.RESTClientGetter(), "", driver); err != nil {
+	cacheRoot := filepath.Join(os.TempDir(), "rtifact-installer-helm")
+	if err := os.MkdirAll(cacheRoot, 0o755); err != nil {
 		return nil, err
-	}
-	if opts.RegistryClient != nil {
-		cfg.RegistryClient = opts.RegistryClient
 	}
 	wait := true
 	if opts.Defaults.Wait != nil {
@@ -88,9 +89,10 @@ func New(opts Options) (*Client, error) {
 		tout = 10 * time.Minute
 	}
 	return &Client{
-		cfg:        cfg,
-		settings:   settings,
-		reg:        cfg.RegistryClient,
+		kube:       newKubeAccess(opts.Kube),
+		chartEnv:   chartLocateEnv(cacheRoot),
+		cfgByNS:    map[string]*action.Configuration{},
+		reg:        opts.RegistryClient,
 		deployment: opts.Deployment,
 		def:        opts.Defaults,
 		regOpts:    opts.Registry,
@@ -101,38 +103,61 @@ func New(opts Options) (*Client, error) {
 	}, nil
 }
 
-// Observe lists Helm releases labeled as managed by this deployment.
-func (c *Client) Observe(ctx context.Context) ([]plan.Observed, error) {
-	_ = ctx
-	lst := action.NewList(c.cfg)
-	lst.AllNamespaces = true
-	lst.StateMask = action.ListAll
-	rels, err := lst.Run()
-	if err != nil {
+func (c *Client) configFor(ns string) (*action.Configuration, error) {
+	if ns == "" {
+		ns = "default"
+	}
+	c.cfgMu.Lock()
+	defer c.cfgMu.Unlock()
+	if cfg, ok := c.cfgByNS[ns]; ok {
+		return cfg, nil
+	}
+	cfg := action.NewConfiguration()
+	if err := cfg.Init(c.kube.RESTClientGetter(), ns, helmDriver); err != nil {
 		return nil, err
 	}
+	if c.reg != nil {
+		cfg.RegistryClient = c.reg
+	}
+	c.cfgByNS[ns] = cfg
+	return cfg, nil
+}
+
+// Observe loads cluster state for each wanted release name/namespace (no cluster-wide list).
+func (c *Client) Observe(ctx context.Context, opts ObserveOptions) ([]plan.Observed, error) {
 	var out []plan.Observed
-	for _, ri := range rels {
-		rel, ok := ri.(*release.Release)
+	for _, w := range opts.Wanted {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		cfg, err := c.configFor(w.Namespace)
+		if err != nil {
+			return nil, err
+		}
+		get := action.NewGet(cfg)
+		rel, err := get.Run(w.Name)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				continue
+			}
+			return nil, err
+		}
+		r, ok := rel.(*release.Release)
 		if !ok {
 			continue
 		}
-		if rel.Labels == nil || rel.Labels[LabelDeployment] != c.deployment {
+		if r.Namespace != w.Namespace {
 			continue
 		}
-		chartName := rel.Chart.Metadata.Name
-		if rel.Labels[LabelChart] != "" {
-			chartName = rel.Labels[LabelChart]
-		}
+		managed := r.Labels != nil && r.Labels[LabelDeployment] == c.deployment
 		out = append(out, plan.Observed{
-			Name:                rel.Name,
-			Namespace:           rel.Namespace,
-			Chart:               chartName,
-			Version:             rel.Chart.Metadata.Version,
-			ValuesDigest:        rel.Labels[LabelValuesDigest],
-			Status:              string(rel.Info.Status),
-			Revision:            rel.Version,
-			ManagedByDeployment: true,
+			Name:                r.Name,
+			Namespace:           r.Namespace,
+			Chart:               r.Chart.Metadata.Name,
+			Version:             r.Chart.Metadata.Version,
+			Status:              string(r.Info.Status),
+			Revision:            r.Version,
+			ManagedByDeployment: managed,
 		})
 	}
 	return out, nil
@@ -140,14 +165,18 @@ func (c *Client) Observe(ctx context.Context) ([]plan.Observed, error) {
 
 // InstallOrUpgrade applies one release.
 func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chartRef string, values map[string]any, digest string) error {
-	_ = ctx
-	exists, err := c.releaseExists(rel.Name, rel.Namespace)
+	_ = digest
+	cfg, err := c.configFor(rel.Namespace)
 	if err != nil {
 		return err
 	}
-	labels := labels(c.deployment, rel.Chart, digest)
+	exists, err := c.releaseExists(cfg, rel.Name, rel.Namespace)
+	if err != nil {
+		return err
+	}
+	lbl := labels(c.deployment)
 	if !exists {
-		ins := action.NewInstall(c.cfg)
+		ins := action.NewInstall(cfg)
 		ins.ReleaseName = rel.Name
 		ins.Namespace = rel.Namespace
 		ins.CreateNamespace = false
@@ -155,30 +184,27 @@ func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chart
 		ins.WaitStrategy = waitStrategy(c.wait)
 		ins.RollbackOnFailure = c.rollback
 		ins.PostRenderer = pvcKeepRenderer()
-		ins.Labels = labels
+		ins.Labels = lbl
 		ins.ChartPathOptions.Version = rel.Version
 		ins.ChartPathOptions.RepoURL = chartRef
 		ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
 		if c.reg != nil {
 			ins.SetRegistryClient(c.reg)
 		}
-		ch, err := c.locateChart(chartRef, rel.Version)
+		ch, err := c.locateChart(cfg, chartRef, rel.Version)
 		if err != nil {
 			return err
 		}
-		_, err = ins.RunWithContext(context.Background(), ch, values)
-		if err == nil {
-			return c.patchLabels(rel.Name, rel.Namespace, labels)
-		}
+		_, err = ins.RunWithContext(ctx, ch, values)
 		return err
 	}
-	up := action.NewUpgrade(c.cfg)
+	up := action.NewUpgrade(cfg)
 	up.Namespace = rel.Namespace
 	up.Timeout = c.timeout
 	up.WaitStrategy = waitStrategy(c.wait)
 	up.RollbackOnFailure = c.rollback
 	up.PostRenderer = pvcKeepRenderer()
-	up.Labels = labels
+	up.Labels = lbl
 	up.MaxHistory = c.historyMax
 	up.ChartPathOptions.Version = rel.Version
 	up.ChartPathOptions.RepoURL = chartRef
@@ -186,34 +212,31 @@ func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chart
 	if c.reg != nil {
 		up.SetRegistryClient(c.reg)
 	}
-	ch, err := c.locateChart(chartRef, rel.Version)
+	ch, err := c.locateChart(cfg, chartRef, rel.Version)
 	if err != nil {
 		return err
 	}
-	_, err = up.RunWithContext(context.Background(), rel.Name, ch, values)
-	if err != nil {
-		return err
-	}
-	return c.patchLabels(rel.Name, rel.Namespace, labels)
+	_, err = up.RunWithContext(ctx, rel.Name, ch, values)
+	return err
 }
 
-func (c *Client) locateChart(chartRef, version string) (any, error) {
-	ins := action.NewInstall(c.cfg)
+func (c *Client) locateChart(cfg *action.Configuration, chartRef, version string) (any, error) {
+	ins := action.NewInstall(cfg)
 	ins.ChartPathOptions.Version = version
 	ins.ChartPathOptions.RepoURL = chartRef
 	ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
 	if c.reg != nil {
 		ins.SetRegistryClient(c.reg)
 	}
-	name, err := ins.ChartPathOptions.LocateChart(chartRef, c.settings)
+	name, err := ins.ChartPathOptions.LocateChart(chartRef, c.chartEnv)
 	if err != nil {
 		return nil, err
 	}
 	return loader.Load(name)
 }
 
-func (c *Client) releaseExists(name, ns string) (bool, error) {
-	get := action.NewGet(c.cfg)
+func (c *Client) releaseExists(cfg *action.Configuration, name, ns string) (bool, error) {
+	get := action.NewGet(cfg)
 	get.Version = 0
 	rel, err := get.Run(name)
 	if err != nil {
@@ -229,37 +252,48 @@ func (c *Client) releaseExists(name, ns string) (bool, error) {
 	return true, nil
 }
 
-func (c *Client) patchLabels(name, ns string, lbl map[string]string) error {
-	_ = name
-	_ = ns
-	_ = lbl
-	return nil
-}
-
 // Uninstall removes a release (PVC keep handled via post-render in C4).
 func (c *Client) Uninstall(ctx context.Context, name, ns string) error {
-	_ = ctx
-	_ = ns
-	un := action.NewUninstall(c.cfg)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	cfg, err := c.configFor(ns)
+	if err != nil {
+		return err
+	}
+	un := action.NewUninstall(cfg)
 	un.WaitStrategy = waitStrategy(true)
 	un.Timeout = c.timeout
-	_, err := un.Run(name)
+	_, err = un.Run(name)
 	return err
 }
 
 // Rollback rolls back to previous revision.
-func (c *Client) Rollback(ctx context.Context, name string, rev int) error {
-	_ = ctx
-	rb := action.NewRollback(c.cfg)
+func (c *Client) Rollback(ctx context.Context, name, ns string, rev int) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	cfg, err := c.configFor(ns)
+	if err != nil {
+		return err
+	}
+	rb := action.NewRollback(cfg)
 	rb.WaitStrategy = waitStrategy(true)
 	rb.Timeout = c.timeout
 	rb.Version = rev
 	return rb.Run(name)
 }
 
-// ReleaseByName returns live release status.
-func (c *Client) ReleaseByName(name string) (*release.Release, error) {
-	get := action.NewGet(c.cfg)
+// ReleaseByName returns live release status in the given namespace.
+func (c *Client) ReleaseByName(ctx context.Context, name, ns string) (*release.Release, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	cfg, err := c.configFor(ns)
+	if err != nil {
+		return nil, err
+	}
+	get := action.NewGet(cfg)
 	rel, err := get.Run(name)
 	if err != nil {
 		return nil, err

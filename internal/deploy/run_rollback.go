@@ -39,7 +39,17 @@ func Rollback(ctx context.Context, o RunOptions, release string) error {
 	if err != nil {
 		return err
 	}
-	rel, err := cs.ReleaseByName(release)
+	var ns string
+	for _, r := range doc.Releases {
+		if r.Name == release {
+			ns = r.Namespace
+			break
+		}
+	}
+	if ns == "" {
+		return fmt.Errorf("release %q not in deploy file", release)
+	}
+	rel, err := cs.ReleaseByName(ctx, release, ns)
 	if err != nil {
 		return err
 	}
@@ -47,5 +57,5 @@ func Rollback(ctx context.Context, o RunOptions, release string) error {
 	if rev < 1 {
 		return fmt.Errorf("release %q has no previous revision", release)
 	}
-	return cs.Rollback(ctx, release, rev)
+	return cs.Rollback(ctx, release, ns, rev)
 }

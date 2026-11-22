@@ -2,7 +2,9 @@ package ocireg
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -13,10 +15,10 @@ import (
 
 // Registry describes OCI chart registry connection settings.
 type Registry struct {
-	Host       string
-	ChartsPath string
-	CAFile     string
-	PlainHTTP  bool
+	Host        string
+	ChartsPath  string
+	CAFile      string
+	PlainHTTP   bool
 	UsernameEnv string
 	PasswordEnv string
 }
@@ -60,27 +62,31 @@ func ChartRef(reg Registry, chart string) (string, error) {
 
 // NewClient constructs a Helm OCI registry client with registry TLS options.
 func NewClient(reg Registry, cred Credentials) (*registry.Client, error) {
-	opts := []registry.ClientOption{}
-	tlsCfg := &tls.Config{MinVersion: tls.VersionTLS12}
+	opts := []registry.ClientOption{
+		registry.ClientOptWriter(io.Discard),
+	}
 	if reg.PlainHTTP {
-		opts = append(opts, registry.ClientOptHTTPClient(&http.Client{
-			Transport: &http.Transport{TLSClientConfig: tlsCfg},
-		}))
+		opts = append(opts, registry.ClientOptPlainHTTP())
 	}
-	client, err := registry.NewClient(opts...)
-	if err != nil {
-		return nil, err
-	}
-	if cred.Username != "" || cred.Password != "" {
-		host := reg.Host
-		if err := client.Login(host, registry.LoginOptBasicAuth(cred.Username, cred.Password)); err != nil {
-			return nil, usererr.WithHint(
-				fmt.Sprintf("Registry %q authentication failed.", host),
-				"Check registry credentials and network reachability.",
-				err.Error(),
-			)
+	tlsCfg := &tls.Config{MinVersion: tls.VersionTLS12}
+	if reg.CAFile != "" {
+		pem, err := os.ReadFile(reg.CAFile)
+		if err != nil {
+			return nil, fmt.Errorf("registry ca_file: %w", err)
 		}
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM(pem) {
+			return nil, fmt.Errorf("registry ca_file: no certificates found in %q", reg.CAFile)
+		}
+		tlsCfg.RootCAs = pool
 	}
-	_ = reg.CAFile
-	return client, nil
+	opts = append(opts, registry.ClientOptHTTPClient(&http.Client{
+		Transport: &http.Transport{TLSClientConfig: tlsCfg},
+	}))
+	if cred.Username != "" || cred.Password != "" {
+		// Helm's registry.Login persists credentials under ~/.config/helm/registry.
+		// ClientOptBasicAuth keeps auth in memory on the registry client authorizer.
+		opts = append(opts, registry.ClientOptBasicAuth(cred.Username, cred.Password))
+	}
+	return registry.NewClient(opts...)
 }

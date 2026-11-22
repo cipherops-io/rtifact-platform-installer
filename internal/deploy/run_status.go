@@ -43,7 +43,7 @@ func Status(ctx context.Context, o RunOptions, asJSON bool) error {
 	if err != nil {
 		return err
 	}
-	live, err := cs.Observe(ctx)
+	live, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: want})
 	if err != nil {
 		return err
 	}

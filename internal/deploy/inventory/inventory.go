@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 	corev1 "k8s.io/api/core/v1"
@@ -74,7 +75,7 @@ func Write(ctx context.Context, kcfg kube.Config, deployment string, entries []E
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: SystemNS,
-			Labels:    map[string]string{"rtifact.rtifact.ai/deployment": deployment},
+			Labels:    map[string]string{helmclient.LabelDeployment: deployment},
 		},
 		Data: map[string]string{"inventory.json": string(b)},
 	}

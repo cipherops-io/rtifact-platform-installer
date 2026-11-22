@@ -19,7 +19,6 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/redact"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/engine"
-	"helm.sh/helm/v4/pkg/registry"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -90,10 +89,11 @@ func printBanner(w io.Writer, doc *Document, disc Discovery, kcfg kube.Config) {
 
 // Plan prints pending changes without mutating the cluster.
 func Plan(ctx context.Context, o RunOptions) (int, error) {
-	doc, disc, kcfg, err := loadRuntime(o)
+	sess, err := OpenSession(ctx, o)
 	if err != nil {
 		return 1, err
 	}
+	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
 	printBanner(o.out(), doc, disc, kcfg)
 	regCfg := registryFromDoc(doc)
 	cred, err := ocireg.LoadAuth(regCfg)
@@ -109,8 +109,7 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 			Timeout: doc.Defaults.Timeout, Wait: doc.Defaults.Wait,
 			RollbackOnFailure: doc.Defaults.RollbackOnFailure, HistoryMax: doc.Defaults.HistoryMax,
 		},
-		Registry:       helmclient.RegistryOpts{PlainHTTP: doc.Registry.PlainHTTP},
-		RegistryClient: mustReg(regCfg, cred),
+		Registry: helmclient.RegistryOpts{PlainHTTP: doc.Registry.PlainHTTP},
 	})
 	if err != nil {
 		return 1, err
@@ -119,7 +118,7 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 	if err != nil {
 		return 1, err
 	}
-	observed, err := cs.Observe(ctx)
+	observed, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: want})
 	if err != nil {
 		return 1, err
 	}
@@ -149,10 +148,11 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 func Apply(ctx context.Context, o RunOptions) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	doc, disc, kcfg, err := loadRuntime(o)
+	sess, err := OpenSession(ctx, o)
 	if err != nil {
 		return err
 	}
+	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
 	printBanner(o.out(), doc, disc, kcfg)
 	regCfg := registryFromDoc(doc)
 	cred, err := ocireg.LoadAuth(regCfg)
@@ -184,7 +184,7 @@ func Apply(ctx context.Context, o RunOptions) error {
 	if err != nil {
 		return err
 	}
-	observed, err := cs.Observe(ctx)
+	observed, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: want})
 	if err != nil {
 		return err
 	}
@@ -398,14 +398,6 @@ func registryFromDoc(doc *Document) ocireg.Registry {
 		r.PasswordEnv = doc.Registry.Auth.PasswordEnv
 	}
 	return r
-}
-
-func mustReg(reg ocireg.Registry, cred ocireg.Credentials) *registry.Client {
-	c, err := ocireg.NewClient(reg, cred)
-	if err != nil {
-		return nil
-	}
-	return c
 }
 
 func ensureSystemNS(ctx context.Context, kcfg kube.Config) error {
