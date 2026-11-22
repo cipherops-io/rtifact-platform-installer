@@ -20,5 +20,14 @@ func LoadFile(path string) (*Document, error) {
 	if err := yaml.Unmarshal(raw, &doc); err != nil {
 		return nil, usererr.Wrap(err, "Deploy file is not valid YAML.", "Fix indentation and quoting.")
 	}
+	applyDefaults(&doc)
 	return &doc, nil
+}
+
+func applyDefaults(doc *Document) {
+	for i := range doc.Releases {
+		if doc.Releases[i].CRDs == "" {
+			doc.Releases[i].CRDs = "chart"
+		}
+	}
 }

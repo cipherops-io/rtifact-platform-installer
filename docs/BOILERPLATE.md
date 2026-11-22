@@ -57,7 +57,7 @@ Optional local re-render:
 
 ```bash
 make boilerplate-verify
-make deploy-e2e
+make deploy-unit
 ```
 
 Commit or stash local changes before running verify.

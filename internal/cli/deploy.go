@@ -17,18 +17,24 @@ func addDeployGroup(root *cobra.Command) {
 	}
 	grp.PersistentFlags().StringVar(&kubeconfigFlag, "kubeconfig", "", "Kubeconfig path (overrides file discovery)")
 
-	grp.AddCommand(&cobra.Command{
+	validateCmd := &cobra.Command{
 		Use:   "validate [releases.yaml]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Schema and semantic validation (no cluster)",
-		RunE: func(_ *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			explain, _ := cmd.Flags().GetBool("explain")
+			if explain {
+				return deploy.PrintExplain(args[0])
+			}
 			if err := deploy.ValidateFile(args[0]); err != nil {
 				return err
 			}
 			fmt.Fprintf(os.Stdout, "OK\n")
 			return nil
 		},
-	})
+	}
+	validateCmd.Flags().Bool("explain", false, "Print merge-style summary with ${env.*} masked")
+	grp.AddCommand(validateCmd)
 
 	initCfg := &cobra.Command{
 		Use:   "init-config",

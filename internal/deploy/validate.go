@@ -84,6 +84,15 @@ func validateSemantic(deployPath string, doc *Document) error {
 		if err := validatePlaceholders(rel.Values); err != nil {
 			return fmt.Errorf("release %q values: %w", rel.Name, err)
 		}
+		for _, vf := range rel.ValuesFiles {
+			p := vf
+			if !filepath.IsAbs(p) {
+				p = filepath.Join(dir, vf)
+			}
+			if err := validatePlaceholdersInFile(p); err != nil {
+				return fmt.Errorf("release %q values file %q: %w", rel.Name, vf, err)
+			}
+		}
 	}
 	for _, rel := range doc.Releases {
 		for _, req := range rel.Requires {

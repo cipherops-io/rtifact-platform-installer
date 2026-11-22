@@ -2,8 +2,12 @@ package deploy
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
+
+	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -11,8 +15,24 @@ var (
 	infraRef = regexp.MustCompile(`^\$\{infra\.[a-zA-Z0-9_.-]+\}$`)
 )
 
+func validatePlaceholdersInFile(path string) error {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	var data any
+	if err := yaml.Unmarshal(raw, &data); err != nil {
+		return fmt.Errorf("not valid YAML: %w", err)
+	}
+	return validatePlaceholdersTree(config.NormalizeYAML(data))
+}
+
 func validatePlaceholders(values map[string]any) error {
-	return walkPlaceholders(values, func(s string) error {
+	return validatePlaceholdersTree(values)
+}
+
+func validatePlaceholdersTree(v any) error {
+	return walkPlaceholders(v, func(s string) error {
 		if envRef.MatchString(s) || infraRef.MatchString(s) {
 			return nil
 		}

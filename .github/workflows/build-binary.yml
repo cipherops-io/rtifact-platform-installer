@@ -59,6 +59,11 @@ jobs:
       - name: Build
         run: make release PACKAGED_CLOUDS="$CLOUD" VERSION="$VERSION" CUSTOMER="$CUSTOMER" GOOS="$GOOS" GOARCH="$GOARCH"
 
+      - name: Build summary
+        run: |
+          ls -lh dist/rtifact
+          wc -c < dist/rtifact | xargs echo "Binary size (bytes):"
+
       - name: Smoke test
         if: ${{ matrix.goos == 'linux' }}
         run: |

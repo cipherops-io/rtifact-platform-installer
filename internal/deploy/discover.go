@@ -34,7 +34,8 @@ func Discover(opts DiscoverOpts) (Discovery, error) {
 	file := opts.FilePath
 
 	// Kubeconfig: flag, file field, cwd, artifact dir.
-	if opts.KubeconfigCLI != "" {
+	kubeFromFlag := opts.KubeconfigCLI != ""
+	if kubeFromFlag {
 		d.KubeconfigPath = opts.KubeconfigCLI
 		d.KubeconfigFrom = "--kubeconfig flag"
 	} else if opts.Doc.Cluster.Kubeconfig != "" {
@@ -61,7 +62,11 @@ func Discover(opts DiscoverOpts) (Discovery, error) {
 		)
 	}
 	if !filepath.IsAbs(d.KubeconfigPath) {
-		d.KubeconfigPath = filepath.Join(filepath.Dir(file), d.KubeconfigPath)
+		base := filepath.Dir(file)
+		if kubeFromFlag {
+			base = opts.WorkDir
+		}
+		d.KubeconfigPath = filepath.Join(base, d.KubeconfigPath)
 	}
 
 	// Infra outputs: file field, then artifact dir (optional).
@@ -82,6 +87,7 @@ func Discover(opts DiscoverOpts) (Discovery, error) {
 }
 
 // IdentityGuardRefusal is used when kubeconfig server does not match expected (S13).
+// C2 must call identity guard (read kubeconfig server) before any cluster read in plan/apply.
 func IdentityGuardRefusal(expected, got string) error {
 	return usererr.WithHint(
 		"The kubeconfig points at a different API server than expected.",

@@ -154,10 +154,10 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-22T08:46:36Z"
+Timestamp: "2026-11-22T09:21:43Z"
 TemplateURL: /Users/raghavendiran/cipherops-io/boilerplates/devops-templates/rtifact-product
 BoilerplateVersion: v0.17.0
-SourceChecksum: sha256:e40f16e618def1fcdf9b3baa60c2c2a3d2871e4800f0927bae7c5af90a5b2b20
+SourceChecksum: sha256:339a6fdf08c7a5f5bd784c4ed4e9abbcb936b061c51865147b54a719e7c8987f
 OutputDir: .
 Dependencies:
     - Variables:
@@ -4184,9 +4184,9 @@ Files:
     - Path: .github/pull_request_template.md
       Checksum: sha256:cc6698fcfd3c326e04625bba5bc8cbce8691f7993b82c62cbca6a46ecf7271a2
     - Path: .github/workflows/build-binary.yml
-      Checksum: sha256:621d7c8c5ac70ddf386419848a0f8cb79427fb28b898f7c00e3a0686934e5b2e
+      Checksum: sha256:7823d1067daa03f821000aed4382ae3ce0d516071186204fb0be749a9db1e2a8
     - Path: .github/workflows/ci.yml
-      Checksum: sha256:c17492be0fa562b0b280c4b48624fde217cc77bd2816e642e0428603639a087c
+      Checksum: sha256:7415688da030f1a965c1c09be70c502713dada4593a426e433563f2bcc0ff81b
     - Path: .terraform-docs.gen.yml
       Checksum: sha256:7cba1689f7c088a1b9e208dfd0aeef31535f4dd321584f8e3a0e847365f584d0
     - Path: .terraform-docs.yml
@@ -4202,7 +4202,7 @@ Files:
     - Path: deploy/AGENTS.md
       Checksum: sha256:7b92bd76d71b9d81e1f742794d361317de4150f69bcc1e11603a8c7b9c14e314
     - Path: docs/BOILERPLATE.md
-      Checksum: sha256:ad94b5f5ad300af438932c863f541e4643a4f1ffe14ed662b62cd61e7ec53964
+      Checksum: sha256:205d8006aba77f3e727c66b65a2a186b23f5b39e9b89354a4240cfdfc0be9195
     - Path: infra/AGENTS.md
       Checksum: sha256:483d3ddc0f18a2cd11197f74bedc3f2fc41ddbf16f6637c0e826c388befe35fb
     - Path: infra/modules/AGENTS.md
