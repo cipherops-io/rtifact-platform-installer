@@ -15,6 +15,7 @@ import (
 	"helm.sh/helm/v4/pkg/chart/v2/loader"
 	"helm.sh/helm/v4/pkg/cli"
 	helmkube "helm.sh/helm/v4/pkg/kube"
+	releasecommon "helm.sh/helm/v4/pkg/release/common"
 	release "helm.sh/helm/v4/pkg/release/v1"
 	"helm.sh/helm/v4/pkg/registry"
 )
@@ -266,6 +267,75 @@ func (c *Client) Uninstall(ctx context.Context, name, ns string) error {
 	un.Timeout = c.timeout
 	_, err = un.Run(name)
 	return err
+}
+
+// FetchChartArchive downloads a chart and returns the .tgz bytes (for CRD upgrades).
+func (c *Client) FetchChartArchive(ctx context.Context, chartRef, version string) ([]byte, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	cfg, err := c.configFor("default")
+	if err != nil {
+		return nil, err
+	}
+	ins := action.NewInstall(cfg)
+	ins.ChartPathOptions.Version = version
+	ins.ChartPathOptions.RepoURL = chartRef
+	ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
+	if c.reg != nil {
+		ins.SetRegistryClient(c.reg)
+	}
+	path, err := ins.ChartPathOptions.LocateChart(chartRef, c.chartEnv)
+	if err != nil {
+		return nil, err
+	}
+	return os.ReadFile(path)
+}
+
+// PreviousDeployedRevision returns the revision to roll back to (last deployed before current).
+func (c *Client) PreviousDeployedRevision(ctx context.Context, name, ns string) (int, error) {
+	if err := ctx.Err(); err != nil {
+		return 0, err
+	}
+	cfg, err := c.configFor(ns)
+	if err != nil {
+		return 0, err
+	}
+	get := action.NewGet(cfg)
+	curRel, err := get.Run(name)
+	if err != nil {
+		return 0, err
+	}
+	cur, ok := curRel.(*release.Release)
+	if !ok {
+		return 0, fmt.Errorf("unexpected release type for %q", name)
+	}
+	if cur.Namespace != ns {
+		return 0, fmt.Errorf("release %q is not in namespace %q", name, ns)
+	}
+	hist := action.NewHistory(cfg)
+	revs, err := hist.Run(name)
+	if err != nil {
+		return 0, err
+	}
+	target := 0
+	for i := len(revs) - 1; i >= 0; i-- {
+		r, ok := revs[i].(*release.Release)
+		if !ok {
+			continue
+		}
+		if r.Version >= cur.Version {
+			continue
+		}
+		if r.Info.Status == releasecommon.StatusDeployed {
+			target = r.Version
+			break
+		}
+	}
+	if target < 1 {
+		return 0, fmt.Errorf("release %q has no previous deployed revision", name)
+	}
+	return target, nil
 }
 
 // Rollback rolls back to previous revision.

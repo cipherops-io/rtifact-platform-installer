@@ -151,7 +151,7 @@ func resolveReleaseString(s string, rd *redact.Redactor, outputsDir string) (str
 	return b.String(), nil
 }
 
-// ValuesDigest returns a stable hash of resolved values for change detection.
+// ValuesDigest returns a stable hash of merged release values (unresolved) for change detection.
 func ValuesDigest(v map[string]any) (string, error) {
 	b, err := json.Marshal(v)
 	if err != nil {

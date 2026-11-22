@@ -3,13 +3,15 @@ package deploy
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/lock"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/ocireg"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/engine"
 )
 
-// Rollback rolls back a single release to its previous revision.
+// Rollback rolls back a single release to its previous deployed revision.
 func Rollback(ctx context.Context, o RunOptions, release string) error {
 	sess, err := OpenSession(ctx, o)
 	if err != nil {
@@ -20,6 +22,20 @@ func Rollback(ctx context.Context, o RunOptions, release string) error {
 	if err := engine.ConfirmDeployRollback(o.Yes, release); err != nil {
 		return err
 	}
+	deployment := DeploymentID(doc)
+	if err := ensureSystemNS(ctx, kcfg); err != nil {
+		return err
+	}
+	runID := newRunID()
+	h, err := lock.Acquire(ctx, kcfg, deployment, lock.HolderIdentity(runID), o.ForceUnlock)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = h.Release(releaseCtx, kcfg, deployment)
+	}()
 	regCfg := registryFromDoc(doc)
 	cred, err := ocireg.LoadAuth(regCfg)
 	if err != nil {
@@ -30,7 +46,7 @@ func Rollback(ctx context.Context, o RunOptions, release string) error {
 		return err
 	}
 	cs, err := helmclient.New(helmclient.Options{
-		Kube: kcfg, Deployment: DeploymentID(doc), RegistryClient: reg,
+		Kube: kcfg, Deployment: deployment, RegistryClient: reg,
 		Defaults: helmclient.Defaults{
 			Timeout: doc.Defaults.Timeout, Wait: doc.Defaults.Wait,
 			RollbackOnFailure: doc.Defaults.RollbackOnFailure, HistoryMax: doc.Defaults.HistoryMax,
@@ -54,9 +70,12 @@ func Rollback(ctx context.Context, o RunOptions, release string) error {
 	if err != nil {
 		return err
 	}
-	rev := rel.Version - 1
-	if rev < 1 {
-		return fmt.Errorf("release %q has no previous revision", release)
+	if rel.Labels == nil || rel.Labels[helmclient.LabelDeployment] != deployment {
+		return fmt.Errorf("release %q in namespace %q is not managed by deploy file %q", release, ns, deployment)
+	}
+	rev, err := cs.PreviousDeployedRevision(ctx, release, ns)
+	if err != nil {
+		return err
 	}
 	return cs.Rollback(ctx, release, ns, rev)
 }

@@ -1,13 +1,16 @@
 package helmclient
 
 import (
+	"bufio"
 	"bytes"
-	"strings"
+	"fmt"
+	"io"
 
 	"helm.sh/helm/v4/pkg/postrenderer"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/yaml"
+	utilyaml "k8s.io/apimachinery/pkg/util/yaml"
 )
 
 const pvcKeepAnnotation = "helm.sh/resource-policy"
@@ -19,18 +22,27 @@ var decUnstructured = yaml.NewDecodingSerializer(unstructured.UnstructuredJSONSc
 type pvcKeepPostRenderer struct{}
 
 func (pvcKeepPostRenderer) Run(rendered *bytes.Buffer) (*bytes.Buffer, error) {
-	var docs []string
-	for _, part := range strings.Split(rendered.String(), "\n---") {
-		part = strings.TrimSpace(part)
-		if part == "" {
+	reader := utilyaml.NewYAMLReader(bufio.NewReader(rendered))
+	out := &bytes.Buffer{}
+	first := true
+	for {
+		docBytes, err := reader.Read()
+		if err != nil && err != io.EOF {
+			return nil, fmt.Errorf("post-render: read manifest: %w", err)
+		}
+		if err == io.EOF {
+			break
+		}
+		docBytes = bytes.TrimSpace(docBytes)
+		if len(docBytes) == 0 {
 			continue
 		}
-		docs = append(docs, part)
-	}
-	out := &bytes.Buffer{}
-	for i, doc := range docs {
 		obj := &unstructured.Unstructured{}
-		if _, _, err := decUnstructured.Decode([]byte(doc), nil, obj); err == nil && obj.GetKind() == "PersistentVolumeClaim" {
+		if _, _, err := decUnstructured.Decode(docBytes, nil, obj); err != nil {
+			return nil, fmt.Errorf("post-render: decode manifest: %w", err)
+		}
+		doc := string(docBytes)
+		if obj.GetKind() == "PersistentVolumeClaim" {
 			ann := obj.GetAnnotations()
 			if ann == nil {
 				ann = map[string]string{}
@@ -45,9 +57,10 @@ func (pvcKeepPostRenderer) Run(rendered *bytes.Buffer) (*bytes.Buffer, error) {
 			}
 			doc = string(b)
 		}
-		if i > 0 {
+		if !first {
 			out.WriteString("\n---\n")
 		}
+		first = false
 		out.WriteString(doc)
 	}
 	return out, nil

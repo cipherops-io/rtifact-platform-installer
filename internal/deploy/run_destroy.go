@@ -3,6 +3,7 @@ package deploy
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
@@ -23,11 +24,19 @@ func Destroy(ctx context.Context, o RunOptions) error {
 	if err := engine.ConfirmDeployDestroy(o.Yes, deployment); err != nil {
 		return err
 	}
-	h, err := lock.Acquire(ctx, kcfg, deployment, hostname(), o.ForceUnlock)
+	if err := ensureSystemNS(ctx, kcfg); err != nil {
+		return err
+	}
+	runID := newRunID()
+	h, err := lock.Acquire(ctx, kcfg, deployment, lock.HolderIdentity(runID), o.ForceUnlock)
 	if err != nil {
 		return err
 	}
-	defer h.Release(ctx, kcfg, deployment)
+	defer func() {
+		releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = h.Release(releaseCtx, kcfg, deployment)
+	}()
 	regCfg := registryFromDoc(doc)
 	cred, err := ocireg.LoadAuth(regCfg)
 	if err != nil {

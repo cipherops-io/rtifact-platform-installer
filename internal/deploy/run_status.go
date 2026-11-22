@@ -40,7 +40,10 @@ func Status(ctx context.Context, o RunOptions, asJSON bool) error {
 	if err != nil {
 		return err
 	}
-	want, err := buildWanted(o.FilePath, doc, disc.OutputsPath)
+	want, err := buildWanted(wantedBuildOpts{
+		deployPath: o.FilePath, doc: doc, outputsDir: disc.OutputsPath,
+		reg: regCfg, regClient: reg,
+	})
 	if err != nil {
 		return err
 	}
