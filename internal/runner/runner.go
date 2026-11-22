@@ -158,7 +158,7 @@ func stackRelDir(profileStackID, cloudName string, layer stacks.Layer) string {
 	return filepath.Join("stacks", profileStackID, cloudName, string(layer))
 }
 
-func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.ProfileMeta, provider cloud.Provider, spec cloud.StateSpec, contentRoot string, merged map[string]any, layer stacks.Layer) error {
+func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.ProfileMeta, provider cloud.Cloud, spec cloud.StateSpec, contentRoot string, merged map[string]any, layer stacks.Layer) error {
 	stackRel := stackRelDir(meta.StackID, customer.Cloud, layer)
 	stackSrc := filepath.Join(contentRoot, "infra", stackRel)
 	if st, err := os.Stat(stackSrc); err != nil || !st.IsDir() {
@@ -183,12 +183,8 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 	if err := destroyDependencyGuard(opts, customer.NamePrefix(), layer); err != nil {
 		return err
 	}
-	lifecycle, err := registry.LifecycleHooksFor(customer.Cloud)
-	if err != nil {
-		return err
-	}
 	if opts.Action == "destroy" {
-		if err := lifecycle.DestroyOrphanGuard(layer, customer.Account.Region, customer.NamePrefix(), merged); err != nil {
+		if err := provider.DestroyOrphanGuard(layer, customer.Account.Region, customer.NamePrefix(), merged); err != nil {
 			return err
 		}
 	}
@@ -221,7 +217,7 @@ func runOneLayer(opts Options, customer *config.CustomerConfig, meta *config.Pro
 		return err
 	}
 	edgeOut := filepath.Join(paths.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
-	lifecycle.MutateDNSDelegation(context.Background(), layer, customer.Account.Region, customer.NamePrefix(), edgeOut, layerMerged)
+	provider.MutateDNSDelegation(context.Background(), layer, customer.Account.Region, customer.NamePrefix(), edgeOut, layerMerged)
 	if err := config.WriteAutoTofuVarsJSON(stackWork, layerMerged); err != nil {
 		return err
 	}
@@ -387,11 +383,11 @@ func captureOutputs(tofuPath, stackWork string, env []string, customer *config.C
 		}
 	}
 	if layer == stacks.LayerNetworkEdge {
-		lh, err := registry.LifecycleHooksFor(customer.Cloud)
+		cl, err := registry.Get(customer.Cloud)
 		if err != nil {
 			return err
 		}
-		if err := lh.DelegationPauseIfNeeded(merged, configPath, prefix, flat); err != nil {
+		if err := cl.DelegationPauseIfNeeded(merged, configPath, prefix, flat); err != nil {
 			return err
 		}
 	}

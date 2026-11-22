@@ -23,11 +23,11 @@ func compileCustomerSchema(cloud string) (*jsonschema.Schema, error) {
 	if err := compiler.AddResource(name, bytes.NewReader(cloudRaw)); err != nil {
 		return nil, err
 	}
-	hooks, err := registry.HooksFor(cloud)
+	c, err := registry.Get(cloud)
 	if err != nil {
 		return nil, err
 	}
-	if !hooks.CustomerSchemaUsesCommonAllOf() {
+	if !c.CustomerSchemaUsesCommonAllOf() {
 		return compiler.Compile(name)
 	}
 	commonRaw, err := assets.ReadSchemaFile("common.schema.json")

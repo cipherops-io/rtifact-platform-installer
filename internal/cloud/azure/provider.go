@@ -21,7 +21,7 @@ type Provider struct {
 	lookPath func(string) (string, error)
 }
 
-var _ cloud.Provider = (*Provider)(nil)
+var _ cloud.Cloud = (*Provider)(nil)
 
 // New returns an Azure provider that shells out to the Azure CLI.
 func New() *Provider {

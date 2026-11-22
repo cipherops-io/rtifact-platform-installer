@@ -1,14 +1,8 @@
-package cloudconfig
+package azure
 
 import "context"
 
-func init() {
-	Register("azure", azureConfig{})
-}
-
-type azureConfig struct{}
-
-func (azureConfig) TFVarSections() []string {
+func (*Provider) TFVarSections() []string {
 	return []string{
 		"features", "state", "tags", "network", "kubernetes_cluster",
 		"key_vault", "postgresql_flexible_server", "container_registry",
@@ -20,7 +14,7 @@ func (azureConfig) TFVarSections() []string {
 	}
 }
 
-func (azureConfig) Normalize(merged map[string]any) {
+func (*Provider) Normalize(merged map[string]any) {
 	bastion, _ := merged["bastion"].(map[string]any)
 	if bastion == nil {
 		bastion = make(map[string]any)
@@ -49,6 +43,6 @@ func (azureConfig) Normalize(merged map[string]any) {
 	merged["bastion"] = bastion
 }
 
-func (azureConfig) Validate(_ map[string]any) error { return nil }
+func (*Provider) Validate(_ map[string]any) error { return nil }
 
-func (azureConfig) Preflight(context.Context, map[string]any) error { return nil }
+func (*Provider) Preflight(context.Context, map[string]any) error { return nil }

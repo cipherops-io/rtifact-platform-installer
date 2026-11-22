@@ -120,9 +120,9 @@ func (m *ProfileMeta) CloudMaturityFor(cloud string) string {
 			return v
 		}
 	}
-	hooks, err := registry.HooksFor(cloud)
+	c, err := registry.Get(cloud)
 	if err != nil {
 		return "preview"
 	}
-	return hooks.DefaultMaturity()
+	return c.DefaultMaturity()
 }

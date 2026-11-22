@@ -89,8 +89,8 @@ func NewRoot() *cobra.Command {
 			}
 			if !cmd.Flags().Changed("check-quota") {
 				if peek, err := config.LoadCustomer(args[0]); err == nil {
-					if hooks, err := registry.HooksFor(peek.Cloud); err == nil {
-						checkQuota = hooks.DefaultQuotaCheckOnValidate()
+					if c, err := registry.Get(peek.Cloud); err == nil {
+						checkQuota = c.DefaultQuotaCheckOnValidate()
 					}
 				}
 			}

@@ -1,4 +1,4 @@
-package cloudconfig
+package aws
 
 import (
 	"fmt"

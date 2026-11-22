@@ -9,7 +9,6 @@ import (
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/cloudconfig"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 	"gopkg.in/yaml.v3"
 )
@@ -145,11 +144,11 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 	if err != nil {
 		return nil, err
 	}
-	cloudProfile, err := cloudconfig.Get(customer.Cloud)
+	c, err := registry.Get(customer.Cloud)
 	if err != nil {
 		return nil, err
 	}
-	sections := cloudProfile.TFVarSections()
+	sections := c.TFVarSections()
 	rawBytes, err := os.ReadFile(customerPath)
 	if err != nil {
 		return nil, err
@@ -219,11 +218,11 @@ func MergeBuildFromPath(defaults map[string]any, customerPath string) (map[strin
 		}
 	}
 
-	cloudProfile.Normalize(merged)
+	c.Normalize(merged)
 	if err := validateMergedFeaturesFromRegistry(merged, customer.Profile, customer.Cloud); err != nil {
 		return nil, err
 	}
-	if err := cloudProfile.Validate(merged); err != nil {
+	if err := c.Validate(merged); err != nil {
 		return nil, err
 	}
 	return merged, nil

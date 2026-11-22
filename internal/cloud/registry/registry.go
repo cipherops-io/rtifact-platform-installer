@@ -21,8 +21,8 @@ func init() {
 	}
 }
 
-// Get returns the provider for name.
-func Get(name string) (cloud.Provider, error) {
+// Get returns the cloud implementation for name.
+func Get(name string) (cloud.Cloud, error) {
 	if !version.CloudPackaged(name) {
 		return nil, fmt.Errorf("cloud %q is not in this binary (packaged: %v)", name, Supported)
 	}

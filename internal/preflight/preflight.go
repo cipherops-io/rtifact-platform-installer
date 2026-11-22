@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/cloudconfig"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/quota"
 )
 
@@ -41,8 +41,8 @@ func Run(configPath string) error {
 	if err := checkCIDR(merged); err != nil {
 		return err
 	}
-	if cc, err := cloudconfig.Get(cfg.Cloud); err == nil {
-		if err := cc.Preflight(context.Background(), merged); err != nil {
+	if c, err := registry.Get(cfg.Cloud); err == nil {
+		if err := c.Preflight(context.Background(), merged); err != nil {
 			return err
 		}
 	}

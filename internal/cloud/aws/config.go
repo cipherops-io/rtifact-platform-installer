@@ -1,4 +1,4 @@
-package cloudconfig
+package aws
 
 import (
 	"context"
@@ -10,20 +10,14 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
 )
 
-func init() {
-	Register("aws", awsConfig{})
-}
-
-type awsConfig struct{}
-
-func (awsConfig) TFVarSections() []string {
+func (*Provider) TFVarSections() []string {
 	return []string{
 		"features", "state", "tags", "certificates", "network",
 		"kubernetes_cluster", "bastion", "public_dns",
 	}
 }
 
-func (awsConfig) Normalize(merged map[string]any) {
+func (*Provider) Normalize(merged map[string]any) {
 	bastion, _ := merged["bastion"].(map[string]any)
 	if bastion == nil {
 		bastion = make(map[string]any)
@@ -49,7 +43,7 @@ func (awsConfig) Normalize(merged map[string]any) {
 	}
 }
 
-func (awsConfig) Validate(merged map[string]any) error {
+func (*Provider) Validate(merged map[string]any) error {
 	features, _ := merged["features"].(map[string]any)
 	if err := validateAWSSubnets(merged); err != nil {
 		return err
@@ -98,7 +92,7 @@ func (awsConfig) Validate(merged map[string]any) error {
 	return nil
 }
 
-func (awsConfig) Preflight(ctx context.Context, merged map[string]any) error {
+func (p *Provider) Preflight(ctx context.Context, merged map[string]any) error {
 	state, _ := merged["state"].(map[string]any)
 	if airGapped, _ := state["air_gapped"].(bool); airGapped {
 		return nil
@@ -108,7 +102,7 @@ func (awsConfig) Preflight(ctx context.Context, merged map[string]any) error {
 	if region == "" {
 		return fmt.Errorf("preflight: account.region is required")
 	}
-	if _, err := exec.LookPath("aws"); err != nil {
+	if _, err := p.lookPath(CLI); err != nil {
 		return fmt.Errorf("preflight: aws CLI not found in PATH (required when state.air_gapped is false)")
 	}
 	cmd := exec.CommandContext(ctx, "aws", "sts", "get-caller-identity", "--region", region)

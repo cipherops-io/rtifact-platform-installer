@@ -17,7 +17,7 @@ type Provider struct {
 	lookPath func(string) (string, error)
 }
 
-var _ cloud.Provider = (*Provider)(nil)
+var _ cloud.Cloud = (*Provider)(nil)
 
 func New() *Provider {
 	return &Provider{run: execRun, lookPath: exec.LookPath}

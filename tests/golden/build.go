@@ -76,11 +76,6 @@ func BuildSnapshot(repoRoot, configRel string) (*Snapshot, error) {
 		return nil, err
 	}
 	spec := config.CloudStateSpec(customer, meta.StackID)
-	lifecycle, err := registry.LifecycleHooksFor(customer.Cloud)
-	if err != nil {
-		return nil, err
-	}
-
 	snap := &Snapshot{
 		Merged:     merged,
 		Validation: validationResult{Result: "pass"},
@@ -110,7 +105,7 @@ func BuildSnapshot(repoRoot, configRel string) (*Snapshot, error) {
 		}
 		// injectAzureResourceGroupFlags calls Azure CLI — skipped for goldens; keys listed in ExcludedCloudKeys.
 		edgeOut := filepath.Join(paths.ArtifactsDir(customer.NamePrefix()), string(stacks.LayerNetworkEdge)+"-outputs.json")
-		lifecycle.MutateDNSDelegation(context.Background(), layer, customer.Account.Region, customer.NamePrefix(), edgeOut, layerMerged)
+		provider.MutateDNSDelegation(context.Background(), layer, customer.Account.Region, customer.NamePrefix(), edgeOut, layerMerged)
 		for _, k := range excludedCloudKeys {
 			delete(layerMerged, k)
 		}
