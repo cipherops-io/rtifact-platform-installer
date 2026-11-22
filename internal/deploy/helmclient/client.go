@@ -54,7 +54,6 @@ type Client struct {
 	cfgByNS    map[string]*action.Configuration
 	reg        *registry.Client
 	deployment string
-	def        Defaults
 	regOpts    RegistryOpts
 	timeout    time.Duration
 	wait       bool
@@ -95,7 +94,6 @@ func New(opts Options) (*Client, error) {
 		cfgByNS:    map[string]*action.Configuration{},
 		reg:        opts.RegistryClient,
 		deployment: opts.Deployment,
-		def:        opts.Defaults,
 		regOpts:    opts.Registry,
 		timeout:    tout,
 		wait:       wait,

@@ -1,4 +1,5 @@
-# Reference layout: multiple releases, requires, and protection flags.
+# Reference layout: requires chain, protect, and values_files (no fictional chart names).
+# Charts must exist in your OCI registry; names here match tests/deploy/charts for local e2e.
 schema_version: 1
 kind: deploy
 customer:
@@ -8,9 +9,12 @@ environment: staging
 name_prefix: ref-stg
 
 registry:
-  host: oci.internal.example.com
+  host: 127.0.0.1:5000
   charts_path: charts
-  plain_http: false
+  plain_http: true
+  auth:
+    username_env: RTIFACT_REGISTRY_USER
+    password_env: RTIFACT_REGISTRY_PASSWORD
 
 defaults:
   timeout: 15m
@@ -20,28 +24,26 @@ defaults:
 
 cluster:
   kubeconfig: /path/to/kubeconfig
-  expected_server: https://k8s.staging.example.com
+  expected_server: https://kubernetes.example.com
 
 namespaces:
-  - name: platform
-  - name: apps
+  - name: deploy-a
+  - name: deploy-b
 
 releases:
-  - name: platform-crds
-    namespace: platform
-    chart: platform-crds
-    version: 2.1.0
-    crds: upgrade
+  - name: ok-a
+    namespace: deploy-a
+    chart: ok-a
+    version: "1.0.0"
+    crds: chart
     protect: true
-  - name: platform-core
-    namespace: platform
-    chart: platform-core
-    version: 3.0.0
-    requires: [platform-crds]
-  - name: sample-app
-    namespace: apps
-    chart: sample-app
-    version: 1.4.2
-    requires: [platform-core]
     values:
-      replicas: 2
+      msg: base
+  - name: ok-b
+    namespace: deploy-b
+    chart: ok-b
+    version: "1.0.0"
+    crds: chart
+    requires: [ok-a]
+    values_files:
+      - values-sample-app.yaml

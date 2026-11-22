@@ -48,18 +48,6 @@ func InstallOrder(releases []Release) ([]string, error) {
 	return order, nil
 }
 
-// RemoveOrder returns uninstall order (reverse of install).
-func RemoveOrder(releases []Release) ([]string, error) {
-	order, err := InstallOrder(releases)
-	if err != nil {
-		return nil, err
-	}
-	for i, j := 0, len(order)-1; i < j; i, j = i+1, j-1 {
-		order[i], order[j] = order[j], order[i]
-	}
-	return order, nil
-}
-
 func userErrCycle() error {
 	return fmt.Errorf("requires: dependency cycle detected among releases")
 }

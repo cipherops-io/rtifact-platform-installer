@@ -73,10 +73,7 @@ func TestE2E_S6_CRDUpgrade(t *testing.T) {
 	})
 	o.FilePath = file
 	e2eMustApply(t, o)
-	cs, err := kube.DynamicClient(k8s(t))
-	if err != nil {
-		t.Fatal(err)
-	}
+	cs := e2eDynamicClient(t, k8s(t))
 	u, err := cs.Resource(metav1.GroupVersionResource{
 		Group: "apiextensions.k8s.io", Version: "v1", Resource: "customresourcedefinitions",
 	}).Get(context.Background(), "widgets.deploytests.rtifact.ai", metav1.GetOptions{})

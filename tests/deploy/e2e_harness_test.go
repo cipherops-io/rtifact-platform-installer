@@ -17,6 +17,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
+	"k8s.io/client-go/dynamic"
 )
 
 var safeTestName = regexp.MustCompile(`[^a-z0-9-]+`)
@@ -259,4 +260,17 @@ func e2eIntEq(t *testing.T, label string, got, want int) {
 	if got != want {
 		t.Fatalf("%s: got %d want %d", label, got, want)
 	}
+}
+
+func e2eDynamicClient(t *testing.T, kcfg kube.Config) dynamic.Interface {
+	t.Helper()
+	restCfg, err := kube.RESTConfig(kcfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cs, err := dynamic.NewForConfig(restCfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cs
 }

@@ -60,11 +60,7 @@ func mergeValMaps(base, overlay map[string]any) map[string]any {
 	return out
 }
 
-// ResolveReleaseValues substitutes ${env.NAME} and ${infra.key} placeholders.
-func ResolveReleaseValues(tree map[string]any, rd *redact.Redactor) (map[string]any, error) {
-	return ResolveReleaseValuesFrom(tree, rd, "")
-}
-
+// ResolveReleaseValuesFrom substitutes ${env.NAME} and ${infra.key} placeholders.
 func ResolveReleaseValuesFrom(tree map[string]any, rd *redact.Redactor, outputsDir string) (map[string]any, error) {
 	v, err := resolveReleaseNode(tree, rd, outputsDir)
 	if err != nil {

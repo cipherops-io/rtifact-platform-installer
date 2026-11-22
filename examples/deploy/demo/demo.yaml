@@ -1,4 +1,5 @@
-# Demo deployment for `rtifact deploy plan|apply` walkthrough (charts live in your OCI registry).
+# Walkthrough file: same release layout as tests/deploy/fixtures/e2e.yaml (ok-a → ok-b).
+# Point registry.host and cluster at your OCI registry and kubeconfig before apply.
 schema_version: 1
 kind: deploy
 customer:
@@ -9,7 +10,7 @@ name_prefix: demo
 
 registry:
   host: registry.example.com
-  charts_path: rtifact/charts
+  charts_path: charts
   auth:
     username_env: RTIFACT_REGISTRY_USER
     password_env: RTIFACT_REGISTRY_PASSWORD
@@ -25,12 +26,20 @@ cluster:
   expected_server: https://kubernetes.example.com
 
 namespaces:
-  - name: demo
-    pull_secret: true
+  - name: deploy-a
+  - name: deploy-b
 
 releases:
-  - name: demo-app
-    namespace: demo
-    chart: demo-app
-    version: 1.0.0
+  - name: ok-a
+    namespace: deploy-a
+    chart: ok-a
+    version: "1.0.0"
     crds: chart
+    values:
+      msg: hello
+  - name: ok-b
+    namespace: deploy-b
+    chart: ok-b
+    version: "1.0.0"
+    crds: chart
+    requires: [ok-a]

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"sort"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
@@ -129,10 +128,4 @@ func buildStatusRows(ctx context.Context, cs *helmclient.Client, doc *Document, 
 		return nil, err
 	}
 	return mergeStatusRows(doc, inv, live), nil
-}
-
-// SetWriters allows CLI to redirect status output.
-func (o *RunOptions) SetWriters(out, err io.Writer) {
-	o.Stdout = out
-	o.Stderr = err
 }

@@ -5,34 +5,6 @@ import (
 	"strings"
 )
 
-// C2: Masking today only hides ${env.NAME} text in summaries. Once placeholders are resolved at apply time,
-// resolved secret literals must be redacted from every diff, log line, and error — the placeholder string is not the secret.
-// Use ResolvedSecretRedactor when wiring plan/apply in C2.
-
-// ResolvedSecretRedactor records literal values produced from ${env.*} resolution and redacts them from output.
-type ResolvedSecretRedactor struct {
-	literals []string
-}
-
-// RecordResolved registers a secret value that must never appear in user-visible output.
-func (r *ResolvedSecretRedactor) RecordResolved(value string) {
-	if value == "" {
-		return
-	}
-	r.literals = append(r.literals, value)
-}
-
-// RedactText replaces recorded literals and remaining env placeholder tokens with ***.
-func (r *ResolvedSecretRedactor) RedactText(s string) string {
-	out := MaskEnvPlaceholders(s)
-	for _, lit := range r.literals {
-		if lit != "" {
-			out = strings.ReplaceAll(out, lit, "***")
-		}
-	}
-	return out
-}
-
 // MaskEnvPlaceholders redacts ${env.NAME} references in text shown to the user.
 func MaskEnvPlaceholders(s string) string {
 	return EnvPlaceholderToken.ReplaceAllString(s, "***")

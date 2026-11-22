@@ -2,23 +2,24 @@
 
 ## [0.0.1] - 2026-11-23
 
-First public release: full deploy engine plus v0.4 infra baseline. Aligned with **boilerplates [v0.0.1](https://github.com/cipherops-io/boilerplates/releases/tag/v0.0.1)**.
+**Re-tagged release.** The first **v0.0.1** cut shipped deploy layout and docs before cluster behaviour was implemented; do not use that tag for production clusters. This tag marks the F0–F11 remediation on `main`, aligned with **boilerplates [v0.0.1](https://github.com/cipherops-io/boilerplates/releases/tag/v0.0.1)**.
 
-### Deploy engine
+### Deploy engine (proven on cluster)
 
-- `rtifact deploy plan|apply|status|rollback|destroy` with OCI charts, identity guard, inventory in `rtifact-system`, and lease locking.
-- Level-2 CI: `make deploy-e2e` (kind + Zot). See `tests/deploy/README.md` for scenario coverage.
-- AWS EKS **pod_identities** (preview): module, schema, `pod_identity_role_arns` output; `examples/aws/aws-sbx2.yaml` updated.
+`make deploy-e2e` (kind + Zot) exercises the scenarios in `tests/deploy/README.md`:
 
-## [0.5.0] - 2026-11-23
+- **S1–S4** — fresh apply, no-op re-apply, semver bump, value-only change
+- **S5–S6** — failed release rollback, CRD upgrade (`crds: upgrade`)
+- **S7–S10** — removal, validate guard on required dep, protect, mass-removal guard
+- **S11–S12** — stuck/pending recovery + `rollback`, concurrent apply lock
+- **S13–S17** — identity guard, invalid values, pull-secret refresh, downgrade guard, bad registry password
+- **S18–S19** — destroy keeps PVC, packaged `deploy validate` smoke in CI
+- **Extras** — canary secret redaction, adopt unmanaged release, cancelled apply (`ErrInterrupted`)
 
-Aligned with **boilerplates [v3.3.0](https://github.com/cipherops-io/boilerplates/releases/tag/v3.3.0)**.
+### Also in this tag
 
-### Deploy engine
-
-- `rtifact deploy plan|apply|status|rollback|destroy` with OCI charts, identity guard, inventory in `rtifact-system`, and lease locking.
-- Level-2 CI: `make deploy-e2e` (kind + Zot). See `tests/deploy/README.md` for scenario coverage.
-- AWS EKS **pod_identities** (preview): module, schema, `pod_identity_role_arns` output; `examples/aws/aws-sbx2.yaml` updated.
+- `rtifact deploy` session model, inventory v2, stepped apply, Helm v4.3.2 client (per-namespace), SSA CRD upgrades, lease locking.
+- Infra baseline from v0.4.x lineage; AWS EKS **pod_identities** (preview) and `examples/aws/aws-sbx2.yaml`.
 
 ## [0.4.1] - 2026-11-22
 

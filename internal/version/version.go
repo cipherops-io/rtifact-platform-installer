@@ -5,7 +5,7 @@ const ProductName = "rtifact"
 
 // Set via -ldflags at release.
 var (
-	Version   = "0.1.0-dev"
+	Version   = "0.0.1-dev"
 	GitCommit = "unknown"
 	Customer  = "internal"
 	Release   = "false"
