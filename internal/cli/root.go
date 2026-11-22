@@ -70,6 +70,7 @@ func NewRoot() *cobra.Command {
 		return outputs.Print(args[0])
 	}
 	root.AddCommand(plan, apply, destroy, output)
+	addDeployGroup(root)
 	addCloudGroups(root)
 
 	validate := &cobra.Command{
@@ -180,6 +181,7 @@ func NewRoot() *cobra.Command {
 		Short: "Print version",
 		Run: func(_ *cobra.Command, _ []string) {
 			fmt.Printf("rtifact %s (commit %s) customer=%s clouds=%s\n", version.Version, version.GitCommit, version.Customer, version.PackagedClouds)
+			fmt.Println(version.DeployEngineLine())
 		},
 	})
 

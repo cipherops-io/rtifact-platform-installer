@@ -2,7 +2,7 @@ Variables:
     AirGapped: true
     ArtifactRegistryHost: ""
     BoilerplateCliVersion: 0.17.0
-    BoilerplatesRef: v3.1.1
+    BoilerplatesRef: v3.2.0
     BuildTargets:
         - linux/amd64
         - darwin/arm64
@@ -21,6 +21,7 @@ Variables:
     GitHubOwner: cipherops-io
     GitHubRepo: rtifact-platform-installer
     GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+    KindVersion: 0.26.0
     LayerMeta:
         ai-integrations:
             examples:
@@ -153,10 +154,10 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-22T04:23:44Z"
-TemplateURL: ../boilerplates/devops-templates/rtifact-product
+Timestamp: "2026-11-22T08:46:36Z"
+TemplateURL: /Users/raghavendiran/cipherops-io/boilerplates/devops-templates/rtifact-product
 BoilerplateVersion: v0.17.0
-SourceChecksum: sha256:59bbed6b6e45a9801aa0818a7be0ec8e374e7758e2309c20a4817a7d3328d8d0
+SourceChecksum: sha256:e40f16e618def1fcdf9b3baa60c2c2a3d2871e4800f0927bae7c5af90a5b2b20
 OutputDir: .
 Dependencies:
     - Variables:
@@ -164,7 +165,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.1
+        BoilerplatesRef: v3.2.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -184,6 +185,7 @@ Dependencies:
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
                 examples:
@@ -330,7 +332,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.1
+        BoilerplatesRef: v3.2.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -350,6 +352,7 @@ Dependencies:
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
                 examples:
@@ -496,7 +499,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.1
+        BoilerplatesRef: v3.2.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -516,6 +519,7 @@ Dependencies:
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
                 examples:
@@ -662,7 +666,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.1
+        BoilerplatesRef: v3.2.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -682,6 +686,7 @@ Dependencies:
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
                 examples:
@@ -826,7 +831,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -846,6 +851,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: state-backend
             LayerMeta:
                 ai-integrations:
@@ -993,7 +999,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1013,6 +1019,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: core-network
             LayerMeta:
                 ai-integrations:
@@ -1160,7 +1167,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1180,6 +1187,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: data-platform
             LayerMeta:
                 ai-integrations:
@@ -1327,7 +1335,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1347,6 +1355,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: app-platform
             LayerMeta:
                 ai-integrations:
@@ -1494,7 +1503,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1514,6 +1523,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: network-edge
             LayerMeta:
                 ai-integrations:
@@ -1661,7 +1671,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -1681,6 +1691,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: ai-integrations
             LayerMeta:
                 ai-integrations:
@@ -1828,7 +1839,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.1
+        BoilerplatesRef: v3.2.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -1848,6 +1859,7 @@ Dependencies:
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
                 examples:
@@ -1992,7 +2004,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2012,6 +2024,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: state-backend
             LayerMeta:
                 ai-integrations:
@@ -2159,7 +2172,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2179,6 +2192,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: core-network
             LayerMeta:
                 ai-integrations:
@@ -2326,7 +2340,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2346,6 +2360,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: data-platform
             LayerMeta:
                 ai-integrations:
@@ -2493,7 +2508,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2513,6 +2528,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: app-platform
             LayerMeta:
                 ai-integrations:
@@ -2660,7 +2676,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2680,6 +2696,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: network-edge
             LayerMeta:
                 ai-integrations:
@@ -2827,7 +2844,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -2847,6 +2864,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: ai-integrations
             LayerMeta:
                 ai-integrations:
@@ -2994,7 +3012,7 @@ Dependencies:
         AirGapped: true
         ArtifactRegistryHost: ""
         BoilerplateCliVersion: 0.17.0
-        BoilerplatesRef: v3.1.1
+        BoilerplatesRef: v3.2.0
         BuildTargets:
             - linux/amd64
             - darwin/arm64
@@ -3014,6 +3032,7 @@ Dependencies:
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
                 examples:
@@ -3158,7 +3177,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3178,6 +3197,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: state-backend
             LayerMeta:
                 ai-integrations:
@@ -3325,7 +3345,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3345,6 +3365,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: core-network
             LayerMeta:
                 ai-integrations:
@@ -3492,7 +3513,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3512,6 +3533,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: data-platform
             LayerMeta:
                 ai-integrations:
@@ -3659,7 +3681,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3679,6 +3701,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: app-platform
             LayerMeta:
                 ai-integrations:
@@ -3826,7 +3849,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -3846,6 +3869,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: network-edge
             LayerMeta:
                 ai-integrations:
@@ -3993,7 +4017,7 @@ Dependencies:
             AirGapped: true
             ArtifactRegistryHost: ""
             BoilerplateCliVersion: 0.17.0
-            BoilerplatesRef: v3.1.1
+            BoilerplatesRef: v3.2.0
             BuildTargets:
                 - linux/amd64
                 - darwin/arm64
@@ -4013,6 +4037,7 @@ Dependencies:
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            KindVersion: 0.26.0
             Layer: ai-integrations
             LayerMeta:
                 ai-integrations:
@@ -4159,26 +4184,28 @@ Files:
     - Path: .github/pull_request_template.md
       Checksum: sha256:cc6698fcfd3c326e04625bba5bc8cbce8691f7993b82c62cbca6a46ecf7271a2
     - Path: .github/workflows/build-binary.yml
-      Checksum: sha256:d846e84bef77171ada8aa680a52581d38781f9f776013a187ddf1df89497c0a7
+      Checksum: sha256:621d7c8c5ac70ddf386419848a0f8cb79427fb28b898f7c00e3a0686934e5b2e
     - Path: .github/workflows/ci.yml
-      Checksum: sha256:6b89bbaf11b12a5453eb0775632e6a922bb352306ea8d18fabce786e59bb11c0
+      Checksum: sha256:c17492be0fa562b0b280c4b48624fde217cc77bd2816e642e0428603639a087c
     - Path: .terraform-docs.gen.yml
       Checksum: sha256:7cba1689f7c088a1b9e208dfd0aeef31535f4dd321584f8e3a0e847365f584d0
     - Path: .terraform-docs.yml
       Checksum: sha256:2ef73e4f08fcbd4b3ee01fe67c91b588ad1b0321bcb5e854e915ae2cc1447694
     - Path: AGENTS.md
-      Checksum: sha256:21d7c5cd295ba464cf7b0e7a2c9f8748d34e5609b750316545d42bcdc04bfa4f
+      Checksum: sha256:936a90b6f2d3530394ce34df6b8280dadbd82ef9c0eeace4e687d7fc0fed9394
     - Path: CLAUDE.md
       Checksum: sha256:c54ba6a2cf5a7404006d2da37d3e66950d240149b1ebe2c709d2c248ef25c876
     - Path: boilerplate.mk
-      Checksum: sha256:7b6f7bc5383665f1186c253067079ac9962f9941fca5d2493d9819ecd973b980
+      Checksum: sha256:f6ea9e3b23caa61dcf02c5ae6c48d1cf0e15bedd896e4e832f1944738858d943
     - Path: build/scripts/terraform-docs-module.sh
       Checksum: sha256:edf53e942fd1e54c1ebcb1610e1dba7e36223d67c14bdfe6af14ad46ae777395
+    - Path: deploy/AGENTS.md
+      Checksum: sha256:7b92bd76d71b9d81e1f742794d361317de4150f69bcc1e11603a8c7b9c14e314
     - Path: docs/BOILERPLATE.md
-      Checksum: sha256:b8bb92e3bdf1589d541439780b0eb38c16ec9d53620f8bb39da961079b67678e
+      Checksum: sha256:ad94b5f5ad300af438932c863f541e4643a4f1ffe14ed662b62cd61e7ec53964
     - Path: infra/AGENTS.md
       Checksum: sha256:483d3ddc0f18a2cd11197f74bedc3f2fc41ddbf16f6637c0e826c388befe35fb
     - Path: infra/modules/AGENTS.md
       Checksum: sha256:0e68896ce28d591b9a9e77002b05a2027752852a7d3b957c05ac860a5c975c7f
     - Path: tooling.mk
-      Checksum: sha256:0590c7bfb470a984b9c7605933a5bff644aabe6535be96991a2a34e72625cdd7
+      Checksum: sha256:41db87497dac4b79d332322057d183d8774e4a0f1460b0d6147cd3fa05b1203d

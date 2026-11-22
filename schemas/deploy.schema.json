@@ -1,0 +1,301 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rtifact.ai/schemas/deploy.schema.json",
+  "title": "Rtifact deploy configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "customer",
+    "environment",
+    "name_prefix",
+    "registry",
+    "namespaces",
+    "releases"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "deploy"
+    },
+    "customer": {
+      "$ref": "#/$defs/customer"
+    },
+    "environment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name_prefix": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cluster": {
+      "$ref": "#/$defs/cluster"
+    },
+    "registry": {
+      "$ref": "#/$defs/registry"
+    },
+    "infra_outputs": {
+      "type": "string"
+    },
+    "defaults": {
+      "$ref": "#/$defs/defaults"
+    },
+    "namespaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/namespace"
+      },
+      "uniqueItems": true
+    },
+    "releases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/release"
+      }
+    }
+  },
+  "$defs": {
+    "customer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "code"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        }
+      }
+    },
+    "cluster": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kubeconfig": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        },
+        "expected_server": {
+          "type": "string"
+        }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "charts_path"
+      ],
+      "properties": {
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "charts_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ca_file": {
+          "type": "string"
+        },
+        "plain_http": {
+          "type": "boolean"
+        },
+        "auth": {
+          "$ref": "#/$defs/registryAuth"
+        },
+        "pull_secret": {
+          "$ref": "#/$defs/pullSecret"
+        }
+      }
+    },
+    "registryAuth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "username_env",
+        "password_env"
+      ],
+      "properties": {
+        "username_env": {
+          "type": "string",
+          "pattern": "^[A-Z_][A-Z0-9_]*$"
+        },
+        "password_env": {
+          "type": "string",
+          "pattern": "^[A-Z_][A-Z0-9_]*$"
+        }
+      }
+    },
+    "pullSecret": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/kubernetesName"
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timeout": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*(ms|s|m|h)$"
+        },
+        "wait": {
+          "type": "boolean"
+        },
+        "rollback_on_failure": {
+          "type": "boolean"
+        },
+        "history_max": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "namespace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/kubernetesName"
+        },
+        "pull_secret": {
+          "type": "boolean"
+        },
+        "attach_pull_secret_to_default_sa": {
+          "type": "boolean"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.*$": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "namespace",
+        "chart",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/kubernetesName"
+        },
+        "namespace": {
+          "$ref": "#/$defs/kubernetesName"
+        },
+        "chart": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$"
+        },
+        "crds": {
+          "type": "string",
+          "enum": [
+            "upgrade",
+            "chart",
+            "skip"
+          ]
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/kubernetesName"
+          },
+          "uniqueItems": true
+        },
+        "values_files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.*$": {
+              "$ref": "#/$defs/jsonValue"
+            }
+          }
+        },
+        "protect": {
+          "type": "boolean"
+        }
+      }
+    },
+    "kubernetesName": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 253,
+      "pattern": "^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$"
+    },
+    "jsonValue": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^.*$": {
+              "$ref": "#/$defs/jsonValue"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

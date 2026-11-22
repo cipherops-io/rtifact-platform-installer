@@ -17,7 +17,7 @@ LDFLAGS := -s -w \
 include boilerplate.mk
 
 .PHONY: deps build build-dev embed mirror-tofu fetch-tofu release test fmt package-content
-.PHONY: release-all release-azure release-aws release-gcp validate-examples e2e-sandbox e2e-azure-smoke e2e-azure-deploy
+.PHONY: release-all release-azure release-aws release-gcp validate-examples e2e-sandbox e2e-azure-smoke e2e-azure-deploy deploy-e2e
 
 validate-examples:
 	@test -f $(DIST) || $(MAKE) build-dev
@@ -70,6 +70,9 @@ release-aws:
 
 release-gcp:
 	$(MAKE) release PACKAGED_CLOUDS=gcp
+
+deploy-e2e:
+	go test ./internal/deploy/... ./tests/deploy/...
 
 test:
 	go test ./...

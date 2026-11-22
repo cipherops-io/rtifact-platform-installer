@@ -63,6 +63,11 @@ func materializeCWD(prefix string, flat map[string]any, opts MaterializeOpts) ([
 			return written, err
 		}
 		written = append(written, p)
+		artifactKube := filepath.Join(config.ArtifactsDir(prefix), kubeconfigFile(prefix))
+		if err := os.MkdirAll(filepath.Dir(artifactKube), 0o700); err == nil {
+			_ = os.WriteFile(artifactKube, []byte(kube), 0o600)
+			written = append(written, artifactKube)
+		}
 	}
 
 	pem := firstString(flat,

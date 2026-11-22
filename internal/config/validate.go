@@ -24,7 +24,7 @@ func ValidateCustomerYAML(path string) error {
 	if err := yaml.Unmarshal(raw, &data); err != nil {
 		return usererr.Wrap(err, "Config file is not valid YAML.", "Fix indentation, colons, and quoting in your YAML.")
 	}
-	data = normalizeYAML(data)
+	data = NormalizeYAML(data)
 	cloud, _ := data.(map[string]any)["cloud"].(string)
 	sch, err := compileCustomerSchema(cloud)
 	if err != nil {
@@ -78,24 +78,25 @@ func checkProfileCloud(meta *ProfileMeta, cloudName string) error {
 	return fmt.Errorf("cloud %q is not supported (supported: %v)", cloudName, meta.Clouds)
 }
 
-func normalizeYAML(v any) any {
+// NormalizeYAML converts yaml.v3 decode trees into JSON-schema-friendly values.
+func NormalizeYAML(v any) any {
 	switch t := v.(type) {
 	case map[interface{}]interface{}:
 		m := make(map[string]any, len(t))
 		for k, val := range t {
-			m[fmt.Sprint(k)] = normalizeYAML(val)
+			m[fmt.Sprint(k)] = NormalizeYAML(val)
 		}
 		return m
 	case map[string]any:
 		m := make(map[string]any, len(t))
 		for k, val := range t {
-			m[k] = normalizeYAML(val)
+			m[k] = NormalizeYAML(val)
 		}
 		return m
 	case []interface{}:
 		s := make([]any, len(t))
 		for i, val := range t {
-			s[i] = normalizeYAML(val)
+			s[i] = NormalizeYAML(val)
 		}
 		return s
 	default:

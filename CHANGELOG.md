@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0] - 2026-11-22
+
+Aligned with **boilerplates [v3.2.0](https://github.com/cipherops-io/boilerplates/releases/tag/v3.2.0)**.
+
+### Deploy (Step B + C1)
+
+- `rtifact deploy` command group: `validate`, `init-config write` (plan/apply/status/destroy stubbed for C2+).
+- Packaged `schemas/deploy.schema.json` and `examples/deploy/` for every cloud binary.
+- Helm SDK linked; `rtifact version` prints `deploy-engine`.
+- Kubeconfig also written under `~/.rtifact/<prefix>/` for deploy discovery.
+
 ## [0.2.0] - 2026-11-22
 
 Aligned with **boilerplates [v3.1.1](https://github.com/cipherops-io/boilerplates/releases/tag/v3.1.1)**.

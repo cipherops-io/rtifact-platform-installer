@@ -66,9 +66,13 @@ Logic is edited **in this repo only**. Managed structure/tooling is edited in **
 
 ## Boilerplates checkout
 
-Use sibling `../boilerplates` for template development; before push set `BOILERPLATES_TEMPLATE_URL` to `github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.1.1`.
+Use sibling `../boilerplates` for template development; before push set `BOILERPLATES_TEMPLATE_URL` to `github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v3.2.0`.
 
-Templates: `rtifact-product` (managed sync), `rtifact-stack`, `rtifact-module`, `rtifact-cloud` (one-shot scaffolds).
+Templates: `rtifact-product` (managed sync), `rtifact-stack`, `rtifact-module`, `rtifact-cloud`, `rtifact-deploy` (one-shot scaffolds).
+
+## Infrastructure vs deploy configuration
+
+Infrastructure YAML and deploy YAML are separate contracts and never share keys. For deploy configuration and release rules, read `deploy/AGENTS.md`.
 
 ## Backport rules
 

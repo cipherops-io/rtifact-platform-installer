@@ -21,8 +21,8 @@ func TestMaterializeCWD(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(written) != 2 {
-		t.Fatalf("expected 2 files, got %v", written)
+	if len(written) < 2 {
+		t.Fatalf("expected at least cwd kubeconfig and bastion, got %v", written)
 	}
 	for _, name := range []string{"cm-test-kubeconfig.yaml", "cm-test-bastion.pem"} {
 		if _, err := os.Stat(filepath.Join(dir, name)); err != nil {

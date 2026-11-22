@@ -38,7 +38,10 @@ Produces `dist/<ProductName>`. Smoke checks:
 ```bash
 ./dist/<ProductName> version   # prints version, packaged cloud(s), customer
 ./dist/<ProductName> validate examples/<cloud>/minimal.yaml
+./dist/<ProductName> deploy validate examples/deploy/minimal.yaml
 ```
+
+Deploy content is packaged in every binary, regardless of the selected infrastructure cloud.
 
 Managed workflow: `.github/workflows/build-binary.yml` (matrix targets from template `BuildTargets`).
 
@@ -54,6 +57,7 @@ Optional local re-render:
 
 ```bash
 make boilerplate-verify
+make deploy-e2e
 ```
 
 Commit or stash local changes before running verify.

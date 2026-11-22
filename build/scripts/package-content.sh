@@ -34,6 +34,9 @@ done
 if [ -f "$ROOT/schemas/common.schema.json" ]; then
   cp "$ROOT/schemas/common.schema.json" "$PKG/schemas/"
 fi
+if [ -f "$ROOT/schemas/deploy.schema.json" ]; then
+  cp "$ROOT/schemas/deploy.schema.json" "$PKG/schemas/"
+fi
 
 mkdir -p "$PKG/infra/stacks/aios-infra" "$PKG/infra/modules"
 for c in "${CLOUDS[@]}"; do
@@ -54,6 +57,10 @@ for c in "${CLOUDS[@]}"; do
     rsync -a "$ROOT/examples/$c" "$PKG/examples/"
   fi
 done
+if [ -d "$ROOT/examples/deploy" ]; then
+  mkdir -p "$PKG/examples"
+  rsync -a "$ROOT/examples/deploy" "$PKG/examples/"
+fi
 
 if [ -d "$ROOT/build/embed" ]; then
   mkdir -p "$PKG/build"

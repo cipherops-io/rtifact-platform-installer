@@ -67,6 +67,8 @@ jobs:
           grep -q "$CLOUD" version.txt
           grep -q "$CUSTOMER" version.txt
           ./dist/rtifact validate "examples/$CLOUD/minimal.yaml"
+          ./dist/rtifact deploy validate examples/deploy/minimal.yaml
+          grep -qiE 'deploy[- ]engine|helm' version.txt
 
       - name: Package
         run: |
