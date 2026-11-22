@@ -49,6 +49,7 @@ func writeFixture(t *testing.T, dir string, mutate func(*deploy.Document)) strin
 		doc.Registry.Host = host
 	}
 	mutate(doc)
+	isolateFixture(t, doc)
 	out := filepath.Join(dir, "releases.yaml")
 	if err := deploy.WriteDocument(out, doc); err != nil {
 		t.Fatal(err)
@@ -60,7 +61,9 @@ func writeFixture(t *testing.T, dir string, mutate func(*deploy.Document)) strin
 func TestE2E_S1_FreshApply(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
-	if err := deploy.Apply(context.Background(), e2eOpts(t, file)); err != nil {
+	o := e2eOpts(t, file)
+	e2eCleanupDeploy(t, file, o)
+	if err := deploy.Apply(context.Background(), o); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -70,6 +73,7 @@ func TestE2E_S2_ReapplyNoChanges(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
+	e2eCleanupDeploy(t, file, o)
 	if err := deploy.Apply(context.Background(), o); err != nil {
 		t.Fatal(err)
 	}
@@ -84,7 +88,10 @@ func TestE2E_S3_VersionBump(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
-	_ = deploy.Apply(context.Background(), o)
+	e2eCleanupDeploy(t, file, o)
+	if err := deploy.Apply(context.Background(), o); err != nil {
+		t.Fatal(err)
+	}
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		for i := range doc.Releases {
 			if doc.Releases[i].Name == "ok-a" {
@@ -108,7 +115,10 @@ func TestE2E_S4_ValueChange(t *testing.T) {
 	dir := t.TempDir()
 	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
-	_ = deploy.Apply(context.Background(), o)
+	e2eCleanupDeploy(t, file, o)
+	if err := deploy.Apply(context.Background(), o); err != nil {
+		t.Fatal(err)
+	}
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		for i := range doc.Releases {
 			if doc.Releases[i].Name == "ok-a" {
