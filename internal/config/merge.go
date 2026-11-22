@@ -10,6 +10,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/maputil"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 	"gopkg.in/yaml.v3"
 )
 
@@ -36,6 +37,7 @@ func LoadCustomer(path string) (*CustomerConfig, error) {
 		return nil, fmt.Errorf("profile is required")
 	}
 	cfg.Profile = ResolveProfileID(cfg.Profile)
+	usererr.SetProfileID(cfg.Profile)
 	if err := validateAccountForCloud(&cfg); err != nil {
 		return nil, err
 	}

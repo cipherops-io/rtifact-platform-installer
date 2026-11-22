@@ -4,7 +4,29 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 )
+
+var (
+	profileMu sync.RWMutex
+	profileID string
+)
+
+// SetProfileID sets the active customer profile for generic CLI error hints.
+func SetProfileID(id string) {
+	profileMu.Lock()
+	profileID = id
+	profileMu.Unlock()
+}
+
+func activeProfileID() string {
+	profileMu.RLock()
+	defer profileMu.RUnlock()
+	if profileID != "" {
+		return profileID
+	}
+	return "<profile-id>"
+}
 
 // Error is a user-facing failure (no stack trace, no CLI usage dump).
 type Error struct {
@@ -101,7 +123,8 @@ func prettify(msg string) string {
 	case strings.Contains(msg, "schema_version must be"):
 		return fmt.Sprintf("Unsupported config schema version.\n  • %s\n\nWhat you can do:\n  Set schema_version: 1 at the top of your YAML.", msg)
 	case strings.HasPrefix(msg, "features."):
-		return fmt.Sprintf("Invalid or unsupported feature flags.\n  • %s\n\nWhat you can do:\n  See profiles/aios-infra/features.yaml for allowed features and dependencies.", msg)
+		id := activeProfileID()
+		return fmt.Sprintf("Invalid or unsupported feature flags.\n  • %s\n\nWhat you can do:\n  See profiles/%s/features.yaml for allowed features and dependencies.", msg, id)
 	case strings.HasPrefix(msg, "stack "):
 		return fmt.Sprintf("OpenTofu operation failed.\n  • %s\n\nWhat you can do:\n  Scroll up for provider messages, fix the reported issue, then re-run plan/apply for that stack only (--stack).", msg)
 	case strings.HasPrefix(msg, "unknown --stack"):

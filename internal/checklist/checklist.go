@@ -1,21 +1,28 @@
 package checklist
 
 import (
-	_ "embed"
 	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
 )
 
-//go:embed aios-infra.md
-var aiosInfraChecklist string
-
-var byID = map[string]string{
-	"aios-infra": aiosInfraChecklist,
-}
-
-func Render(id string) (string, error) {
-	text, ok := byID[id]
-	if !ok {
-		return "", fmt.Errorf("unknown checklist %q", id)
+func Render(checklistID string) (string, error) {
+	if checklistID == "" {
+		return "", fmt.Errorf("unknown checklist %q", checklistID)
 	}
-	return "\n--- Post-apply checklist ---\n" + text, nil
+	root, _, err := assets.ContentRootOptional()
+	if err != nil {
+		return "", fmt.Errorf("locate checklist: %w", err)
+	}
+	path := filepath.Join(root, "profiles", checklistID, "checklist.md")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("unknown checklist %q", checklistID)
+		}
+		return "", fmt.Errorf("read checklist %q: %w", checklistID, err)
+	}
+	return "\n--- Post-apply checklist ---\n" + string(data), nil
 }

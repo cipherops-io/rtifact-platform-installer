@@ -23,3 +23,12 @@ func TestWrapPreservesUsererr(t *testing.T) {
 		t.Fatalf("wrap changed user err: %v", out)
 	}
 }
+
+func TestPrettifyFeaturesUsesProfile(t *testing.T) {
+	SetProfileID("my-profile")
+	t.Cleanup(func() { SetProfileID("") })
+	got := Human(fmt.Errorf("features.foo: unknown feature (not in registry)"))
+	if !strings.Contains(got, "profiles/my-profile/features.yaml") {
+		t.Fatalf("expected dynamic profile path: %q", got)
+	}
+}

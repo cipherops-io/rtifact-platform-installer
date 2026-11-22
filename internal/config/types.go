@@ -109,6 +109,7 @@ type ProfileMeta struct {
 	StackID       string            `yaml:"stack_id"`
 	Version       string            `yaml:"version"`
 	ChecklistID   string            `yaml:"checklist_id"`
+	Aliases       []string          `yaml:"aliases,omitempty"`
 	Clouds        []string          `yaml:"clouds,omitempty"`
 	CloudMaturity map[string]string `yaml:"cloud_maturity,omitempty"`
 }

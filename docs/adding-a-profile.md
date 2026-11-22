@@ -17,4 +17,4 @@
    - Refresh provider mirror: `make mirror-tofu`.
 
 5. **Checklist**  
-   - Add `internal/checklist/<id>.md` and register in `internal/checklist/checklist.go`.
+   - Add `profiles/<id>/checklist.md` (packaged with the profile; no Go registration).

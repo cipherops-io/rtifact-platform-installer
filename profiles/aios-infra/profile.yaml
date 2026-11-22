@@ -1,6 +1,7 @@
 stack_id: aios-infra
 version: "1.0.0"
 checklist_id: aios-infra
+aliases: [ai-os-k8s]
 clouds: [azure, aws, gcp]
 cloud_maturity:
   azure: operational
