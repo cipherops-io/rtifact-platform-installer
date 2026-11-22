@@ -1,0 +1,664 @@
+{
+  "ai-integrations": {
+    "vars": {
+      "account_id": "123456789012",
+      "bastion": {
+        "access": "ssm",
+        "public_ip": false
+      },
+      "certificates": {
+        "cloudfront": false,
+        "key_algorithm": "RSA_2048"
+      },
+      "features": {
+        "bastion": false,
+        "certificates": false,
+        "karpenter": false,
+        "kubernetes_cluster": false,
+        "network": true,
+        "public_dns": false
+      },
+      "kubernetes_cluster": {
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.large"
+            ],
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 1,
+            "subnet_tier": "node"
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly"
+        ],
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        }
+      },
+      "location": "us-east-1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "none",
+        "subnets": {
+          "public": {
+            "cidrs": [
+              "10.30.0.0/24",
+              "10.30.1.0/24"
+            ],
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.30.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        },
+        "data-platform": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/data-platform.tfstate"
+          }
+        }
+      }
+    }
+  },
+  "app-platform": {
+    "vars": {
+      "account_id": "123456789012",
+      "bastion": {
+        "access": "ssm",
+        "public_ip": false
+      },
+      "certificates": {
+        "cloudfront": false,
+        "key_algorithm": "RSA_2048"
+      },
+      "features": {
+        "bastion": false,
+        "certificates": false,
+        "karpenter": false,
+        "kubernetes_cluster": false,
+        "network": true,
+        "public_dns": false
+      },
+      "kubernetes_cluster": {
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.large"
+            ],
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 1,
+            "subnet_tier": "node"
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly"
+        ],
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        }
+      },
+      "location": "us-east-1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "none",
+        "subnets": {
+          "public": {
+            "cidrs": [
+              "10.30.0.0/24",
+              "10.30.1.0/24"
+            ],
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.30.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      }
+    }
+  },
+  "core-network": {
+    "vars": {
+      "account_id": "123456789012",
+      "bastion": {
+        "access": "ssm",
+        "public_ip": false
+      },
+      "certificates": {
+        "cloudfront": false,
+        "key_algorithm": "RSA_2048"
+      },
+      "features": {
+        "bastion": false,
+        "certificates": false,
+        "karpenter": false,
+        "kubernetes_cluster": false,
+        "network": true,
+        "public_dns": false
+      },
+      "kubernetes_cluster": {
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.large"
+            ],
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 1,
+            "subnet_tier": "node"
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly"
+        ],
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        }
+      },
+      "location": "us-east-1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "none",
+        "subnets": {
+          "public": {
+            "cidrs": [
+              "10.30.0.0/24",
+              "10.30.1.0/24"
+            ],
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.30.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local",
+        "encryption": "AES256",
+        "versioning": true
+      }
+    }
+  },
+  "data-platform": {
+    "vars": {
+      "account_id": "123456789012",
+      "bastion": {
+        "access": "ssm",
+        "public_ip": false
+      },
+      "certificates": {
+        "cloudfront": false,
+        "key_algorithm": "RSA_2048"
+      },
+      "features": {
+        "bastion": false,
+        "certificates": false,
+        "karpenter": false,
+        "kubernetes_cluster": false,
+        "network": true,
+        "public_dns": false
+      },
+      "kubernetes_cluster": {
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.large"
+            ],
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 1,
+            "subnet_tier": "node"
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly"
+        ],
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        }
+      },
+      "location": "us-east-1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "none",
+        "subnets": {
+          "public": {
+            "cidrs": [
+              "10.30.0.0/24",
+              "10.30.1.0/24"
+            ],
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.30.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      }
+    }
+  },
+  "network-edge": {
+    "vars": {
+      "account_id": "123456789012",
+      "bastion": {
+        "access": "ssm",
+        "public_ip": false
+      },
+      "certificates": {
+        "cloudfront": false,
+        "key_algorithm": "RSA_2048"
+      },
+      "features": {
+        "bastion": false,
+        "certificates": false,
+        "karpenter": false,
+        "kubernetes_cluster": false,
+        "network": true,
+        "public_dns": false
+      },
+      "kubernetes_cluster": {
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.large"
+            ],
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 1,
+            "subnet_tier": "node"
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly"
+        ],
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        }
+      },
+      "location": "us-east-1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "none",
+        "subnets": {
+          "public": {
+            "cidrs": [
+              "10.30.0.0/24",
+              "10.30.1.0/24"
+            ],
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.30.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      }
+    }
+  },
+  "state-backend": {
+    "vars": {
+      "account_id": "123456789012",
+      "bastion": {
+        "access": "ssm",
+        "public_ip": false
+      },
+      "certificates": {
+        "cloudfront": false,
+        "key_algorithm": "RSA_2048"
+      },
+      "features": {
+        "bastion": false,
+        "certificates": false,
+        "karpenter": false,
+        "kubernetes_cluster": false,
+        "network": true,
+        "public_dns": false
+      },
+      "kubernetes_cluster": {
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.large"
+            ],
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 1,
+            "subnet_tier": "node"
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly"
+        ],
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        }
+      },
+      "location": "us-east-1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "none",
+        "subnets": {
+          "public": {
+            "cidrs": [
+              "10.30.0.0/24",
+              "10.30.1.0/24"
+            ],
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.30.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local",
+        "encryption": "AES256",
+        "versioning": true
+      }
+    }
+  }
+}

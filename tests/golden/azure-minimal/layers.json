@@ -1,0 +1,1134 @@
+{
+  "ai-integrations": {
+    "vars": {
+      "ai_foundry": {
+        "public_network_access": "Disabled",
+        "storage": {
+          "account_replication_type": "LRS",
+          "account_tier": "Standard",
+          "public_network_access": "Disabled"
+        }
+      },
+      "azure_bastion": {
+        "os_disk_size_gb": 100,
+        "vm_size": "Standard_D4s_v5"
+      },
+      "azure_environment": "public",
+      "azure_files": {
+        "quota_gb": 1024,
+        "share_name": "aios-shared",
+        "zone_redundant": true
+      },
+      "bastion": {
+        "managed": false,
+        "os_disk_size_gb": 100,
+        "os_disk_type": "Premium_LRS",
+        "vm_size": "Standard_D4s_v5"
+      },
+      "container_registry": {
+        "sku": "Premium"
+      },
+      "features": {
+        "ai_foundry": false,
+        "application_gateway": false,
+        "azure_bastion": false,
+        "azure_express_route_gateway": false,
+        "azure_files_share": false,
+        "azure_firewall": false,
+        "azure_managed_redis": false,
+        "azure_vpn_gateway": false,
+        "communication_email": false,
+        "container_registry": false,
+        "disk_encryption_set": false,
+        "key_vault": false,
+        "key_vault_private_endpoint": false,
+        "kubernetes_cluster": false,
+        "postgresql_flexible_server": false,
+        "private_dns_resolver": false,
+        "private_dns_zones": false,
+        "public_dns_zone": false,
+        "redis_cache": false,
+        "resource_group": true,
+        "storage_account": false,
+        "virtual_network": true
+      },
+      "key_vault": {
+        "foundry": {
+          "deployer_certificate_permissions": [
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "ManageContacts",
+            "ManageIssuers",
+            "SetIssuers",
+            "Update"
+          ],
+          "deployer_key_permissions": [
+            "Backup",
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Update",
+            "GetRotationPolicy",
+            "SetRotationPolicy",
+            "Rotate"
+          ],
+          "deployer_secret_permissions": [
+            "Backup",
+            "Delete",
+            "Get",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Set"
+          ],
+          "grant_deployer_contributor": true,
+          "purge_protection_enabled": true,
+          "soft_delete_retention_days": 7
+        },
+        "sku": "premium"
+      },
+      "kubernetes_cluster": {
+        "availability_zones": [
+          "1",
+          "2",
+          "3"
+        ],
+        "kubernetes_version": "1.30",
+        "node_pools": {
+          "system": {
+            "name": "system",
+            "node_count": 3,
+            "vm_size": "Standard_D4s_v5"
+          },
+          "user_database": {
+            "name": "database",
+            "node_count": 3,
+            "vm_size": "Standard_E8s_v5"
+          },
+          "user_jupyter": {
+            "name": "jupyter",
+            "node_count": 2,
+            "vm_size": "Standard_D32s_v5"
+          },
+          "user_microservices": {
+            "name": "appa",
+            "node_count": 3,
+            "vm_size": "Standard_D16s_v5"
+          },
+          "user_monitoring": {
+            "name": "monitor",
+            "node_count": 2,
+            "vm_size": "Standard_D8s_v5"
+          },
+          "user_sandbox": {
+            "name": "sandbox",
+            "node_count": 2,
+            "vm_size": "Standard_F8s_v2"
+          }
+        }
+      },
+      "location": "eastus",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "dns_service_ip": "172.20.0.10",
+        "load_balancer_subnet_cidr": "10.2.4.0/24",
+        "management_subnet_cidr": "10.2.6.0/27",
+        "node_subnet_cidr": "10.2.0.0/22",
+        "pod_cidr": "10.244.0.0/16",
+        "private_endpoint_subnet_cidr": "10.2.5.0/24",
+        "service_cidr": "172.20.0.0/16",
+        "vnet_cidr": "10.2.0.0/20"
+      },
+      "postgresql_flexible_server": {
+        "backup_retention_days": 7,
+        "high_availability": {
+          "enabled": true,
+          "mode": "ZoneRedundant"
+        },
+        "iops": 40000,
+        "read_replica": {
+          "enabled": true
+        },
+        "sku_name": "GP_Standard_D8ds_v5",
+        "storage_mb": 1048576,
+        "version": "16"
+      },
+      "redis_cache": {
+        "capacity": 1,
+        "family": "P",
+        "minimum_tls_version": "1.2",
+        "sku_name": "Premium"
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "storage_account": {
+        "backup_gb": 250,
+        "corpus_gb": 250
+      },
+      "subscription_id": "00000000-0000-0000-0000-000000000000",
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        },
+        "data-platform": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/data-platform.tfstate"
+          }
+        }
+      },
+      "use_msi": false
+    }
+  },
+  "app-platform": {
+    "vars": {
+      "ai_foundry": {
+        "public_network_access": "Disabled",
+        "storage": {
+          "account_replication_type": "LRS",
+          "account_tier": "Standard",
+          "public_network_access": "Disabled"
+        }
+      },
+      "azure_bastion": {
+        "os_disk_size_gb": 100,
+        "vm_size": "Standard_D4s_v5"
+      },
+      "azure_environment": "public",
+      "azure_files": {
+        "quota_gb": 1024,
+        "share_name": "aios-shared",
+        "zone_redundant": true
+      },
+      "bastion": {
+        "managed": false,
+        "os_disk_size_gb": 100,
+        "os_disk_type": "Premium_LRS",
+        "vm_size": "Standard_D4s_v5"
+      },
+      "container_registry": {
+        "sku": "Premium"
+      },
+      "features": {
+        "ai_foundry": false,
+        "application_gateway": false,
+        "azure_bastion": false,
+        "azure_express_route_gateway": false,
+        "azure_files_share": false,
+        "azure_firewall": false,
+        "azure_managed_redis": false,
+        "azure_vpn_gateway": false,
+        "communication_email": false,
+        "container_registry": false,
+        "disk_encryption_set": false,
+        "key_vault": false,
+        "key_vault_private_endpoint": false,
+        "kubernetes_cluster": false,
+        "postgresql_flexible_server": false,
+        "private_dns_resolver": false,
+        "private_dns_zones": false,
+        "public_dns_zone": false,
+        "redis_cache": false,
+        "resource_group": true,
+        "storage_account": false,
+        "virtual_network": true
+      },
+      "key_vault": {
+        "foundry": {
+          "deployer_certificate_permissions": [
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "ManageContacts",
+            "ManageIssuers",
+            "SetIssuers",
+            "Update"
+          ],
+          "deployer_key_permissions": [
+            "Backup",
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Update",
+            "GetRotationPolicy",
+            "SetRotationPolicy",
+            "Rotate"
+          ],
+          "deployer_secret_permissions": [
+            "Backup",
+            "Delete",
+            "Get",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Set"
+          ],
+          "grant_deployer_contributor": true,
+          "purge_protection_enabled": true,
+          "soft_delete_retention_days": 7
+        },
+        "sku": "premium"
+      },
+      "kubernetes_cluster": {
+        "availability_zones": [
+          "1",
+          "2",
+          "3"
+        ],
+        "kubernetes_version": "1.30",
+        "node_pools": {
+          "system": {
+            "name": "system",
+            "node_count": 3,
+            "vm_size": "Standard_D4s_v5"
+          },
+          "user_database": {
+            "name": "database",
+            "node_count": 3,
+            "vm_size": "Standard_E8s_v5"
+          },
+          "user_jupyter": {
+            "name": "jupyter",
+            "node_count": 2,
+            "vm_size": "Standard_D32s_v5"
+          },
+          "user_microservices": {
+            "name": "appa",
+            "node_count": 3,
+            "vm_size": "Standard_D16s_v5"
+          },
+          "user_monitoring": {
+            "name": "monitor",
+            "node_count": 2,
+            "vm_size": "Standard_D8s_v5"
+          },
+          "user_sandbox": {
+            "name": "sandbox",
+            "node_count": 2,
+            "vm_size": "Standard_F8s_v2"
+          }
+        }
+      },
+      "location": "eastus",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "dns_service_ip": "172.20.0.10",
+        "load_balancer_subnet_cidr": "10.2.4.0/24",
+        "management_subnet_cidr": "10.2.6.0/27",
+        "node_subnet_cidr": "10.2.0.0/22",
+        "pod_cidr": "10.244.0.0/16",
+        "private_endpoint_subnet_cidr": "10.2.5.0/24",
+        "service_cidr": "172.20.0.0/16",
+        "vnet_cidr": "10.2.0.0/20"
+      },
+      "postgresql_flexible_server": {
+        "backup_retention_days": 7,
+        "high_availability": {
+          "enabled": true,
+          "mode": "ZoneRedundant"
+        },
+        "iops": 40000,
+        "read_replica": {
+          "enabled": true
+        },
+        "sku_name": "GP_Standard_D8ds_v5",
+        "storage_mb": 1048576,
+        "version": "16"
+      },
+      "redis_cache": {
+        "capacity": 1,
+        "family": "P",
+        "minimum_tls_version": "1.2",
+        "sku_name": "Premium"
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "storage_account": {
+        "backup_gb": 250,
+        "corpus_gb": 250
+      },
+      "subscription_id": "00000000-0000-0000-0000-000000000000",
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      },
+      "use_msi": false
+    }
+  },
+  "core-network": {
+    "excluded_cloud_keys": [
+      "resource_group_create",
+      "resource_group_name"
+    ],
+    "vars": {
+      "ai_foundry": {
+        "public_network_access": "Disabled",
+        "storage": {
+          "account_replication_type": "LRS",
+          "account_tier": "Standard",
+          "public_network_access": "Disabled"
+        }
+      },
+      "azure_bastion": {
+        "os_disk_size_gb": 100,
+        "vm_size": "Standard_D4s_v5"
+      },
+      "azure_environment": "public",
+      "azure_files": {
+        "quota_gb": 1024,
+        "share_name": "aios-shared",
+        "zone_redundant": true
+      },
+      "bastion": {
+        "managed": false,
+        "os_disk_size_gb": 100,
+        "os_disk_type": "Premium_LRS",
+        "vm_size": "Standard_D4s_v5"
+      },
+      "container_registry": {
+        "sku": "Premium"
+      },
+      "features": {
+        "ai_foundry": false,
+        "application_gateway": false,
+        "azure_bastion": false,
+        "azure_express_route_gateway": false,
+        "azure_files_share": false,
+        "azure_firewall": false,
+        "azure_managed_redis": false,
+        "azure_vpn_gateway": false,
+        "communication_email": false,
+        "container_registry": false,
+        "disk_encryption_set": false,
+        "key_vault": false,
+        "key_vault_private_endpoint": false,
+        "kubernetes_cluster": false,
+        "postgresql_flexible_server": false,
+        "private_dns_resolver": false,
+        "private_dns_zones": false,
+        "public_dns_zone": false,
+        "redis_cache": false,
+        "resource_group": true,
+        "storage_account": false,
+        "virtual_network": true
+      },
+      "key_vault": {
+        "foundry": {
+          "deployer_certificate_permissions": [
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "ManageContacts",
+            "ManageIssuers",
+            "SetIssuers",
+            "Update"
+          ],
+          "deployer_key_permissions": [
+            "Backup",
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Update",
+            "GetRotationPolicy",
+            "SetRotationPolicy",
+            "Rotate"
+          ],
+          "deployer_secret_permissions": [
+            "Backup",
+            "Delete",
+            "Get",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Set"
+          ],
+          "grant_deployer_contributor": true,
+          "purge_protection_enabled": true,
+          "soft_delete_retention_days": 7
+        },
+        "sku": "premium"
+      },
+      "kubernetes_cluster": {
+        "availability_zones": [
+          "1",
+          "2",
+          "3"
+        ],
+        "kubernetes_version": "1.30",
+        "node_pools": {
+          "system": {
+            "name": "system",
+            "node_count": 3,
+            "vm_size": "Standard_D4s_v5"
+          },
+          "user_database": {
+            "name": "database",
+            "node_count": 3,
+            "vm_size": "Standard_E8s_v5"
+          },
+          "user_jupyter": {
+            "name": "jupyter",
+            "node_count": 2,
+            "vm_size": "Standard_D32s_v5"
+          },
+          "user_microservices": {
+            "name": "appa",
+            "node_count": 3,
+            "vm_size": "Standard_D16s_v5"
+          },
+          "user_monitoring": {
+            "name": "monitor",
+            "node_count": 2,
+            "vm_size": "Standard_D8s_v5"
+          },
+          "user_sandbox": {
+            "name": "sandbox",
+            "node_count": 2,
+            "vm_size": "Standard_F8s_v2"
+          }
+        }
+      },
+      "location": "eastus",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "dns_service_ip": "172.20.0.10",
+        "load_balancer_subnet_cidr": "10.2.4.0/24",
+        "management_subnet_cidr": "10.2.6.0/27",
+        "node_subnet_cidr": "10.2.0.0/22",
+        "pod_cidr": "10.244.0.0/16",
+        "private_endpoint_subnet_cidr": "10.2.5.0/24",
+        "service_cidr": "172.20.0.0/16",
+        "vnet_cidr": "10.2.0.0/20"
+      },
+      "postgresql_flexible_server": {
+        "backup_retention_days": 7,
+        "high_availability": {
+          "enabled": true,
+          "mode": "ZoneRedundant"
+        },
+        "iops": 40000,
+        "read_replica": {
+          "enabled": true
+        },
+        "sku_name": "GP_Standard_D8ds_v5",
+        "storage_mb": 1048576,
+        "version": "16"
+      },
+      "redis_cache": {
+        "capacity": 1,
+        "family": "P",
+        "minimum_tls_version": "1.2",
+        "sku_name": "Premium"
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "storage_account": {
+        "backup_gb": 250,
+        "corpus_gb": 250
+      },
+      "subscription_id": "00000000-0000-0000-0000-000000000000",
+      "use_msi": false
+    }
+  },
+  "data-platform": {
+    "vars": {
+      "ai_foundry": {
+        "public_network_access": "Disabled",
+        "storage": {
+          "account_replication_type": "LRS",
+          "account_tier": "Standard",
+          "public_network_access": "Disabled"
+        }
+      },
+      "azure_bastion": {
+        "os_disk_size_gb": 100,
+        "vm_size": "Standard_D4s_v5"
+      },
+      "azure_environment": "public",
+      "azure_files": {
+        "quota_gb": 1024,
+        "share_name": "aios-shared",
+        "zone_redundant": true
+      },
+      "bastion": {
+        "managed": false,
+        "os_disk_size_gb": 100,
+        "os_disk_type": "Premium_LRS",
+        "vm_size": "Standard_D4s_v5"
+      },
+      "container_registry": {
+        "sku": "Premium"
+      },
+      "features": {
+        "ai_foundry": false,
+        "application_gateway": false,
+        "azure_bastion": false,
+        "azure_express_route_gateway": false,
+        "azure_files_share": false,
+        "azure_firewall": false,
+        "azure_managed_redis": false,
+        "azure_vpn_gateway": false,
+        "communication_email": false,
+        "container_registry": false,
+        "disk_encryption_set": false,
+        "key_vault": false,
+        "key_vault_private_endpoint": false,
+        "kubernetes_cluster": false,
+        "postgresql_flexible_server": false,
+        "private_dns_resolver": false,
+        "private_dns_zones": false,
+        "public_dns_zone": false,
+        "redis_cache": false,
+        "resource_group": true,
+        "storage_account": false,
+        "virtual_network": true
+      },
+      "key_vault": {
+        "foundry": {
+          "deployer_certificate_permissions": [
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "ManageContacts",
+            "ManageIssuers",
+            "SetIssuers",
+            "Update"
+          ],
+          "deployer_key_permissions": [
+            "Backup",
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Update",
+            "GetRotationPolicy",
+            "SetRotationPolicy",
+            "Rotate"
+          ],
+          "deployer_secret_permissions": [
+            "Backup",
+            "Delete",
+            "Get",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Set"
+          ],
+          "grant_deployer_contributor": true,
+          "purge_protection_enabled": true,
+          "soft_delete_retention_days": 7
+        },
+        "sku": "premium"
+      },
+      "kubernetes_cluster": {
+        "availability_zones": [
+          "1",
+          "2",
+          "3"
+        ],
+        "kubernetes_version": "1.30",
+        "node_pools": {
+          "system": {
+            "name": "system",
+            "node_count": 3,
+            "vm_size": "Standard_D4s_v5"
+          },
+          "user_database": {
+            "name": "database",
+            "node_count": 3,
+            "vm_size": "Standard_E8s_v5"
+          },
+          "user_jupyter": {
+            "name": "jupyter",
+            "node_count": 2,
+            "vm_size": "Standard_D32s_v5"
+          },
+          "user_microservices": {
+            "name": "appa",
+            "node_count": 3,
+            "vm_size": "Standard_D16s_v5"
+          },
+          "user_monitoring": {
+            "name": "monitor",
+            "node_count": 2,
+            "vm_size": "Standard_D8s_v5"
+          },
+          "user_sandbox": {
+            "name": "sandbox",
+            "node_count": 2,
+            "vm_size": "Standard_F8s_v2"
+          }
+        }
+      },
+      "location": "eastus",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "dns_service_ip": "172.20.0.10",
+        "load_balancer_subnet_cidr": "10.2.4.0/24",
+        "management_subnet_cidr": "10.2.6.0/27",
+        "node_subnet_cidr": "10.2.0.0/22",
+        "pod_cidr": "10.244.0.0/16",
+        "private_endpoint_subnet_cidr": "10.2.5.0/24",
+        "service_cidr": "172.20.0.0/16",
+        "vnet_cidr": "10.2.0.0/20"
+      },
+      "postgresql_flexible_server": {
+        "backup_retention_days": 7,
+        "high_availability": {
+          "enabled": true,
+          "mode": "ZoneRedundant"
+        },
+        "iops": 40000,
+        "read_replica": {
+          "enabled": true
+        },
+        "sku_name": "GP_Standard_D8ds_v5",
+        "storage_mb": 1048576,
+        "version": "16"
+      },
+      "redis_cache": {
+        "capacity": 1,
+        "family": "P",
+        "minimum_tls_version": "1.2",
+        "sku_name": "Premium"
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "storage_account": {
+        "backup_gb": 250,
+        "corpus_gb": 250
+      },
+      "subscription_id": "00000000-0000-0000-0000-000000000000",
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      },
+      "use_msi": false
+    }
+  },
+  "network-edge": {
+    "vars": {
+      "ai_foundry": {
+        "public_network_access": "Disabled",
+        "storage": {
+          "account_replication_type": "LRS",
+          "account_tier": "Standard",
+          "public_network_access": "Disabled"
+        }
+      },
+      "azure_bastion": {
+        "os_disk_size_gb": 100,
+        "vm_size": "Standard_D4s_v5"
+      },
+      "azure_environment": "public",
+      "azure_files": {
+        "quota_gb": 1024,
+        "share_name": "aios-shared",
+        "zone_redundant": true
+      },
+      "bastion": {
+        "managed": false,
+        "os_disk_size_gb": 100,
+        "os_disk_type": "Premium_LRS",
+        "vm_size": "Standard_D4s_v5"
+      },
+      "container_registry": {
+        "sku": "Premium"
+      },
+      "features": {
+        "ai_foundry": false,
+        "application_gateway": false,
+        "azure_bastion": false,
+        "azure_express_route_gateway": false,
+        "azure_files_share": false,
+        "azure_firewall": false,
+        "azure_managed_redis": false,
+        "azure_vpn_gateway": false,
+        "communication_email": false,
+        "container_registry": false,
+        "disk_encryption_set": false,
+        "key_vault": false,
+        "key_vault_private_endpoint": false,
+        "kubernetes_cluster": false,
+        "postgresql_flexible_server": false,
+        "private_dns_resolver": false,
+        "private_dns_zones": false,
+        "public_dns_zone": false,
+        "redis_cache": false,
+        "resource_group": true,
+        "storage_account": false,
+        "virtual_network": true
+      },
+      "key_vault": {
+        "foundry": {
+          "deployer_certificate_permissions": [
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "ManageContacts",
+            "ManageIssuers",
+            "SetIssuers",
+            "Update"
+          ],
+          "deployer_key_permissions": [
+            "Backup",
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Update",
+            "GetRotationPolicy",
+            "SetRotationPolicy",
+            "Rotate"
+          ],
+          "deployer_secret_permissions": [
+            "Backup",
+            "Delete",
+            "Get",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Set"
+          ],
+          "grant_deployer_contributor": true,
+          "purge_protection_enabled": true,
+          "soft_delete_retention_days": 7
+        },
+        "sku": "premium"
+      },
+      "kubernetes_cluster": {
+        "availability_zones": [
+          "1",
+          "2",
+          "3"
+        ],
+        "kubernetes_version": "1.30",
+        "node_pools": {
+          "system": {
+            "name": "system",
+            "node_count": 3,
+            "vm_size": "Standard_D4s_v5"
+          },
+          "user_database": {
+            "name": "database",
+            "node_count": 3,
+            "vm_size": "Standard_E8s_v5"
+          },
+          "user_jupyter": {
+            "name": "jupyter",
+            "node_count": 2,
+            "vm_size": "Standard_D32s_v5"
+          },
+          "user_microservices": {
+            "name": "appa",
+            "node_count": 3,
+            "vm_size": "Standard_D16s_v5"
+          },
+          "user_monitoring": {
+            "name": "monitor",
+            "node_count": 2,
+            "vm_size": "Standard_D8s_v5"
+          },
+          "user_sandbox": {
+            "name": "sandbox",
+            "node_count": 2,
+            "vm_size": "Standard_F8s_v2"
+          }
+        }
+      },
+      "location": "eastus",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "dns_service_ip": "172.20.0.10",
+        "load_balancer_subnet_cidr": "10.2.4.0/24",
+        "management_subnet_cidr": "10.2.6.0/27",
+        "node_subnet_cidr": "10.2.0.0/22",
+        "pod_cidr": "10.244.0.0/16",
+        "private_endpoint_subnet_cidr": "10.2.5.0/24",
+        "service_cidr": "172.20.0.0/16",
+        "vnet_cidr": "10.2.0.0/20"
+      },
+      "postgresql_flexible_server": {
+        "backup_retention_days": 7,
+        "high_availability": {
+          "enabled": true,
+          "mode": "ZoneRedundant"
+        },
+        "iops": 40000,
+        "read_replica": {
+          "enabled": true
+        },
+        "sku_name": "GP_Standard_D8ds_v5",
+        "storage_mb": 1048576,
+        "version": "16"
+      },
+      "redis_cache": {
+        "capacity": 1,
+        "family": "P",
+        "minimum_tls_version": "1.2",
+        "sku_name": "Premium"
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "storage_account": {
+        "backup_gb": 250,
+        "corpus_gb": 250
+      },
+      "subscription_id": "00000000-0000-0000-0000-000000000000",
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      },
+      "use_msi": false
+    }
+  },
+  "state-backend": {
+    "excluded_cloud_keys": [
+      "resource_group_create",
+      "resource_group_name"
+    ],
+    "vars": {
+      "ai_foundry": {
+        "public_network_access": "Disabled",
+        "storage": {
+          "account_replication_type": "LRS",
+          "account_tier": "Standard",
+          "public_network_access": "Disabled"
+        }
+      },
+      "azure_bastion": {
+        "os_disk_size_gb": 100,
+        "vm_size": "Standard_D4s_v5"
+      },
+      "azure_environment": "public",
+      "azure_files": {
+        "quota_gb": 1024,
+        "share_name": "aios-shared",
+        "zone_redundant": true
+      },
+      "bastion": {
+        "managed": false,
+        "os_disk_size_gb": 100,
+        "os_disk_type": "Premium_LRS",
+        "vm_size": "Standard_D4s_v5"
+      },
+      "container_registry": {
+        "sku": "Premium"
+      },
+      "features": {
+        "ai_foundry": false,
+        "application_gateway": false,
+        "azure_bastion": false,
+        "azure_express_route_gateway": false,
+        "azure_files_share": false,
+        "azure_firewall": false,
+        "azure_managed_redis": false,
+        "azure_vpn_gateway": false,
+        "communication_email": false,
+        "container_registry": false,
+        "disk_encryption_set": false,
+        "key_vault": false,
+        "key_vault_private_endpoint": false,
+        "kubernetes_cluster": false,
+        "postgresql_flexible_server": false,
+        "private_dns_resolver": false,
+        "private_dns_zones": false,
+        "public_dns_zone": false,
+        "redis_cache": false,
+        "resource_group": true,
+        "storage_account": false,
+        "virtual_network": true
+      },
+      "key_vault": {
+        "foundry": {
+          "deployer_certificate_permissions": [
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "ManageContacts",
+            "ManageIssuers",
+            "SetIssuers",
+            "Update"
+          ],
+          "deployer_key_permissions": [
+            "Backup",
+            "Create",
+            "Delete",
+            "Get",
+            "Import",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Update",
+            "GetRotationPolicy",
+            "SetRotationPolicy",
+            "Rotate"
+          ],
+          "deployer_secret_permissions": [
+            "Backup",
+            "Delete",
+            "Get",
+            "List",
+            "Purge",
+            "Recover",
+            "Restore",
+            "Set"
+          ],
+          "grant_deployer_contributor": true,
+          "purge_protection_enabled": true,
+          "soft_delete_retention_days": 7
+        },
+        "sku": "premium"
+      },
+      "kubernetes_cluster": {
+        "availability_zones": [
+          "1",
+          "2",
+          "3"
+        ],
+        "kubernetes_version": "1.30",
+        "node_pools": {
+          "system": {
+            "name": "system",
+            "node_count": 3,
+            "vm_size": "Standard_D4s_v5"
+          },
+          "user_database": {
+            "name": "database",
+            "node_count": 3,
+            "vm_size": "Standard_E8s_v5"
+          },
+          "user_jupyter": {
+            "name": "jupyter",
+            "node_count": 2,
+            "vm_size": "Standard_D32s_v5"
+          },
+          "user_microservices": {
+            "name": "appa",
+            "node_count": 3,
+            "vm_size": "Standard_D16s_v5"
+          },
+          "user_monitoring": {
+            "name": "monitor",
+            "node_count": 2,
+            "vm_size": "Standard_D8s_v5"
+          },
+          "user_sandbox": {
+            "name": "sandbox",
+            "node_count": 2,
+            "vm_size": "Standard_F8s_v2"
+          }
+        }
+      },
+      "location": "eastus",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "dns_service_ip": "172.20.0.10",
+        "load_balancer_subnet_cidr": "10.2.4.0/24",
+        "management_subnet_cidr": "10.2.6.0/27",
+        "node_subnet_cidr": "10.2.0.0/22",
+        "pod_cidr": "10.244.0.0/16",
+        "private_endpoint_subnet_cidr": "10.2.5.0/24",
+        "service_cidr": "172.20.0.0/16",
+        "vnet_cidr": "10.2.0.0/20"
+      },
+      "postgresql_flexible_server": {
+        "backup_retention_days": 7,
+        "high_availability": {
+          "enabled": true,
+          "mode": "ZoneRedundant"
+        },
+        "iops": 40000,
+        "read_replica": {
+          "enabled": true
+        },
+        "sku_name": "GP_Standard_D8ds_v5",
+        "storage_mb": 1048576,
+        "version": "16"
+      },
+      "redis_cache": {
+        "capacity": 1,
+        "family": "P",
+        "minimum_tls_version": "1.2",
+        "sku_name": "Premium"
+      },
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "storage_account": {
+        "backup_gb": 250,
+        "corpus_gb": 250
+      },
+      "subscription_id": "00000000-0000-0000-0000-000000000000",
+      "use_msi": false
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "bastion": null,
+  "features": {
+    "kubernetes_cluster": false,
+    "virtual_network": true
+  },
+  "location": "us-central1",
+  "name_prefix": "ex-minimal",
+  "network": {
+    "vnet_cidr": "10.4.0.0/20"
+  },
+  "project_id": "example-proj",
+  "state": {
+    "air_gapped": true,
+    "backend": "local"
+  }
+}

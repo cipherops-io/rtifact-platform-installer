@@ -1,0 +1,1608 @@
+{
+  "ai-integrations": {
+    "vars": {
+      "account_id": "635702036154",
+      "bastion": {
+        "access": "ssm",
+        "allowed_cidrs": [
+          "3.108.172.165/32",
+          "13.235.189.88/32"
+        ],
+        "disk": {
+          "encrypted": true,
+          "size_gb": 100,
+          "type": "gp3"
+        },
+        "iam_policy_arns": [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ],
+        "instance_type": "t3.medium",
+        "public_ip": false,
+        "ssh_public_key": "",
+        "subnet_tier": "public"
+      },
+      "certificates": {
+        "cloudfront": true,
+        "key_algorithm": "RSA_2048",
+        "names": [
+          "sbx2.rtifact.ai",
+          "*.sbx2.rtifact.ai"
+        ]
+      },
+      "features": {
+        "bastion": true,
+        "certificates": true,
+        "karpenter": true,
+        "kubernetes_cluster": true,
+        "network": true,
+        "public_dns": true
+      },
+      "kubernetes_cluster": {
+        "addons": {
+          "aws-ebs-csi-driver": {
+            "configuration": {
+              "controller": {
+                "nodeSelector": {
+                  "rtfc/node-type": "initial"
+                }
+              }
+            },
+            "version": "v1.68.1-eksbuild.1"
+          },
+          "coredns": {
+            "version": "v1.14.7-eksbuild.35"
+          },
+          "eks-pod-identity-agent": {
+            "version": "v1.4.1-eksbuild.3"
+          },
+          "kube-proxy": {
+            "version": "v1.37.0-eksbuild.39"
+          },
+          "vpc-cni": {
+            "version": "v1.22.4-eksbuild.14"
+          }
+        },
+        "admin_principal_arns": [
+          "arn:aws:iam::635702036154:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_sandbox-users-permission-set_165a60e6ca18f314"
+        ],
+        "authentication_mode": "API_AND_CONFIG_MAP",
+        "deletion_protection": false,
+        "endpoint": {
+          "private": true,
+          "public": true,
+          "public_access_cidrs": [
+            "3.108.172.165/32",
+            "13.235.189.88/32"
+          ]
+        },
+        "karpenter": {
+          "namespace": "karpenter",
+          "node_role_policies": [
+            "AmazonEKSWorkerNodePolicy",
+            "AmazonEKS_CNI_Policy",
+            "AmazonEC2ContainerRegistryReadOnly",
+            "AmazonSSMManagedInstanceCore"
+          ],
+          "queue_retention_seconds": 300,
+          "service_account": "karpenter"
+        },
+        "kubernetes_version": "1.37",
+        "log_types": [],
+        "name": "rtfc-sbx2-eks",
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.xlarge"
+            ],
+            "labels": {
+              "karpenter.sh/controller": "true",
+              "rtfc/node-type": "initial"
+            },
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 2,
+            "subnet_tier": "node",
+            "taints": []
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonSSMManagedInstanceCore",
+          "AmazonEBSCSIDriverPolicy"
+        ],
+        "secrets_encryption": {
+          "mode": "none"
+        },
+        "service_cidr": "172.20.0.0/16",
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "office": {
+            "cidrs": [
+              "vpc",
+              "3.108.172.165/32",
+              "13.235.189.88/32"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        },
+        "support_type": "STANDARD"
+      },
+      "location": "ap-south-1",
+      "name_prefix": "rtfc-sbx2",
+      "network": {
+        "availability_zones": [
+          "ap-south-1a",
+          "ap-south-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "single",
+        "secondary_cidrs": [
+          "100.72.0.0/16"
+        ],
+        "subnets": {
+          "cluster_private": {
+            "cidrs": [
+              "100.72.64.0/20",
+              "100.72.80.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "internal_lb"
+            ],
+            "route": "nat"
+          },
+          "cluster_public": {
+            "cidrs": [
+              "100.72.128.0/20",
+              "100.72.144.0/20"
+            ],
+            "roles": [
+              "public_lb"
+            ],
+            "route": "internet"
+          },
+          "datastore": {
+            "cidrs": [
+              "10.20.128.0/19",
+              "10.20.160.0/19"
+            ],
+            "route": "isolated"
+          },
+          "node": {
+            "cidrs": [
+              "100.72.0.0/20",
+              "100.72.16.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "nodes",
+              "internal_lb",
+              "karpenter"
+            ],
+            "route": "nat"
+          },
+          "private": {
+            "cidrs": [
+              "10.20.64.0/19",
+              "10.20.96.0/19"
+            ],
+            "route": "nat"
+          },
+          "public": {
+            "cidrs": [
+              "10.20.0.0/19",
+              "10.20.32.0/19"
+            ],
+            "public_ip_on_launch": true,
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.20.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false,
+        "parent_zone_id": "",
+        "zone_name": "sbx2.rtifact.ai"
+      },
+      "state": {
+        "air_gapped": false,
+        "backend": "s3",
+        "bootstrap": true,
+        "bucket_name": "rtfc-sbx2-tfstate-635702036154",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "tags": {
+        "Environment": "sbx2",
+        "ManagedBy": "rtifact"
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "s3",
+          "config": {
+            "bucket": "rtfc-sbx2-tfstate-635702036154",
+            "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+            "encrypt": "true",
+            "key": "aios-infra/rtfc-sbx2/core-network.tfstate",
+            "region": "ap-south-1"
+          }
+        },
+        "data-platform": {
+          "backend": "s3",
+          "config": {
+            "bucket": "rtfc-sbx2-tfstate-635702036154",
+            "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+            "encrypt": "true",
+            "key": "aios-infra/rtfc-sbx2/data-platform.tfstate",
+            "region": "ap-south-1"
+          }
+        }
+      },
+      "workload_environment": "sbx2"
+    }
+  },
+  "app-platform": {
+    "vars": {
+      "account_id": "635702036154",
+      "bastion": {
+        "access": "ssm",
+        "allowed_cidrs": [
+          "3.108.172.165/32",
+          "13.235.189.88/32"
+        ],
+        "disk": {
+          "encrypted": true,
+          "size_gb": 100,
+          "type": "gp3"
+        },
+        "iam_policy_arns": [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ],
+        "instance_type": "t3.medium",
+        "public_ip": false,
+        "ssh_public_key": "",
+        "subnet_tier": "public"
+      },
+      "certificates": {
+        "cloudfront": true,
+        "key_algorithm": "RSA_2048",
+        "names": [
+          "sbx2.rtifact.ai",
+          "*.sbx2.rtifact.ai"
+        ]
+      },
+      "features": {
+        "bastion": true,
+        "certificates": true,
+        "karpenter": true,
+        "kubernetes_cluster": true,
+        "network": true,
+        "public_dns": true
+      },
+      "kubernetes_cluster": {
+        "addons": {
+          "aws-ebs-csi-driver": {
+            "configuration": {
+              "controller": {
+                "nodeSelector": {
+                  "rtfc/node-type": "initial"
+                }
+              }
+            },
+            "version": "v1.68.1-eksbuild.1"
+          },
+          "coredns": {
+            "version": "v1.14.7-eksbuild.35"
+          },
+          "eks-pod-identity-agent": {
+            "version": "v1.4.1-eksbuild.3"
+          },
+          "kube-proxy": {
+            "version": "v1.37.0-eksbuild.39"
+          },
+          "vpc-cni": {
+            "version": "v1.22.4-eksbuild.14"
+          }
+        },
+        "admin_principal_arns": [
+          "arn:aws:iam::635702036154:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_sandbox-users-permission-set_165a60e6ca18f314"
+        ],
+        "authentication_mode": "API_AND_CONFIG_MAP",
+        "deletion_protection": false,
+        "endpoint": {
+          "private": true,
+          "public": true,
+          "public_access_cidrs": [
+            "3.108.172.165/32",
+            "13.235.189.88/32"
+          ]
+        },
+        "karpenter": {
+          "namespace": "karpenter",
+          "node_role_policies": [
+            "AmazonEKSWorkerNodePolicy",
+            "AmazonEKS_CNI_Policy",
+            "AmazonEC2ContainerRegistryReadOnly",
+            "AmazonSSMManagedInstanceCore"
+          ],
+          "queue_retention_seconds": 300,
+          "service_account": "karpenter"
+        },
+        "kubernetes_version": "1.37",
+        "log_types": [],
+        "name": "rtfc-sbx2-eks",
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.xlarge"
+            ],
+            "labels": {
+              "karpenter.sh/controller": "true",
+              "rtfc/node-type": "initial"
+            },
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 2,
+            "subnet_tier": "node",
+            "taints": []
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonSSMManagedInstanceCore",
+          "AmazonEBSCSIDriverPolicy"
+        ],
+        "secrets_encryption": {
+          "mode": "none"
+        },
+        "service_cidr": "172.20.0.0/16",
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "office": {
+            "cidrs": [
+              "vpc",
+              "3.108.172.165/32",
+              "13.235.189.88/32"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        },
+        "support_type": "STANDARD"
+      },
+      "location": "ap-south-1",
+      "name_prefix": "rtfc-sbx2",
+      "network": {
+        "availability_zones": [
+          "ap-south-1a",
+          "ap-south-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "single",
+        "secondary_cidrs": [
+          "100.72.0.0/16"
+        ],
+        "subnets": {
+          "cluster_private": {
+            "cidrs": [
+              "100.72.64.0/20",
+              "100.72.80.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "internal_lb"
+            ],
+            "route": "nat"
+          },
+          "cluster_public": {
+            "cidrs": [
+              "100.72.128.0/20",
+              "100.72.144.0/20"
+            ],
+            "roles": [
+              "public_lb"
+            ],
+            "route": "internet"
+          },
+          "datastore": {
+            "cidrs": [
+              "10.20.128.0/19",
+              "10.20.160.0/19"
+            ],
+            "route": "isolated"
+          },
+          "node": {
+            "cidrs": [
+              "100.72.0.0/20",
+              "100.72.16.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "nodes",
+              "internal_lb",
+              "karpenter"
+            ],
+            "route": "nat"
+          },
+          "private": {
+            "cidrs": [
+              "10.20.64.0/19",
+              "10.20.96.0/19"
+            ],
+            "route": "nat"
+          },
+          "public": {
+            "cidrs": [
+              "10.20.0.0/19",
+              "10.20.32.0/19"
+            ],
+            "public_ip_on_launch": true,
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.20.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false,
+        "parent_zone_id": "",
+        "zone_name": "sbx2.rtifact.ai"
+      },
+      "state": {
+        "air_gapped": false,
+        "backend": "s3",
+        "bootstrap": true,
+        "bucket_name": "rtfc-sbx2-tfstate-635702036154",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "tags": {
+        "Environment": "sbx2",
+        "ManagedBy": "rtifact"
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "s3",
+          "config": {
+            "bucket": "rtfc-sbx2-tfstate-635702036154",
+            "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+            "encrypt": "true",
+            "key": "aios-infra/rtfc-sbx2/core-network.tfstate",
+            "region": "ap-south-1"
+          }
+        }
+      },
+      "workload_environment": "sbx2"
+    }
+  },
+  "core-network": {
+    "vars": {
+      "account_id": "635702036154",
+      "bastion": {
+        "access": "ssm",
+        "allowed_cidrs": [
+          "3.108.172.165/32",
+          "13.235.189.88/32"
+        ],
+        "disk": {
+          "encrypted": true,
+          "size_gb": 100,
+          "type": "gp3"
+        },
+        "iam_policy_arns": [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ],
+        "instance_type": "t3.medium",
+        "public_ip": false,
+        "ssh_public_key": "",
+        "subnet_tier": "public"
+      },
+      "certificates": {
+        "cloudfront": true,
+        "key_algorithm": "RSA_2048",
+        "names": [
+          "sbx2.rtifact.ai",
+          "*.sbx2.rtifact.ai"
+        ]
+      },
+      "features": {
+        "bastion": true,
+        "certificates": true,
+        "karpenter": true,
+        "kubernetes_cluster": true,
+        "network": true,
+        "public_dns": true
+      },
+      "kubernetes_cluster": {
+        "addons": {
+          "aws-ebs-csi-driver": {
+            "configuration": {
+              "controller": {
+                "nodeSelector": {
+                  "rtfc/node-type": "initial"
+                }
+              }
+            },
+            "version": "v1.68.1-eksbuild.1"
+          },
+          "coredns": {
+            "version": "v1.14.7-eksbuild.35"
+          },
+          "eks-pod-identity-agent": {
+            "version": "v1.4.1-eksbuild.3"
+          },
+          "kube-proxy": {
+            "version": "v1.37.0-eksbuild.39"
+          },
+          "vpc-cni": {
+            "version": "v1.22.4-eksbuild.14"
+          }
+        },
+        "admin_principal_arns": [
+          "arn:aws:iam::635702036154:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_sandbox-users-permission-set_165a60e6ca18f314"
+        ],
+        "authentication_mode": "API_AND_CONFIG_MAP",
+        "deletion_protection": false,
+        "endpoint": {
+          "private": true,
+          "public": true,
+          "public_access_cidrs": [
+            "3.108.172.165/32",
+            "13.235.189.88/32"
+          ]
+        },
+        "karpenter": {
+          "namespace": "karpenter",
+          "node_role_policies": [
+            "AmazonEKSWorkerNodePolicy",
+            "AmazonEKS_CNI_Policy",
+            "AmazonEC2ContainerRegistryReadOnly",
+            "AmazonSSMManagedInstanceCore"
+          ],
+          "queue_retention_seconds": 300,
+          "service_account": "karpenter"
+        },
+        "kubernetes_version": "1.37",
+        "log_types": [],
+        "name": "rtfc-sbx2-eks",
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.xlarge"
+            ],
+            "labels": {
+              "karpenter.sh/controller": "true",
+              "rtfc/node-type": "initial"
+            },
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 2,
+            "subnet_tier": "node",
+            "taints": []
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonSSMManagedInstanceCore",
+          "AmazonEBSCSIDriverPolicy"
+        ],
+        "secrets_encryption": {
+          "mode": "none"
+        },
+        "service_cidr": "172.20.0.0/16",
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "office": {
+            "cidrs": [
+              "vpc",
+              "3.108.172.165/32",
+              "13.235.189.88/32"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        },
+        "support_type": "STANDARD"
+      },
+      "location": "ap-south-1",
+      "name_prefix": "rtfc-sbx2",
+      "network": {
+        "availability_zones": [
+          "ap-south-1a",
+          "ap-south-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "single",
+        "secondary_cidrs": [
+          "100.72.0.0/16"
+        ],
+        "subnets": {
+          "cluster_private": {
+            "cidrs": [
+              "100.72.64.0/20",
+              "100.72.80.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "internal_lb"
+            ],
+            "route": "nat"
+          },
+          "cluster_public": {
+            "cidrs": [
+              "100.72.128.0/20",
+              "100.72.144.0/20"
+            ],
+            "roles": [
+              "public_lb"
+            ],
+            "route": "internet"
+          },
+          "datastore": {
+            "cidrs": [
+              "10.20.128.0/19",
+              "10.20.160.0/19"
+            ],
+            "route": "isolated"
+          },
+          "node": {
+            "cidrs": [
+              "100.72.0.0/20",
+              "100.72.16.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "nodes",
+              "internal_lb",
+              "karpenter"
+            ],
+            "route": "nat"
+          },
+          "private": {
+            "cidrs": [
+              "10.20.64.0/19",
+              "10.20.96.0/19"
+            ],
+            "route": "nat"
+          },
+          "public": {
+            "cidrs": [
+              "10.20.0.0/19",
+              "10.20.32.0/19"
+            ],
+            "public_ip_on_launch": true,
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.20.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false,
+        "parent_zone_id": "",
+        "zone_name": "sbx2.rtifact.ai"
+      },
+      "state": {
+        "air_gapped": false,
+        "backend": "s3",
+        "bootstrap": true,
+        "bucket_name": "rtfc-sbx2-tfstate-635702036154",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "tags": {
+        "Environment": "sbx2",
+        "ManagedBy": "rtifact"
+      },
+      "workload_environment": "sbx2"
+    }
+  },
+  "data-platform": {
+    "vars": {
+      "account_id": "635702036154",
+      "bastion": {
+        "access": "ssm",
+        "allowed_cidrs": [
+          "3.108.172.165/32",
+          "13.235.189.88/32"
+        ],
+        "disk": {
+          "encrypted": true,
+          "size_gb": 100,
+          "type": "gp3"
+        },
+        "iam_policy_arns": [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ],
+        "instance_type": "t3.medium",
+        "public_ip": false,
+        "ssh_public_key": "",
+        "subnet_tier": "public"
+      },
+      "certificates": {
+        "cloudfront": true,
+        "key_algorithm": "RSA_2048",
+        "names": [
+          "sbx2.rtifact.ai",
+          "*.sbx2.rtifact.ai"
+        ]
+      },
+      "features": {
+        "bastion": true,
+        "certificates": true,
+        "karpenter": true,
+        "kubernetes_cluster": true,
+        "network": true,
+        "public_dns": true
+      },
+      "kubernetes_cluster": {
+        "addons": {
+          "aws-ebs-csi-driver": {
+            "configuration": {
+              "controller": {
+                "nodeSelector": {
+                  "rtfc/node-type": "initial"
+                }
+              }
+            },
+            "version": "v1.68.1-eksbuild.1"
+          },
+          "coredns": {
+            "version": "v1.14.7-eksbuild.35"
+          },
+          "eks-pod-identity-agent": {
+            "version": "v1.4.1-eksbuild.3"
+          },
+          "kube-proxy": {
+            "version": "v1.37.0-eksbuild.39"
+          },
+          "vpc-cni": {
+            "version": "v1.22.4-eksbuild.14"
+          }
+        },
+        "admin_principal_arns": [
+          "arn:aws:iam::635702036154:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_sandbox-users-permission-set_165a60e6ca18f314"
+        ],
+        "authentication_mode": "API_AND_CONFIG_MAP",
+        "deletion_protection": false,
+        "endpoint": {
+          "private": true,
+          "public": true,
+          "public_access_cidrs": [
+            "3.108.172.165/32",
+            "13.235.189.88/32"
+          ]
+        },
+        "karpenter": {
+          "namespace": "karpenter",
+          "node_role_policies": [
+            "AmazonEKSWorkerNodePolicy",
+            "AmazonEKS_CNI_Policy",
+            "AmazonEC2ContainerRegistryReadOnly",
+            "AmazonSSMManagedInstanceCore"
+          ],
+          "queue_retention_seconds": 300,
+          "service_account": "karpenter"
+        },
+        "kubernetes_version": "1.37",
+        "log_types": [],
+        "name": "rtfc-sbx2-eks",
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.xlarge"
+            ],
+            "labels": {
+              "karpenter.sh/controller": "true",
+              "rtfc/node-type": "initial"
+            },
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 2,
+            "subnet_tier": "node",
+            "taints": []
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonSSMManagedInstanceCore",
+          "AmazonEBSCSIDriverPolicy"
+        ],
+        "secrets_encryption": {
+          "mode": "none"
+        },
+        "service_cidr": "172.20.0.0/16",
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "office": {
+            "cidrs": [
+              "vpc",
+              "3.108.172.165/32",
+              "13.235.189.88/32"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        },
+        "support_type": "STANDARD"
+      },
+      "location": "ap-south-1",
+      "name_prefix": "rtfc-sbx2",
+      "network": {
+        "availability_zones": [
+          "ap-south-1a",
+          "ap-south-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "single",
+        "secondary_cidrs": [
+          "100.72.0.0/16"
+        ],
+        "subnets": {
+          "cluster_private": {
+            "cidrs": [
+              "100.72.64.0/20",
+              "100.72.80.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "internal_lb"
+            ],
+            "route": "nat"
+          },
+          "cluster_public": {
+            "cidrs": [
+              "100.72.128.0/20",
+              "100.72.144.0/20"
+            ],
+            "roles": [
+              "public_lb"
+            ],
+            "route": "internet"
+          },
+          "datastore": {
+            "cidrs": [
+              "10.20.128.0/19",
+              "10.20.160.0/19"
+            ],
+            "route": "isolated"
+          },
+          "node": {
+            "cidrs": [
+              "100.72.0.0/20",
+              "100.72.16.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "nodes",
+              "internal_lb",
+              "karpenter"
+            ],
+            "route": "nat"
+          },
+          "private": {
+            "cidrs": [
+              "10.20.64.0/19",
+              "10.20.96.0/19"
+            ],
+            "route": "nat"
+          },
+          "public": {
+            "cidrs": [
+              "10.20.0.0/19",
+              "10.20.32.0/19"
+            ],
+            "public_ip_on_launch": true,
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.20.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false,
+        "parent_zone_id": "",
+        "zone_name": "sbx2.rtifact.ai"
+      },
+      "state": {
+        "air_gapped": false,
+        "backend": "s3",
+        "bootstrap": true,
+        "bucket_name": "rtfc-sbx2-tfstate-635702036154",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "tags": {
+        "Environment": "sbx2",
+        "ManagedBy": "rtifact"
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "s3",
+          "config": {
+            "bucket": "rtfc-sbx2-tfstate-635702036154",
+            "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+            "encrypt": "true",
+            "key": "aios-infra/rtfc-sbx2/core-network.tfstate",
+            "region": "ap-south-1"
+          }
+        }
+      },
+      "workload_environment": "sbx2"
+    }
+  },
+  "network-edge": {
+    "vars": {
+      "account_id": "635702036154",
+      "bastion": {
+        "access": "ssm",
+        "allowed_cidrs": [
+          "3.108.172.165/32",
+          "13.235.189.88/32"
+        ],
+        "disk": {
+          "encrypted": true,
+          "size_gb": 100,
+          "type": "gp3"
+        },
+        "iam_policy_arns": [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ],
+        "instance_type": "t3.medium",
+        "public_ip": false,
+        "ssh_public_key": "",
+        "subnet_tier": "public"
+      },
+      "certificates": {
+        "cloudfront": true,
+        "key_algorithm": "RSA_2048",
+        "names": [
+          "sbx2.rtifact.ai",
+          "*.sbx2.rtifact.ai"
+        ]
+      },
+      "features": {
+        "bastion": true,
+        "certificates": true,
+        "karpenter": true,
+        "kubernetes_cluster": true,
+        "network": true,
+        "public_dns": true
+      },
+      "kubernetes_cluster": {
+        "addons": {
+          "aws-ebs-csi-driver": {
+            "configuration": {
+              "controller": {
+                "nodeSelector": {
+                  "rtfc/node-type": "initial"
+                }
+              }
+            },
+            "version": "v1.68.1-eksbuild.1"
+          },
+          "coredns": {
+            "version": "v1.14.7-eksbuild.35"
+          },
+          "eks-pod-identity-agent": {
+            "version": "v1.4.1-eksbuild.3"
+          },
+          "kube-proxy": {
+            "version": "v1.37.0-eksbuild.39"
+          },
+          "vpc-cni": {
+            "version": "v1.22.4-eksbuild.14"
+          }
+        },
+        "admin_principal_arns": [
+          "arn:aws:iam::635702036154:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_sandbox-users-permission-set_165a60e6ca18f314"
+        ],
+        "authentication_mode": "API_AND_CONFIG_MAP",
+        "deletion_protection": false,
+        "endpoint": {
+          "private": true,
+          "public": true,
+          "public_access_cidrs": [
+            "3.108.172.165/32",
+            "13.235.189.88/32"
+          ]
+        },
+        "karpenter": {
+          "namespace": "karpenter",
+          "node_role_policies": [
+            "AmazonEKSWorkerNodePolicy",
+            "AmazonEKS_CNI_Policy",
+            "AmazonEC2ContainerRegistryReadOnly",
+            "AmazonSSMManagedInstanceCore"
+          ],
+          "queue_retention_seconds": 300,
+          "service_account": "karpenter"
+        },
+        "kubernetes_version": "1.37",
+        "log_types": [],
+        "name": "rtfc-sbx2-eks",
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.xlarge"
+            ],
+            "labels": {
+              "karpenter.sh/controller": "true",
+              "rtfc/node-type": "initial"
+            },
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 2,
+            "subnet_tier": "node",
+            "taints": []
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonSSMManagedInstanceCore",
+          "AmazonEBSCSIDriverPolicy"
+        ],
+        "secrets_encryption": {
+          "mode": "none"
+        },
+        "service_cidr": "172.20.0.0/16",
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "office": {
+            "cidrs": [
+              "vpc",
+              "3.108.172.165/32",
+              "13.235.189.88/32"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        },
+        "support_type": "STANDARD"
+      },
+      "location": "ap-south-1",
+      "name_prefix": "rtfc-sbx2",
+      "network": {
+        "availability_zones": [
+          "ap-south-1a",
+          "ap-south-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "single",
+        "secondary_cidrs": [
+          "100.72.0.0/16"
+        ],
+        "subnets": {
+          "cluster_private": {
+            "cidrs": [
+              "100.72.64.0/20",
+              "100.72.80.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "internal_lb"
+            ],
+            "route": "nat"
+          },
+          "cluster_public": {
+            "cidrs": [
+              "100.72.128.0/20",
+              "100.72.144.0/20"
+            ],
+            "roles": [
+              "public_lb"
+            ],
+            "route": "internet"
+          },
+          "datastore": {
+            "cidrs": [
+              "10.20.128.0/19",
+              "10.20.160.0/19"
+            ],
+            "route": "isolated"
+          },
+          "node": {
+            "cidrs": [
+              "100.72.0.0/20",
+              "100.72.16.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "nodes",
+              "internal_lb",
+              "karpenter"
+            ],
+            "route": "nat"
+          },
+          "private": {
+            "cidrs": [
+              "10.20.64.0/19",
+              "10.20.96.0/19"
+            ],
+            "route": "nat"
+          },
+          "public": {
+            "cidrs": [
+              "10.20.0.0/19",
+              "10.20.32.0/19"
+            ],
+            "public_ip_on_launch": true,
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.20.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false,
+        "parent_zone_id": "",
+        "zone_name": "sbx2.rtifact.ai"
+      },
+      "state": {
+        "air_gapped": false,
+        "backend": "s3",
+        "bootstrap": true,
+        "bucket_name": "rtfc-sbx2-tfstate-635702036154",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "tags": {
+        "Environment": "sbx2",
+        "ManagedBy": "rtifact"
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "s3",
+          "config": {
+            "bucket": "rtfc-sbx2-tfstate-635702036154",
+            "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+            "encrypt": "true",
+            "key": "aios-infra/rtfc-sbx2/core-network.tfstate",
+            "region": "ap-south-1"
+          }
+        }
+      },
+      "workload_environment": "sbx2"
+    }
+  },
+  "state-backend": {
+    "vars": {
+      "account_id": "635702036154",
+      "bastion": {
+        "access": "ssm",
+        "allowed_cidrs": [
+          "3.108.172.165/32",
+          "13.235.189.88/32"
+        ],
+        "disk": {
+          "encrypted": true,
+          "size_gb": 100,
+          "type": "gp3"
+        },
+        "iam_policy_arns": [
+          "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        ],
+        "instance_type": "t3.medium",
+        "public_ip": false,
+        "ssh_public_key": "",
+        "subnet_tier": "public"
+      },
+      "certificates": {
+        "cloudfront": true,
+        "key_algorithm": "RSA_2048",
+        "names": [
+          "sbx2.rtifact.ai",
+          "*.sbx2.rtifact.ai"
+        ]
+      },
+      "features": {
+        "bastion": true,
+        "certificates": true,
+        "karpenter": true,
+        "kubernetes_cluster": true,
+        "network": true,
+        "public_dns": true
+      },
+      "kubernetes_cluster": {
+        "addons": {
+          "aws-ebs-csi-driver": {
+            "configuration": {
+              "controller": {
+                "nodeSelector": {
+                  "rtfc/node-type": "initial"
+                }
+              }
+            },
+            "version": "v1.68.1-eksbuild.1"
+          },
+          "coredns": {
+            "version": "v1.14.7-eksbuild.35"
+          },
+          "eks-pod-identity-agent": {
+            "version": "v1.4.1-eksbuild.3"
+          },
+          "kube-proxy": {
+            "version": "v1.37.0-eksbuild.39"
+          },
+          "vpc-cni": {
+            "version": "v1.22.4-eksbuild.14"
+          }
+        },
+        "admin_principal_arns": [
+          "arn:aws:iam::635702036154:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_sandbox-users-permission-set_165a60e6ca18f314"
+        ],
+        "authentication_mode": "API_AND_CONFIG_MAP",
+        "deletion_protection": false,
+        "endpoint": {
+          "private": true,
+          "public": true,
+          "public_access_cidrs": [
+            "3.108.172.165/32",
+            "13.235.189.88/32"
+          ]
+        },
+        "karpenter": {
+          "namespace": "karpenter",
+          "node_role_policies": [
+            "AmazonEKSWorkerNodePolicy",
+            "AmazonEKS_CNI_Policy",
+            "AmazonEC2ContainerRegistryReadOnly",
+            "AmazonSSMManagedInstanceCore"
+          ],
+          "queue_retention_seconds": 300,
+          "service_account": "karpenter"
+        },
+        "kubernetes_version": "1.37",
+        "log_types": [],
+        "name": "rtfc-sbx2-eks",
+        "node_groups": {
+          "initial": {
+            "ami_type": "AL2023_x86_64_STANDARD",
+            "capacity_type": "ON_DEMAND",
+            "desired_size": 2,
+            "disk": {
+              "encrypted": true,
+              "size_gb": 100,
+              "type": "gp3"
+            },
+            "instance_types": [
+              "m6a.xlarge"
+            ],
+            "labels": {
+              "karpenter.sh/controller": "true",
+              "rtfc/node-type": "initial"
+            },
+            "max_size": 3,
+            "max_unavailable": 1,
+            "metadata": {
+              "hop_limit": 2,
+              "http_tokens": "optional"
+            },
+            "min_size": 2,
+            "subnet_tier": "node",
+            "taints": []
+          }
+        },
+        "node_role_policies": [
+          "AmazonEKSWorkerNodePolicy",
+          "AmazonEKS_CNI_Policy",
+          "AmazonEC2ContainerRegistryReadOnly",
+          "AmazonSSMManagedInstanceCore",
+          "AmazonEBSCSIDriverPolicy"
+        ],
+        "secrets_encryption": {
+          "mode": "none"
+        },
+        "service_cidr": "172.20.0.0/16",
+        "service_security_groups": {
+          "internal": {
+            "cidrs": [
+              "vpc"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "office": {
+            "cidrs": [
+              "vpc",
+              "3.108.172.165/32",
+              "13.235.189.88/32"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          },
+          "public": {
+            "cidrs": [
+              "0.0.0.0/0"
+            ],
+            "ports": [
+              80,
+              443
+            ]
+          }
+        },
+        "support_type": "STANDARD"
+      },
+      "location": "ap-south-1",
+      "name_prefix": "rtfc-sbx2",
+      "network": {
+        "availability_zones": [
+          "ap-south-1a",
+          "ap-south-1b"
+        ],
+        "flow_logs": false,
+        "gateway_endpoints": [
+          "s3",
+          "dynamodb"
+        ],
+        "nat_gateway": "single",
+        "secondary_cidrs": [
+          "100.72.0.0/16"
+        ],
+        "subnets": {
+          "cluster_private": {
+            "cidrs": [
+              "100.72.64.0/20",
+              "100.72.80.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "internal_lb"
+            ],
+            "route": "nat"
+          },
+          "cluster_public": {
+            "cidrs": [
+              "100.72.128.0/20",
+              "100.72.144.0/20"
+            ],
+            "roles": [
+              "public_lb"
+            ],
+            "route": "internet"
+          },
+          "datastore": {
+            "cidrs": [
+              "10.20.128.0/19",
+              "10.20.160.0/19"
+            ],
+            "route": "isolated"
+          },
+          "node": {
+            "cidrs": [
+              "100.72.0.0/20",
+              "100.72.16.0/20"
+            ],
+            "roles": [
+              "cluster",
+              "nodes",
+              "internal_lb",
+              "karpenter"
+            ],
+            "route": "nat"
+          },
+          "private": {
+            "cidrs": [
+              "10.20.64.0/19",
+              "10.20.96.0/19"
+            ],
+            "route": "nat"
+          },
+          "public": {
+            "cidrs": [
+              "10.20.0.0/19",
+              "10.20.32.0/19"
+            ],
+            "public_ip_on_launch": true,
+            "route": "internet"
+          }
+        },
+        "vpc_cidr": "10.20.0.0/16"
+      },
+      "public_dns": {
+        "delegated": false,
+        "parent_zone_id": "",
+        "zone_name": "sbx2.rtifact.ai"
+      },
+      "state": {
+        "air_gapped": false,
+        "backend": "s3",
+        "bootstrap": true,
+        "bucket_name": "rtfc-sbx2-tfstate-635702036154",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "tags": {
+        "Environment": "sbx2",
+        "ManagedBy": "rtifact"
+      },
+      "workload_environment": "sbx2"
+    }
+  }
+}

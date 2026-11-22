@@ -1,0 +1,58 @@
+{
+  "ai-integrations": {
+    "type": "s3",
+    "settings": {
+      "bucket": "rtfc-sbx2-tfstate-635702036154",
+      "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+      "encrypt": "true",
+      "key": "aios-infra/rtfc-sbx2/ai-integrations.tfstate",
+      "region": "ap-south-1"
+    }
+  },
+  "app-platform": {
+    "type": "s3",
+    "settings": {
+      "bucket": "rtfc-sbx2-tfstate-635702036154",
+      "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+      "encrypt": "true",
+      "key": "aios-infra/rtfc-sbx2/app-platform.tfstate",
+      "region": "ap-south-1"
+    }
+  },
+  "core-network": {
+    "type": "s3",
+    "settings": {
+      "bucket": "rtfc-sbx2-tfstate-635702036154",
+      "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+      "encrypt": "true",
+      "key": "aios-infra/rtfc-sbx2/core-network.tfstate",
+      "region": "ap-south-1"
+    }
+  },
+  "data-platform": {
+    "type": "s3",
+    "settings": {
+      "bucket": "rtfc-sbx2-tfstate-635702036154",
+      "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+      "encrypt": "true",
+      "key": "aios-infra/rtfc-sbx2/data-platform.tfstate",
+      "region": "ap-south-1"
+    }
+  },
+  "network-edge": {
+    "type": "s3",
+    "settings": {
+      "bucket": "rtfc-sbx2-tfstate-635702036154",
+      "dynamodb_table": "rtfc_sbx2_tfstate_lock",
+      "encrypt": "true",
+      "key": "aios-infra/rtfc-sbx2/network-edge.tfstate",
+      "region": "ap-south-1"
+    }
+  },
+  "state-backend": {
+    "type": "local",
+    "settings": {
+      "path": "/tmp/rtifact-golden-home/.rtifact/rtfc-sbx2/state/state-backend.tfstate"
+    }
+  }
+}

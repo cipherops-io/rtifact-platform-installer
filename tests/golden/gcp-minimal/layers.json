@@ -1,0 +1,154 @@
+{
+  "ai-integrations": {
+    "vars": {
+      "bastion": null,
+      "features": {
+        "kubernetes_cluster": false,
+        "virtual_network": true
+      },
+      "location": "us-central1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "vnet_cidr": "10.4.0.0/20"
+      },
+      "project_id": "example-proj",
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        },
+        "data-platform": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/data-platform.tfstate"
+          }
+        }
+      }
+    }
+  },
+  "app-platform": {
+    "vars": {
+      "bastion": null,
+      "features": {
+        "kubernetes_cluster": false,
+        "virtual_network": true
+      },
+      "location": "us-central1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "vnet_cidr": "10.4.0.0/20"
+      },
+      "project_id": "example-proj",
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      }
+    }
+  },
+  "core-network": {
+    "vars": {
+      "bastion": null,
+      "features": {
+        "kubernetes_cluster": false,
+        "virtual_network": true
+      },
+      "location": "us-central1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "vnet_cidr": "10.4.0.0/20"
+      },
+      "project_id": "example-proj",
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      }
+    }
+  },
+  "data-platform": {
+    "vars": {
+      "bastion": null,
+      "features": {
+        "kubernetes_cluster": false,
+        "virtual_network": true
+      },
+      "location": "us-central1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "vnet_cidr": "10.4.0.0/20"
+      },
+      "project_id": "example-proj",
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      }
+    }
+  },
+  "network-edge": {
+    "vars": {
+      "bastion": null,
+      "features": {
+        "kubernetes_cluster": false,
+        "virtual_network": true
+      },
+      "location": "us-central1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "vnet_cidr": "10.4.0.0/20"
+      },
+      "project_id": "example-proj",
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      },
+      "upstream_state": {
+        "core-network": {
+          "backend": "local",
+          "config": {
+            "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+          }
+        }
+      }
+    }
+  },
+  "state-backend": {
+    "vars": {
+      "bastion": null,
+      "features": {
+        "kubernetes_cluster": false,
+        "virtual_network": true
+      },
+      "location": "us-central1",
+      "name_prefix": "ex-minimal",
+      "network": {
+        "vnet_cidr": "10.4.0.0/20"
+      },
+      "project_id": "example-proj",
+      "state": {
+        "air_gapped": true,
+        "backend": "local"
+      }
+    }
+  }
+}

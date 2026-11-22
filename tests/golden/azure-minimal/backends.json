@@ -1,0 +1,38 @@
+{
+  "ai-integrations": {
+    "type": "local",
+    "settings": {
+      "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/ai-integrations.tfstate"
+    }
+  },
+  "app-platform": {
+    "type": "local",
+    "settings": {
+      "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/app-platform.tfstate"
+    }
+  },
+  "core-network": {
+    "type": "local",
+    "settings": {
+      "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/core-network.tfstate"
+    }
+  },
+  "data-platform": {
+    "type": "local",
+    "settings": {
+      "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/data-platform.tfstate"
+    }
+  },
+  "network-edge": {
+    "type": "local",
+    "settings": {
+      "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/network-edge.tfstate"
+    }
+  },
+  "state-backend": {
+    "type": "local",
+    "settings": {
+      "path": "/tmp/rtifact-golden-home/.rtifact/ex-minimal/state/state-backend.tfstate"
+    }
+  }
+}

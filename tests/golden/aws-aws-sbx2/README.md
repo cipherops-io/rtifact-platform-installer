@@ -1,0 +1,5 @@
+# Golden fixtures (W0)
+
+Layer tfvars omit Azure resource_group_create and resource_group_name because
+injectAzureResourceGroupFlags queries the live subscription (Azure CLI).
+All other preparation matches internal/runner before WriteAutoTofuVarsJSON.
