@@ -17,6 +17,7 @@ import (
 
 // deployProbe caches whether a layer has resources in OpenTofu state (one CLI run).
 type deployProbe struct {
+	ctx         context.Context
 	contentRoot string
 	customer    *config.CustomerConfig
 	meta        *config.ProfileMeta
@@ -30,6 +31,7 @@ type deployProbe struct {
 }
 
 func newDeployProbe(
+	ctx context.Context,
 	contentRoot string,
 	customer *config.CustomerConfig,
 	meta *config.ProfileMeta,
@@ -38,6 +40,7 @@ func newDeployProbe(
 	merged map[string]any,
 ) *deployProbe {
 	return &deployProbe{
+		ctx:         ctx,
 		contentRoot: contentRoot,
 		customer:    customer,
 		meta:        meta,
@@ -101,7 +104,7 @@ func (p *deployProbe) layerHasState(layer stacks.Layer) (bool, error) {
 	if !ok {
 		return false, fmt.Errorf("cloud %q: missing lifecycle hooks", p.customer.Cloud)
 	}
-	layerMerged, err := prepareLayerMerged(context.Background(), p.provider, cl, p.spec, layer, p.merged, upstreamSpecPerLayer)
+	layerMerged, err := prepareLayerMerged(p.ctx, p.provider, cl, p.spec, layer, p.merged, upstreamSpecPerLayer)
 	if err != nil {
 		return false, err
 	}

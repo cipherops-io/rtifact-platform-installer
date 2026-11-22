@@ -120,6 +120,43 @@ func runTofuInit(tofuPath, stackWork string, env []string, initArgs []string) er
 	return lastErr
 }
 
+// TofuRunner runs OpenTofu CLI commands in a stack work directory.
+type TofuRunner interface {
+	Run(args ...string) error
+	Output(args ...string) ([]byte, error)
+	ShowJSON(planFile string) ([]byte, error)
+}
+
+type execTofuRunner struct {
+	bin       string
+	stackWork string
+	env       []string
+}
+
+func newTofuRunner(bin, stackWork string, env []string) TofuRunner {
+	return &execTofuRunner{bin: bin, stackWork: stackWork, env: env}
+}
+
+func (r *execTofuRunner) Run(args ...string) error {
+	c := exec.Command(r.bin, args...)
+	c.Dir = r.stackWork
+	c.Env = r.env
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	return c.Run()
+}
+
+func (r *execTofuRunner) Output(args ...string) ([]byte, error) {
+	c := exec.Command(r.bin, args...)
+	c.Dir = r.stackWork
+	c.Env = r.env
+	return c.Output()
+}
+
+func (r *execTofuRunner) ShowJSON(planFile string) ([]byte, error) {
+	return r.Output("show", "-json", planFile)
+}
+
 func retryableTofuInit(stderr string) bool {
 	retryHints := []string{
 		"Failed to install provider",

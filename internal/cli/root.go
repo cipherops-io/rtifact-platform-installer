@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -183,7 +184,7 @@ func tofuRun(action string, stackFlag *string, yes, allowDestroy, checklist, ign
 				fmt.Sprintf("You passed --stack %q.", *stackFlag),
 			)
 		}
-		return runner.Run(runner.Options{
+		return runner.Run(context.Background(), runner.Options{
 			Action:               action,
 			ConfigPath:           args[0],
 			Stack:                layer,

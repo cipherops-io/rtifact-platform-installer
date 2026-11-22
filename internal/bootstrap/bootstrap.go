@@ -60,7 +60,7 @@ func Run(configPath string, yes bool) error {
 	}
 	fmt.Fprintf(os.Stderr, "bootstrap: %v; applying %s layer\n", err, stacks.LayerStateBackend)
 
-	if err := runner.Run(runner.Options{
+	if err := runner.Run(ctx, runner.Options{
 		Action:     "apply",
 		ConfigPath: configPath,
 		Stack:      stacks.LayerStateBackend,

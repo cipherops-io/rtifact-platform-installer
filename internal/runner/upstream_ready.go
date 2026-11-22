@@ -16,6 +16,7 @@ import (
 // upstreamReadyForPlan reports whether upstream stacks have been applied enough
 // for plan on layer (outputs present in remote/local state).
 func upstreamReadyForPlan(
+	ctx context.Context,
 	customer *config.CustomerConfig,
 	meta *config.ProfileMeta,
 	provider cloud.Provider,
@@ -39,7 +40,7 @@ func upstreamReadyForPlan(
 			}
 			continue
 		}
-		has, err := upstreamRemoteOutputsPresent(customer, meta, contentRoot, provider, spec, merged, up)
+		has, err := upstreamRemoteOutputsPresent(ctx, customer, meta, contentRoot, provider, spec, merged, up)
 		if err != nil {
 			return "", false, err
 		}
@@ -51,6 +52,7 @@ func upstreamReadyForPlan(
 }
 
 func upstreamRemoteOutputsPresent(
+	ctx context.Context,
 	customer *config.CustomerConfig,
 	meta *config.ProfileMeta,
 	contentRoot string,
@@ -84,7 +86,7 @@ func upstreamRemoteOutputsPresent(
 	if !ok {
 		return false, fmt.Errorf("cloud %q: missing lifecycle hooks", customer.Cloud)
 	}
-	layerMerged, err := prepareLayerMerged(context.Background(), provider, cl, spec, upstream, merged, upstreamSpecPerLayer)
+	layerMerged, err := prepareLayerMerged(ctx, provider, cl, spec, upstream, merged, upstreamSpecPerLayer)
 	if err != nil {
 		return false, err
 	}

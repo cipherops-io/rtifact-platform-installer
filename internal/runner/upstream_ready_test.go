@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -15,7 +16,7 @@ func TestUpstreamReadyForPlan_NoUpstreamLayers(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	provider := azure.New()
 	spec := cloud.StateSpec{NamePrefix: "test-noup"}
-	_, ready, err := upstreamReadyForPlan(
+	_, ready, err := upstreamReadyForPlan(context.Background(),
 		&config.CustomerConfig{Cloud: azure.CloudName},
 		&config.ProfileMeta{StackID: "aios-infra"},
 		provider, spec, repoRoot(t), map[string]any{}, stacks.LayerStateBackend,

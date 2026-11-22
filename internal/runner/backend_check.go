@@ -12,7 +12,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 )
 
-func ensureBackendBeforeApplyAll(opts Options, customer *config.CustomerConfig, provider cloud.Provider, spec cloud.StateSpec, configPath string) error {
+func ensureBackendBeforeApplyAll(ctx context.Context, opts Options, customer *config.CustomerConfig, provider cloud.Provider, spec cloud.StateSpec, configPath string) error {
 	if opts.Action != "apply" || opts.Stack != stacks.LayerAll {
 		return nil
 	}
@@ -20,7 +20,7 @@ func ensureBackendBeforeApplyAll(opts Options, customer *config.CustomerConfig, 
 		return nil
 	}
 	if customer.Backend != nil {
-		_, err := provider.EnsureStateBackend(context.Background(), spec)
+		_, err := provider.EnsureStateBackend(ctx, spec)
 		if errors.Is(err, cloud.ErrStateBackendMissing) {
 			return usererr.WithHint(
 				"Customer backend block points at resources that do not exist.",
@@ -30,7 +30,7 @@ func ensureBackendBeforeApplyAll(opts Options, customer *config.CustomerConfig, 
 		}
 		return err
 	}
-	_, err := provider.EnsureStateBackend(context.Background(), spec)
+	_, err := provider.EnsureStateBackend(ctx, spec)
 	if err == nil {
 		return nil
 	}
