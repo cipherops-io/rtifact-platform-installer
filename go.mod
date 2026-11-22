@@ -3,12 +3,14 @@ module github.com/cipherops-io/rtifact-platform-installer
 go 1.26.0
 
 require (
+	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/spf13/cobra v1.10.2
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v4 v4.3.2
 	k8s.io/api v0.37.2
 	k8s.io/apimachinery v0.37.2
+	k8s.io/cli-runtime v0.37.2
 	k8s.io/client-go v0.37.2
 )
 
@@ -18,7 +20,6 @@ require (
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/Masterminds/squirrel v1.5.4 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
@@ -115,7 +116,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/apiextensions-apiserver v0.37.2 // indirect
 	k8s.io/apiserver v0.37.2 // indirect
-	k8s.io/cli-runtime v0.37.2 // indirect
 	k8s.io/component-base v0.37.2 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad // indirect

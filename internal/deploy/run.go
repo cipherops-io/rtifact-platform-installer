@@ -109,9 +109,10 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 	closure := onlyClosure(doc, o.Only)
 	res := plan.Build(plan.Input{
 		Wanted: want, Observed: observed, Inventory: inv, Deployment: DeploymentID(doc),
+		FilePath: o.FilePath,
 	}, plan.Options{
 		AllowDestroy: o.AllowDestroy, AllowMassRemoval: o.AllowMassRemoval,
-		AllowDowngrade: o.AllowDowngrade, AllowAdopt: o.AllowAdopt,
+		AllowDowngrade: o.AllowDowngrade, AllowAdopt: o.AllowAdopt, Purge: o.Purge,
 		Only: o.Only, OnlyClosure: closure,
 	})
 	printPlan(o.out(), res)
@@ -175,9 +176,10 @@ func Apply(ctx context.Context, o RunOptions) error {
 	closure := onlyClosure(doc, o.Only)
 	res := plan.Build(plan.Input{
 		Wanted: want, Observed: observed, Inventory: inv, Deployment: DeploymentID(doc),
+		FilePath: o.FilePath,
 	}, plan.Options{
 		AllowDestroy: o.AllowDestroy, AllowMassRemoval: o.AllowMassRemoval,
-		AllowDowngrade: o.AllowDowngrade, AllowAdopt: o.AllowAdopt,
+		AllowDowngrade: o.AllowDowngrade, AllowAdopt: o.AllowAdopt, Purge: o.Purge,
 		Only: o.Only, OnlyClosure: closure,
 	})
 	printPlan(o.out(), res)
@@ -221,10 +223,7 @@ func Apply(ctx context.Context, o RunOptions) error {
 		if row.Action == plan.ActionUnchanged || row.Action == plan.ActionRefused || row.Action == plan.ActionStuck {
 			w := wantByName(want, name)
 			if w != nil {
-				entries = append(entries, inventory.Entry{
-					Name: w.Name, Namespace: w.Namespace, Chart: w.Chart,
-					Version: w.Version, ValuesDigest: w.ValuesDigest, Protect: w.Protect,
-				})
+				entries = append(entries, entryFromWanted(*w))
 			}
 			continue
 		}
@@ -260,32 +259,40 @@ func Apply(ctx context.Context, o RunOptions) error {
 		}, ref, resolved, digest); err != nil {
 			return err
 		}
-		entries = append(entries, inventory.Entry{
-			Name: rel.Name, Namespace: rel.Namespace, Chart: rel.Chart,
-			Version: rel.Version, ValuesDigest: digest, Protect: rel.Protect,
+		applied := entryFromWanted(plan.Wanted{
+			Name: rel.Name, Namespace: rel.Namespace, Chart: rel.Chart, Version: rel.Version,
+			ValuesDigest: digest, Requires: rel.Requires, Protect: rel.Protect,
 		})
+		if w := wantByName(want, name); w != nil {
+			applied.ChartDigest = w.ChartDigest
+			applied.ValuesDigest = w.ValuesDigest
+		}
+		entries = append(entries, applied)
 	}
-	removeOrder, _ := RemoveOrder(doc.Releases)
-	for _, name := range removeOrder {
-		row, ok := rowByName[name]
-		if !ok || row.Action != plan.ActionRemove {
-			continue
+	// Removals come from the plan (inventory minus file), dependents first.
+	invByKey := map[string]inventory.Entry{}
+	for _, e := range inv {
+		invByKey[e.Namespace+"/"+e.Name] = e
+	}
+	for _, row := range res.Removals {
+		switch row.Action {
+		case plan.ActionRemove:
+			if err := cs.Uninstall(ctx, row.Name, row.Namespace); err != nil {
+				return err
+			}
+		case plan.ActionRefused:
+			// Refused removals stay managed: keep their inventory entry.
+			if e, ok := invByKey[row.Namespace+"/"+row.Name]; ok {
+				entries = append(entries, e)
+			}
 		}
-		rel := relByName[name]
-		if err := cs.Uninstall(ctx, rel.Name, rel.Namespace); err != nil {
-			return err
-		}
-		entries = filterEntry(entries, name)
 	}
 	// Keep unchanged releases in inventory.
 	for _, w := range want {
 		if findEntry(entries, w.Name) {
 			continue
 		}
-		entries = append(entries, inventory.Entry{
-			Name: w.Name, Namespace: w.Namespace, Chart: w.Chart,
-			Version: w.Version, ValuesDigest: w.ValuesDigest, Protect: w.Protect,
-		})
+		entries = append(entries, entryFromWanted(w))
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].Name < entries[j].Name })
 	return inventory.Write(ctx, kcfg, DeploymentID(doc), entries)
@@ -309,7 +316,7 @@ func buildWanted(path string, doc *Document, outputsDir string) ([]plan.Wanted, 
 		}
 		out = append(out, plan.Wanted{
 			Name: rel.Name, Namespace: rel.Namespace, Chart: rel.Chart,
-			Version: rel.Version, ValuesDigest: digest, Protect: rel.Protect,
+			Version: rel.Version, ValuesDigest: digest, Requires: rel.Requires, Protect: rel.Protect,
 		})
 	}
 	return out, nil
@@ -350,20 +357,29 @@ func refusedBlocking(res plan.Result) error {
 }
 
 func printPlan(w io.Writer, res plan.Result) {
+	removalsShown := false
 	for _, row := range res.Rows {
+		note := ""
+		if row.Note != "" {
+			note = "  [" + row.Note + "]"
+		}
 		switch row.Action {
 		case plan.ActionUnchanged:
 			fmt.Fprintf(w, "  %s/%s: unchanged (%s)\n", row.Namespace, row.Name, row.ToVersion)
 		case plan.ActionInstall:
-			fmt.Fprintf(w, "  %s/%s: install %s\n", row.Namespace, row.Name, row.ToVersion)
+			fmt.Fprintf(w, "  %s/%s: install %s%s\n", row.Namespace, row.Name, row.ToVersion, note)
 		case plan.ActionUpgrade:
-			fmt.Fprintf(w, "  %s/%s: upgrade %s -> %s\n", row.Namespace, row.Name, row.FromVersion, row.ToVersion)
+			fmt.Fprintf(w, "  %s/%s: upgrade %s -> %s%s\n", row.Namespace, row.Name, row.FromVersion, row.ToVersion, note)
 		case plan.ActionRemove:
-			fmt.Fprintf(w, "\nRemovals:\n  %s/%s: remove\n", row.Namespace, row.Name)
+			if !removalsShown {
+				fmt.Fprint(w, "\nRemovals:\n")
+				removalsShown = true
+			}
+			fmt.Fprintf(w, "  %s/%s: remove%s\n", row.Namespace, row.Name, note)
 		case plan.ActionRefused, plan.ActionStuck:
 			fmt.Fprintf(w, "  %s/%s: %s %s\n", row.Namespace, row.Name, row.Action, row.Note)
 		default:
-			fmt.Fprintf(w, "  %s/%s: %s\n", row.Namespace, row.Name, row.Action)
+			fmt.Fprintf(w, "  %s/%s: %s%s\n", row.Namespace, row.Name, row.Action, note)
 		}
 	}
 }
@@ -429,14 +445,12 @@ func wantByName(want []plan.Wanted, name string) *plan.Wanted {
 	return nil
 }
 
-func filterEntry(entries []inventory.Entry, name string) []inventory.Entry {
-	var out []inventory.Entry
-	for _, e := range entries {
-		if e.Name != name {
-			out = append(out, e)
-		}
+func entryFromWanted(w plan.Wanted) inventory.Entry {
+	return inventory.Entry{
+		Name: w.Name, Namespace: w.Namespace, Chart: w.Chart, Version: w.Version,
+		ChartDigest: w.ChartDigest, ValuesDigest: w.ValuesDigest,
+		Requires: w.Requires, Protect: w.Protect, UpdatedAt: time.Now().UTC(),
 	}
-	return out
 }
 
 func findEntry(entries []inventory.Entry, name string) bool {
