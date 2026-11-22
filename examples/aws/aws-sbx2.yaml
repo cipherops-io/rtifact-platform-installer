@@ -19,6 +19,7 @@ features:
   bastion: true
   kubernetes_cluster: true
   karpenter: true
+  pod_identities: false
   public_dns: true
   certificates: true
 

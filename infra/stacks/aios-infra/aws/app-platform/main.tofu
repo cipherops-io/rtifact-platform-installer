@@ -32,3 +32,27 @@ module "karpenter" {
 
   depends_on = [module.eks]
 }
+
+locals {
+  pod_identity_entries = try({
+    for e in var.kubernetes_cluster.pod_identities : e.name => e
+  }, {})
+}
+
+module "pod_identity" {
+  count = var.features.pod_identities && length(local.pod_identity_entries) > 0 ? 1 : 0
+
+  source       = "../../../../modules/aws/pod-identity"
+  cluster_name = module.eks[0].cluster_name
+  tags         = try(var.tags, local.core.tags)
+  entries = {
+    for k, v in local.pod_identity_entries : k => {
+      namespace       = v.namespace
+      service_account = v.service_account
+      policy_arns     = try(v.policy_arns, [])
+      policy_json     = try(v.policy_json, "")
+    }
+  }
+
+  depends_on = [module.eks]
+}

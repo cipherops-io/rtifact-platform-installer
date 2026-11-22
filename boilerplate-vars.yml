@@ -44,6 +44,7 @@ Modules:
     - app-platform/eks
     - app-platform/compute
     - app-platform/karpenter-infra
+    - app-platform/pod-identity
     - network-edge/dns-public
     - network-edge/certificates
   gcp:

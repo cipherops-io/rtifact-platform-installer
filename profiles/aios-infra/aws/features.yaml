@@ -15,6 +15,10 @@ features:
     status: stable
     requires: [kubernetes_cluster]
     description: Karpenter AWS infrastructure (IAM, SQS, Pod Identity)
+  pod_identities:
+    status: preview
+    requires: [kubernetes_cluster]
+    description: EKS Pod Identity roles for in-cluster controllers (external-dns, cert-manager, etc.)
   public_dns:
     status: stable
     requires: []

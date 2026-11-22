@@ -16,6 +16,7 @@ app-platform:
   - cluster_certificate_authority_data
   - oidc_issuer_url
   - karpenter_queue_name
+  - pod_identity_role_arns
 network-edge:
   - dns_zone_id
   - dns_name_servers

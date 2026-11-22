@@ -66,7 +66,23 @@
         "addons": { "type": "object" },
         "node_role_policies": { "type": "array", "items": { "type": "string" } },
         "node_groups": { "type": "object" },
-        "karpenter": { "type": "object" }
+        "karpenter": { "type": "object" },
+        "pod_identities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "namespace", "service_account"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "namespace": { "type": "string", "minLength": 1 },
+              "service_account": { "type": "string", "minLength": 1 },
+              "policy_arns": { "type": "array", "items": { "type": "string" } },
+              "policy_json_file": { "type": "string" },
+              "policy_json": { "type": "string" }
+            }
+          }
+        }
       }
     },
     "bastion": {

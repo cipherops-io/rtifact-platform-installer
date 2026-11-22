@@ -18,3 +18,7 @@ output "karpenter_queue_name" {
 output "oidc_issuer_url" {
   value = length(module.eks) > 0 ? module.eks[0].oidc_issuer_url : null
 }
+
+output "pod_identity_role_arns" {
+  value = length(module.pod_identity) > 0 ? module.pod_identity[0].pod_identity_role_arns : {}
+}

@@ -33,6 +33,7 @@
     "karpenter": true,
     "kubernetes_cluster": true,
     "network": true,
+    "pod_identities": false,
     "public_dns": true
   },
   "kubernetes_cluster": {
