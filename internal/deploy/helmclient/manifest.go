@@ -12,10 +12,11 @@ import (
 
 // PlannedManifest renders install/upgrade manifests without applying (Secrets masked when HideSecret is set).
 func (c *Client) PlannedManifest(ctx context.Context, rel ReleaseRequest, chartRef, version string, values map[string]any, upgrade bool) (string, error) {
-	cfg, err := c.configFor(rel.Namespace)
+	shared, err := c.configFor(rel.Namespace)
 	if err != nil {
 		return "", err
 	}
+	cfg := dryRunConfig(shared)
 	ch, err := c.locateChart(cfg, chartRef, version)
 	if err != nil {
 		return "", err
@@ -63,6 +64,20 @@ func (c *Client) ReleaseManifest(ctx context.Context, name, ns string) (string, 
 		return "", err
 	}
 	return rel.Manifest, nil
+}
+
+// dryRunConfig shares cfg's clients in a separate Configuration: a client-only
+// install dry-run replaces KubeClient and Releases on the Configuration it is given.
+func dryRunConfig(cfg *action.Configuration) *action.Configuration {
+	return &action.Configuration{
+		RESTClientGetter:    cfg.RESTClientGetter,
+		Releases:            cfg.Releases,
+		KubeClient:          cfg.KubeClient,
+		RegistryClient:      cfg.RegistryClient,
+		Capabilities:        cfg.Capabilities,
+		CustomTemplateFuncs: cfg.CustomTemplateFuncs,
+		HookOutputFunc:      cfg.HookOutputFunc,
+	}
 }
 
 func releaserManifest(res any) (string, error) {
