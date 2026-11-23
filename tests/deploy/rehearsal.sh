@@ -72,7 +72,9 @@ step "validate"
 
 step "plan before first apply reports changes (exit 2) and JSON schema_version"
 expect_code 2 rt plan --detailed-exitcode "$WORK/v1.yaml"
-rt plan -o json "$WORK/v1.yaml" | grep -Eq '"schema_version": ?1' || fail "plan JSON missing schema_version"
+rt plan -o json "$WORK/v1.yaml" >"$WORK/plan.json"
+python3 -c 'import json,sys; assert json.load(open(sys.argv[1]))["schema_version"] == 1' "$WORK/plan.json" ||
+  fail "plan -o json is not one JSON document with schema_version 1: $(cat "$WORK/plan.json")"
 
 step "invalid -o is rejected"
 expect_code 1 rt plan -o yaml "$WORK/v1.yaml"
@@ -85,12 +87,14 @@ rt status -o json "$WORK/v1.yaml" >"$WORK/status.json"
 
 step "upgrade ok-a to 1.0.1"
 rt apply --yes "$WORK/v2.yaml"
-rt status "$WORK/v2.yaml" | grep -q "/ok-a  state=deployed .*deployed=1.0.1" || fail "ok-a not at 1.0.1"
+rt status "$WORK/v2.yaml" >"$WORK/status.txt"
+grep -q "/ok-a  state=deployed .*deployed=1.0.1" "$WORK/status.txt" || fail "ok-a not at 1.0.1: $(cat "$WORK/status.txt")"
 
 step "rollback ok-a (healthy release returns to 1.0.0, stays installed)"
 rt rollback --yes "$WORK/v2.yaml" ok-a
-rt status "$WORK/v2.yaml" | grep -q "/ok-a  state=drifted .*wanted=1.0.1  deployed=1.0.0  status=deployed" ||
-  fail "ok-a after rollback: $(rt status "$WORK/v2.yaml")"
+rt status "$WORK/v2.yaml" >"$WORK/status.txt"
+grep -q "/ok-a  state=drifted .*wanted=1.0.1  deployed=1.0.0  status=deployed" "$WORK/status.txt" ||
+  fail "ok-a after rollback: $(cat "$WORK/status.txt")"
 expect_code 2 rt plan --detailed-exitcode "$WORK/v2.yaml"
 
 step "SIGINT during a slow install exits 130 and releases the lock"
