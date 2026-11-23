@@ -19,7 +19,7 @@ jobs:
       - run: make build-dev
       - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/azure/sandbox.yaml --check-quota=false
       - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/aws/minimal.yaml --check-quota=false
-      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/gcp.yaml --check-quota=false
+      - run: INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/gcp/minimal.yaml --check-quota=false
 
   release-matrix:
     runs-on: ubuntu-latest
