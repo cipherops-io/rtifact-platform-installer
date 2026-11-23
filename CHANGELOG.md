@@ -20,6 +20,10 @@ First public release, paired with **boilerplates [v0.0.1](https://github.com/cip
 
 Plan exit codes: `0` no changes, `1` refusal or error (a refusal always wins), `2` pending changes with `--detailed-exitcode`, `130` interrupted. `plan -o json` and `status -o json` carry `schema_version`.
 
+### Build
+
+- `package-content` always syncs a `build/embed` stub so `make build-dev` works after `make release` or when `build/embed/placeholder.txt` was removed.
+
 ### Infrastructure
 
 - One `cloud.Cloud` interface for Azure, AWS and GCP; shared `internal/engine` plan/confirm/act/record path; profiles are data under `profiles/<id>/`.

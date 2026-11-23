@@ -86,10 +86,20 @@ if [ -d "$ROOT/examples/deploy" ]; then
   rsync -a "$ROOT/examples/deploy" "$PKG/examples/"
 fi
 
-if [ -d "$ROOT/build/embed" ]; then
-  mkdir -p "$PKG/build"
+rm -rf "$PKG/build/embed"
+mkdir -p "$PKG/build/embed"
+stub="$ROOT/build/embed/placeholder.txt"
+if [ -d "$ROOT/build/embed" ] && [ -n "$(ls -A "$ROOT/build/embed" 2>/dev/null)" ]; then
   rsync -a "$ROOT/build/embed/" "$PKG/build/embed/"
   echo "Embedded build/embed (tofu + mirror) synced"
+elif [ -f "$stub" ]; then
+  cp "$stub" "$PKG/build/embed/placeholder.txt"
+  echo "Embedded build/embed stub from $stub"
+else
+  mkdir -p "$ROOT/build/embed"
+  : > "$stub"
+  cp "$stub" "$PKG/build/embed/placeholder.txt"
+  echo "Embedded build/embed stub (created $stub)"
 fi
 touch "$PKG/.packaged"
 echo "Packaged content synced to $PKG (clouds: $PACKAGED_CLOUDS)"
