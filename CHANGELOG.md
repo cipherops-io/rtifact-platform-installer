@@ -2,7 +2,7 @@
 
 ## [0.0.1] - 2026-11-23
 
-First public release, paired with **boilerplates [v0.0.1](https://github.com/cipherops-io/boilerplates/releases/tag/v0.0.1)** (`c4c616a` in `boilerplate-source.yaml`). Earlier internal version numbers (0.2–0.4.x) were pre-release builds and are folded into this entry. An earlier `v0.0.1` tag pointed at a build whose deploy commands did not reach the cluster; this tag replaces it.
+First public release, paired with **boilerplates [v0.0.1](https://github.com/cipherops-io/boilerplates/releases/tag/v0.0.1)** (`3e269f3` in `boilerplate-source.yaml`). Earlier internal version numbers (0.2–0.4.x) were pre-release builds and are folded into this entry. An earlier `v0.0.1` tag pointed at a build whose deploy commands did not reach the cluster; this tag replaces it.
 
 ### Deploy engine
 
@@ -32,9 +32,27 @@ Plan exit codes: `0` no changes, `1` refusal or error (a refusal always wins), `
 - AWS `data-platform` layer (preview features): `kms`, `postgresql` (RDS, Secrets Manager-managed master password), `redis` (ElastiCache, TLS and at-rest encryption), `object_storage` (S3) and `container_registry` (ECR). An enabled `postgresql` or `redis` must name a `subnet_tier` spanning two zones. Checked with `tofu validate` and mocked-provider tests; not yet applied to a live account.
 - Provider pins in `build/provider-versions.yml`; managed files and `boilerplate-source.yaml` from boilerplates.
 
+### Configurable infrastructure values
+
+- Every setting that was hard-coded in `infra/modules` and `infra/stacks` (Azure and AWS) is now a variable. The default is the old value, the validation comes from the provider docs (azurerm 5.14.0, aws 6.73.0), and the setting is reachable from the customer YAML and the closed JSON schemas. `tests/config/module_literals_test.go` fails on any new literal not listed, with a reason, in `tests/config/module_literals_allow.yaml` (names, IAM documents, values the provider or protocol mandates, security baselines).
+- YAML values that were accepted but silently dropped now take effect: `kubernetes_cluster.os_disk_type`, `system_pool` and `sku_tier` (Azure); `private_dns_resolver.inbound_endpoint_enabled` and `outbound_endpoint_enabled`; `disk_encryption_set.rotation_to_latest_version`; EKS node group `ami_type` and `taints`.
+- Azure ACR private endpoints are created only for the Premium SKU (Basic and Standard cannot have one); public network access defaults to on for non-Premium SKUs.
+- AWS modules declare `opentofu/aws` explicitly, so module resources use the pinned provider instead of an unpinned `hashicorp/aws`. The unused AWS `compute` module is removed (the `bastion` module replaced it).
+- Mocked `tofu test` suites (`infra/modules/*/*/tests`) check that defaults match the old literals and cover the bastion key and SSH outputs; `go test ./tests/config` runs them when `tofu` is on `PATH`.
+- `make tofu-docs` finds modules again (boilerplates fix); module READMEs are regenerated.
+
+### Bastion and kubeconfig outputs
+
+- Azure `bastion.access`: `private` (VM only), `public_ip` (public IP plus an NSG allowing SSH from `allowed_ssh_cidrs`; `0.0.0.0/0` is rejected) or `azure_bastion` (Azure Bastion Standard with tunnelling in front of the VM; needs `network.azure_bastion_subnet_cidr` of /26 or larger). The legacy `bastion.managed: true` maps to `azure_bastion` and now also creates the VM.
+- AWS `bastion.access: ssh` generates an RSA or ED25519 key pair when `ssh_public_key` is empty; `allowed_cidrs` is required and `0.0.0.0/0` is rejected. The removed `bastion.enabled` field was required by the module but forbidden by the schema.
+- `rtifact apply` and `rtifact output` write `<name_prefix>-bastion.pem` (0600) and print the bastion IP and the ready-to-run `ssh -i …`, `az network bastion ssh …` or `aws ssm start-session …` command. AWS `app-platform` outputs `kubeconfig_raw` (exec plugin `aws eks get-token`).
+- Saved `<layer>-outputs.json` files are written 0600 because they carry the bastion key and kubeconfig.
+
 ### Upgrading from pre-release builds
 
 - `rtifact aws|azure|gcp …` command groups are removed: use root commands (`rtifact apply`, `rtifact validate`, …); the cloud comes from YAML `cloud:`.
 - `dataops` command group is removed: use deploy `protect` and the engine flags.
 - `validate --check-azure` is now `validate --check-quota`.
 - `vars/versions.yml` moved to `build/provider-versions.yml` (`make bump-providers`).
+- Azure `bastion.managed: true` now creates the bastion VM as well as the Bastion host, and the Bastion host defaults to the Standard SKU with tunnelling. `features.azure_bastion` alone (no `bastion` block) still creates only the VM.
+- `common.schema.json` `state` accepts `storage_account` (Azure) and `lock_table` (AWS); `state.encryption` must be `AES256`, `aws:kms` or `aws:kms:dsse`.
