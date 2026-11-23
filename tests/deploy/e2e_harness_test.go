@@ -256,7 +256,7 @@ func e2eHelmUpgradeNoWait(t *testing.T, release, ns, chart, version string) {
 	pass := os.Getenv("RTIFACT_REGISTRY_PASSWORD")
 	args := []string{
 		"upgrade", "--install", release, e2eChartRef(t) + "/" + chart,
-		"--version", version, "-n", ns, "--wait=false",
+		"--version", version, "-n", ns, "--wait=hookOnly",
 		"--kubeconfig", e2eKubeconfig(t), "--plain-http",
 	}
 	if user != "" {

@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 LOG="/tmp/rtifact-deploy-e2e.log"
 
 ZOT_VERSION="${ZOT_VERSION:-2.1.23}"
-HELM_VERSION="${HELM_VERSION:-3.16.4}"
+HELM_VERSION="${HELM_VERSION:-4.3.2}"
 REG_PORT="${DEPLOY_E2E_REG_PORT:-5000}"
 REG_HOST="127.0.0.1:${REG_PORT}"
 CLUSTER_NAME="${DEPLOY_E2E_CLUSTER:-rtifact-deploy-e2e}"
