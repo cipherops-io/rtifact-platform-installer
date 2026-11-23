@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
@@ -34,16 +35,24 @@ func captureOutputs(ctx context.Context, tofu TofuRunner, customer *config.Custo
 	}
 	b, _ := json.MarshalIndent(flat, "", "  ")
 	path := filepath.Join(paths.ArtifactsDir(prefix), fmt.Sprintf("%s-outputs.json", layer))
-	if err := os.WriteFile(path, b, 0o644); err != nil {
+	if err := os.WriteFile(path, b, 0o600); err != nil {
 		return err
 	}
-	if layer == stacks.LayerAppPlatform {
+	if err := os.Chmod(path, 0o600); err != nil {
+		return err
+	}
+	if slices.Contains(outputs.MaterializeLayers, layer) {
 		written, err := outputs.MaterializeCWD(prefix, flat, outputs.MaterializeOpts{AWSRegion: awsRegion})
 		if err != nil {
 			return err
 		}
 		for _, p := range written {
 			fmt.Fprintf(os.Stderr, "Wrote %s\n", p)
+		}
+		if cwd, err := os.Getwd(); err == nil {
+			if cmd := outputs.BastionSSHCommand(prefix, cwd, flat); cmd != "" {
+				fmt.Fprintf(os.Stderr, "Bastion: %s\n", cmd)
+			}
 		}
 	}
 	if layer == stacks.LayerNetworkEdge {

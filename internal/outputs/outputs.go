@@ -22,20 +22,53 @@ type MaterializeOpts struct {
 func kubeconfigFile(prefix string) string { return prefix + "-kubeconfig.yaml" }
 func bastionKeyFile(prefix string) string { return prefix + "-bastion.pem" }
 
+// MaterializeLayers lists the layers whose outputs carry kubeconfig or bastion key material
+// (the AWS bastion lives in core-network, the Azure bastion VM in app-platform).
+var MaterializeLayers = []stacks.Layer{stacks.LayerCoreNetwork, stacks.LayerAppPlatform}
+
 // MaterializeFromArtifacts reads saved layer outputs and writes kubeconfig / bastion PEM into cwd.
 func MaterializeFromArtifacts(prefix string, opts MaterializeOpts) ([]string, error) {
-	dir := paths.ArtifactsDir(prefix)
-	layer := stacks.LayerAppPlatform
-	path := filepath.Join(dir, fmt.Sprintf("%s-outputs.json", layer))
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, nil
-	}
-	var flat map[string]any
-	if err := json.Unmarshal(b, &flat); err != nil {
+	flat, err := loadLayers(prefix, MaterializeLayers...)
+	if err != nil || len(flat) == 0 {
 		return nil, err
 	}
 	return materializeCWD(prefix, flat, opts)
+}
+
+// loadLayers merges saved outputs of the given layers; later layers win on key clashes.
+func loadLayers(prefix string, layers ...stacks.Layer) (map[string]any, error) {
+	dir := paths.ArtifactsDir(prefix)
+	merged := map[string]any{}
+	for _, layer := range layers {
+		b, err := os.ReadFile(filepath.Join(dir, fmt.Sprintf("%s-outputs.json", layer)))
+		if err != nil {
+			continue
+		}
+		var flat map[string]any
+		if err := json.Unmarshal(b, &flat); err != nil {
+			return nil, fmt.Errorf("%s outputs: %w", layer, err)
+		}
+		for k, v := range flat {
+			if v != nil {
+				merged[k] = v
+			}
+		}
+	}
+	return merged, nil
+}
+
+// BastionSSHCommand returns the bastion_ssh_command output with the key file name replaced by
+// the absolute path of the PEM written into dir (when that file exists).
+func BastionSSHCommand(prefix, dir string, flat map[string]any) string {
+	cmd := asString(flat["bastion_ssh_command"])
+	if cmd == "" {
+		return ""
+	}
+	pemPath := filepath.Join(dir, bastionKeyFile(prefix))
+	if st, err := os.Stat(pemPath); err == nil && !st.IsDir() {
+		cmd = strings.ReplaceAll(cmd, " "+bastionKeyFile(prefix), " "+pemPath)
+	}
+	return cmd
 }
 
 // MaterializeCWD writes sensitive cluster / bastion files into the current working directory.
@@ -127,10 +160,10 @@ func Print(configPath string) error {
 
 	switch cfg.Cloud {
 	case "aws":
-		addFromLayer(stacks.LayerCoreNetwork, "vpc_id", "subnet_ids_by_tier")
+		addFromLayer(stacks.LayerCoreNetwork, "vpc_id", "subnet_ids_by_tier", "bastion_public_ip", "bastion_private_ip")
 		addFromLayer(stacks.LayerNetworkEdge, "dns_zone_id", "certificate_regional_arn")
 	default:
-		addFromLayer(stacks.LayerCoreNetwork, "resource_group_name", "vnet_id")
+		addFromLayer(stacks.LayerCoreNetwork, "resource_group_name", "vnet_id", "azure_bastion_name")
 	}
 	addFromLayer(stacks.LayerDataPlatform,
 		"key_vault_uri", "acr_id", "postgresql_id", "storage_account_id")
@@ -139,7 +172,7 @@ func Print(configPath string) error {
 		addFromLayer(stacks.LayerAppPlatform, "cluster_name", "cluster_endpoint", "oidc_issuer_url")
 	default:
 		addFromLayer(stacks.LayerAppPlatform,
-			"cluster_name", "aks_name", "bastion_private_ip", "oidc_issuer_url")
+			"cluster_name", "aks_name", "bastion_public_ip", "bastion_private_ip", "oidc_issuer_url")
 	}
 
 	kubePath := filepath.Join(cwd, kubeconfigFile(prefix))
@@ -149,6 +182,11 @@ func Print(configPath string) error {
 	pemPath := filepath.Join(cwd, bastionKeyFile(prefix))
 	if st, err := os.Stat(pemPath); err == nil && !st.IsDir() {
 		rows = append(rows, row{"bastion SSH key (local)", pemPath})
+	}
+	if flat, err := loadLayers(prefix, MaterializeLayers...); err == nil {
+		if cmd := BastionSSHCommand(prefix, cwd, flat); cmd != "" {
+			rows = append(rows, row{"bastion SSH command", cmd})
+		}
 	}
 
 	if len(rows) == 0 {

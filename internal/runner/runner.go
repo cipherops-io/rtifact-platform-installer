@@ -164,7 +164,7 @@ func runPostApply(opts Options, rc *runContext, targetLayers []stacks.Layer) err
 			fmt.Fprintln(os.Stderr, text)
 		}
 	}
-	if !containsLayer(targetLayers, stacks.LayerAppPlatform) {
+	if !containsLayer(targetLayers, stacks.LayerAppPlatform) && !containsLayer(targetLayers, stacks.LayerCoreNetwork) {
 		return nil
 	}
 	written, err := outputs.MaterializeFromArtifacts(rc.customer.NamePrefix(), outputs.MaterializeOpts{
