@@ -15,9 +15,9 @@ type Document struct {
 	NamePrefix    string      `yaml:"name_prefix"`
 	Cluster       Cluster     `yaml:"cluster"`
 	Registry      Registry    `yaml:"registry"`
-	InfraOutputs  string      `yaml:"infra_outputs"`
+	InfraOutputs  string      `yaml:"infra_outputs,omitempty"`
 	Defaults      Defaults    `yaml:"defaults"`
-	Namespaces    []Namespace `yaml:"namespaces"`
+	Namespaces    []Namespace `yaml:"namespaces,omitempty"`
 	Releases      []Release   `yaml:"releases"`
 }
 
@@ -28,17 +28,17 @@ type Customer struct {
 
 type Cluster struct {
 	Kubeconfig     string `yaml:"kubeconfig"`
-	Context        string `yaml:"context"`
+	Context        string `yaml:"context,omitempty"`
 	ExpectedServer string `yaml:"expected_server"`
 }
 
 type Registry struct {
 	Host       string         `yaml:"host"`
 	ChartsPath string         `yaml:"charts_path"`
-	CAFile     string         `yaml:"ca_file"`
+	CAFile     string         `yaml:"ca_file,omitempty"`
 	PlainHTTP  bool           `yaml:"plain_http"`
-	Auth       *RegistryAuth  `yaml:"auth"`
-	PullSecret *PullSecretRef `yaml:"pull_secret"`
+	Auth       *RegistryAuth  `yaml:"auth,omitempty"`
+	PullSecret *PullSecretRef `yaml:"pull_secret,omitempty"`
 }
 
 type RegistryAuth struct {
@@ -52,16 +52,16 @@ type PullSecretRef struct {
 
 type Defaults struct {
 	Timeout           string `yaml:"timeout"`
-	Wait              *bool  `yaml:"wait"`
-	RollbackOnFailure *bool  `yaml:"rollback_on_failure"`
-	HistoryMax        int    `yaml:"history_max"`
+	Wait              *bool  `yaml:"wait,omitempty"`
+	RollbackOnFailure *bool  `yaml:"rollback_on_failure,omitempty"`
+	HistoryMax        int    `yaml:"history_max,omitempty"`
 }
 
 type Namespace struct {
 	Name                        string            `yaml:"name"`
-	PullSecret                  bool              `yaml:"pull_secret"`
-	AttachPullSecretToDefaultSA bool              `yaml:"attach_pull_secret_to_default_sa"`
-	Labels                      map[string]string `yaml:"labels"`
+	PullSecret                  bool              `yaml:"pull_secret,omitempty"`
+	AttachPullSecretToDefaultSA bool              `yaml:"attach_pull_secret_to_default_sa,omitempty"`
+	Labels                      map[string]string `yaml:"labels,omitempty"`
 }
 
 type Release struct {
@@ -69,9 +69,9 @@ type Release struct {
 	Namespace   string         `yaml:"namespace"`
 	Chart       string         `yaml:"chart"`
 	Version     string         `yaml:"version"`
-	CRDs        string         `yaml:"crds"`
-	Requires    []string       `yaml:"requires"`
-	ValuesFiles []string       `yaml:"values_files"`
-	Values      map[string]any `yaml:"values"`
-	Protect     bool           `yaml:"protect"`
+	CRDs        string         `yaml:"crds,omitempty"`
+	Requires    []string       `yaml:"requires,omitempty"`
+	ValuesFiles []string       `yaml:"values_files,omitempty"`
+	Values      map[string]any `yaml:"values,omitempty"`
+	Protect     bool           `yaml:"protect,omitempty"`
 }
