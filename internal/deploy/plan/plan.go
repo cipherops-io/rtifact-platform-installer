@@ -39,8 +39,10 @@ type Wanted struct {
 	// Empty means the caller could not resolve it; the chart digest is then
 	// not part of the unchanged comparison.
 	ChartDigest string
-	// ValuesDigest is the digest of the unresolved values file content.
+	// ValuesDigest is the digest of resolved release values (post placeholder expansion).
 	ValuesDigest string
+	// FileValuesDigest is the digest of merged values from files (audit / inventory only).
+	FileValuesDigest string
 	Requires     []string
 	Protect      bool
 }
@@ -49,8 +51,9 @@ type Wanted struct {
 type Observed struct {
 	Name, Namespace string
 	Chart, Version  string
-	// ChartDigest and ValuesDigest are optional: set when the cluster itself
-	// records them. Otherwise the inventory entry supplies them.
+	// ChartDigest and ValuesDigest are optional: ValuesDigest is the canonical hash
+	// of Helm-stored release values when Observe can read them. ChartDigest may fall
+	// back to inventory when the live chart version matches.
 	ChartDigest         string
 	ValuesDigest        string
 	Status              string // deployed, pending-upgrade, pending-install, failed, etc.
@@ -228,18 +231,13 @@ func decideWanted(w Wanted, o Observed, live bool, inv *Entry, in Input, opts Op
 	return row
 }
 
-// appliedDigests returns the chart and values digests last applied for the
-// observed release. Cluster-recorded digests win; the inventory entry is used
-// only when it describes the same chart and version that is live.
+// appliedDigests returns the chart and values digests for comparing wanted state.
+// Values come from Helm-stored release config only; inventory values digests are
+// file-level audit metadata and are not used for upgrade decisions.
 func appliedDigests(o Observed, inv *Entry) (chartDigest, valuesDigest string) {
 	chartDigest, valuesDigest = o.ChartDigest, o.ValuesDigest
-	if inv != nil && inv.Chart == o.Chart && sameVersion(inv.Version, o.Version) {
-		if chartDigest == "" {
-			chartDigest = inv.ChartDigest
-		}
-		if valuesDigest == "" {
-			valuesDigest = inv.ValuesDigest
-		}
+	if inv != nil && inv.Chart == o.Chart && sameVersion(inv.Version, o.Version) && chartDigest == "" {
+		chartDigest = inv.ChartDigest
 	}
 	return chartDigest, valuesDigest
 }

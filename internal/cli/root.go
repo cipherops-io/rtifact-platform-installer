@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/assets"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/bootstrap"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/cloud/registry"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/config"
@@ -212,7 +213,11 @@ func Run() int {
 	if code, ok := planExitCode(err); ok {
 		return code
 	}
-	fmt.Fprintln(os.Stderr, usererr.Human(err))
+	msg := usererr.Human(err)
+	if rd := deploy.ActiveRedactor(); rd != nil {
+		msg = deploy.MaskedPrint(rd, msg)
+	}
+	fmt.Fprintln(os.Stderr, msg)
 	return ExitCode(err)
 }
 

@@ -1,14 +1,12 @@
 package deploy
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/redact"
 	"gopkg.in/yaml.v3"
 )
@@ -164,12 +162,7 @@ func ResolveAllReleases(deployPath string, doc *Document, outputsDir string, rd 
 	return out, nil
 }
 
-// ValuesDigest returns a stable hash of merged release values (unresolved) for change detection.
+// ValuesDigest returns a stable hash of release values (see plan.ValuesDigest).
 func ValuesDigest(v map[string]any) (string, error) {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return "", err
-	}
-	sum := sha256.Sum256(b)
-	return hex.EncodeToString(sum[:]), nil
+	return plan.ValuesDigest(v)
 }

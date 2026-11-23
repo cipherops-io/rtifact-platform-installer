@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/redact"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 )
 
@@ -20,11 +21,11 @@ func helmDefaults(o RunOptions, doc *Document) helmclient.Defaults {
 	return d
 }
 
-func debugf(o RunOptions, format string, args ...any) {
+func debugf(o RunOptions, rd *redact.Redactor, format string, args ...any) {
 	if !o.Debug {
 		return
 	}
-	fmt.Fprintf(o.err(), "debug: "+format+"\n", args...)
+	fmt.Fprintln(o.err(), MaskedPrint(rd, fmt.Sprintf("debug: "+format, args...)))
 }
 
 // validateOnlyRelease ensures --only names a release in the file.

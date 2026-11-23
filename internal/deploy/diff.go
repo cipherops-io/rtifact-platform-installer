@@ -78,6 +78,10 @@ func printPlanManifestDiffs(ctx context.Context, o planDiffOpts) error {
 		if err != nil {
 			return err
 		}
+		planned, err = manifestForDiff(planned)
+		if err != nil {
+			return err
+		}
 		planned = MaskedPrint(o.rd, planned)
 		var live string
 		if row.Action == plan.ActionUpgrade {
@@ -85,12 +89,17 @@ func printPlanManifestDiffs(ctx context.Context, o planDiffOpts) error {
 			if err != nil {
 				return err
 			}
+			live, err = manifestForDiff(live)
+			if err != nil {
+				return err
+			}
 			live = MaskedPrint(o.rd, live)
 		}
 		printManifestDiff(o.out, o.rd, row.Namespace, row.Name, live, planned)
 		if o.debug {
-			fmt.Fprintf(o.stderr, "debug: planned manifest for %s/%s (%d bytes, secrets masked)\n",
-				row.Namespace, row.Name, len(planned))
+			fmt.Fprintln(o.stderr, MaskedPrint(o.rd, fmt.Sprintf(
+				"debug: planned manifest for %s/%s (%d bytes, secrets masked)",
+				row.Namespace, row.Name, len(planned))))
 		}
 	}
 	return nil

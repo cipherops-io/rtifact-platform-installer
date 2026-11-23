@@ -27,6 +27,7 @@ type wantedBuildOpts struct {
 	outputsDir string
 	reg        ocireg.Registry
 	regClient  *registry.Client
+	rd         *redact.Redactor
 }
 
 func buildWanted(opts wantedBuildOpts) ([]plan.Wanted, error) {
@@ -36,18 +37,27 @@ func buildWanted(opts wantedBuildOpts) ([]plan.Wanted, error) {
 		if err != nil {
 			return nil, err
 		}
-		valuesDigest, err := ValuesDigest(merged)
+		fileDigest, err := ValuesDigest(merged)
+		if err != nil {
+			return nil, err
+		}
+		resolved, err := ResolveReleaseValuesFrom(merged, opts.rd, opts.outputsDir)
+		if err != nil {
+			return nil, err
+		}
+		valuesDigest, err := ValuesDigest(resolved)
 		if err != nil {
 			return nil, err
 		}
 		chartDigest, err := ocireg.ChartDigest(opts.regClient, opts.reg, rel.Chart, rel.Version)
 		if err != nil {
-			chartDigest = ""
+			return nil, err
 		}
 		out = append(out, plan.Wanted{
 			Name: rel.Name, Namespace: rel.Namespace, Chart: rel.Chart,
 			Version: rel.Version, ChartDigest: chartDigest, ValuesDigest: valuesDigest,
-			Requires: rel.Requires, Protect: rel.Protect,
+			FileValuesDigest: fileDigest,
+			Requires:         rel.Requires, Protect: rel.Protect,
 		})
 	}
 	return out, nil
@@ -83,71 +93,76 @@ func entryKey(name, ns string) string { return ns + "/" + name }
 func Apply(ctx context.Context, o RunOptions) error {
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	defer SetActiveRedactor(nil)
 
-	ar, err := prepareApplyRun(ctx, o)
+	sess, err := OpenSession(ctx, o)
 	if err != nil {
 		return AsInterrupted(err)
 	}
-	PrintBanner(o.err(), ar.doc, ar.disc, ar.kcfg, ar.identity)
-	debugf(o, "deployment=%s purge=%v timeout=%s", ar.deployID, o.Purge, helmDefaults(o, ar.doc).Timeout)
+	PrintBanner(o.err(), sess.Doc, sess.Disc, sess.Kube, sess.Identity)
+	ar, err := prepareApplyRun(ctx, o, sess)
+	if err != nil {
+		return AsInterrupted(RedactError(ActiveRedactor(), err))
+	}
+	if err := ensureSystemNS(ctx, ar.kcfg); err != nil {
+		return AsInterrupted(RedactError(ar.rd, err))
+	}
+	h, err := lock.Acquire(ctx, ar.kcfg, ar.deployID, lock.HolderIdentity(newRunID()), o.ForceUnlock)
+	if err != nil {
+		return AsInterrupted(RedactError(ar.rd, err))
+	}
+	ar.lockHold = h
+	defer func() {
+		releaseCtx, rcancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer rcancel()
+		_ = h.Release(releaseCtx, ar.kcfg, ar.deployID)
+	}()
+	return AsInterrupted(RedactError(ar.rd, ar.run(ctx)))
+}
 
+func (ar *applyRun) run(ctx context.Context) error {
+	o := ar.o
+	debugf(o, ar.rd, "deployment=%s purge=%v timeout=%s", ar.deployID, o.Purge, helmDefaults(o, ar.doc).Timeout)
 	if !ar.res.HasChange {
 		fmt.Fprintln(o.out(), "No changes.")
 		return nil
 	}
 	if err := refusedBlocking(ar.res); err != nil {
-		return AsInterrupted(err)
+		return err
 	}
 	removals := removalRows(ar.res)
 	if hasNonRemovalChanges(ar.res) {
 		if err := engine.ConfirmDeployApply(o.Yes); err != nil {
-			return AsInterrupted(err)
+			return err
 		}
 	}
 	if len(removals) > 0 {
 		if err := engine.ConfirmDeployRemovals(o.Yes); err != nil {
-			return AsInterrupted(err)
+			return err
 		}
 	}
 	if o.Purge && len(removals) > 0 {
 		if err := confirmPurgeRemovals(ctx, ar, removals); err != nil {
-			return AsInterrupted(err)
+			return err
 		}
 	}
-	if err := ensureSystemNS(ctx, ar.kcfg); err != nil {
-		return AsInterrupted(err)
-	}
-	if err := ar.acquireLock(); err != nil {
-		return AsInterrupted(err)
-	}
-	defer func() {
-		if ar.lockHold == nil {
-			return
-		}
-		releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = ar.lockHold.Release(releaseCtx, ar.kcfg, ar.deployID)
-	}()
-
-	return AsInterrupted(engine.Run(ctx, []engine.Step{
+	return engine.Run(ctx, []engine.Step{
 		ar.stepEnsureNamespaces(),
 		ar.stepPullSecrets(),
 		ar.stepReleases(),
 		ar.stepRemovals(),
-	}))
+	})
 }
 
-func prepareApplyRun(ctx context.Context, o RunOptions) (*applyRun, error) {
-	sess, err := OpenSession(ctx, o)
-	if err != nil {
-		return nil, err
-	}
+func prepareApplyRun(ctx context.Context, o RunOptions, sess *Session) (*applyRun, error) {
 	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
 	rd := redact.New()
 	resolved, err := ResolveAllReleases(o.FilePath, doc, disc.OutputsPath, rd)
 	if err != nil {
 		return nil, err
 	}
+	SetActiveRedactor(rd)
+	o.withRedactedOutput(rd)
 	o.NeedsRegistry = true
 	regCfg := registryFromDoc(doc)
 	reg, err := registryClient(ctx, doc, true)
@@ -156,7 +171,7 @@ func prepareApplyRun(ctx context.Context, o RunOptions) (*applyRun, error) {
 	}
 	want, err := buildWanted(wantedBuildOpts{
 		deployPath: o.FilePath, doc: doc, outputsDir: disc.OutputsPath,
-		reg: regCfg, regClient: reg,
+		reg: regCfg, regClient: reg, rd: rd,
 	})
 	if err != nil {
 		return nil, err
@@ -208,15 +223,6 @@ func prepareApplyRun(ctx context.Context, o RunOptions) (*applyRun, error) {
 		helm: cs, relByName: relByName, entries: entries,
 		identity: sess.Identity, rd: rd, resolved: resolved,
 	}, nil
-}
-
-func (ar *applyRun) acquireLock() error {
-	h, err := lock.Acquire(ar.ctx, ar.kcfg, ar.deployID, lock.HolderIdentity(newRunID()), ar.o.ForceUnlock)
-	if err != nil {
-		return err
-	}
-	ar.lockHold = h
-	return nil
 }
 
 func (ar *applyRun) writeInventory() error {
@@ -314,7 +320,7 @@ func (ar *applyRun) stepReleases() engine.Step {
 			}
 			applied := inventory.Entry{
 				Name: rel.Name, Namespace: rel.Namespace, Chart: rel.Chart, Version: rel.Version,
-				ChartDigest: chartDigest, ValuesDigest: w.ValuesDigest,
+				ChartDigest: chartDigest, ValuesDigest: w.FileValuesDigest,
 				Requires: rel.Requires, Protect: rel.Protect, UpdatedAt: time.Now().UTC(),
 			}
 			ar.entries[entryKey(rel.Name, rel.Namespace)] = applied

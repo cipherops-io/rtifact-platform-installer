@@ -39,6 +39,7 @@ Helm assertions in e2e use the deploy Helm SDK client (`helmclient.ReleaseByName
 
 | Test function | Purpose |
 |---|---|
-| `TestE2E_Canary_SecretNotInPlanOutput` | Resolved secret never appears in plan output |
+| `TestE2E_Canary_SecretNotInPlanOutput` | Resolved secret never appears in apply, plan, status, or destroy output (with `--debug`) |
+| `TestE2E_EnvOnlyChangeTriggersUpgrade` | Changing only a `${env.*}` value makes plan exit 2 and apply upgrade |
 | `TestE2E_Adopt_UnmanagedRelease` | `--adopt` plan + apply for pre-existing release |
 | `TestE2E_Interrupt_CancelApply` | Cancelled apply returns `ErrInterrupted` |

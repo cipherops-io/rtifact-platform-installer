@@ -181,20 +181,56 @@ func TestE2E_Canary_SecretNotInPlanOutput(t *testing.T) {
 	o := e2eOpts(t, file)
 	o.Stdout = &out
 	o.Stderr = &errOut
+	o.Debug = true
 	e2eCleanupDeploy(t, file, o)
-	e2eMustApply(t, o)
-	out.Reset()
-	errOut.Reset()
-	if _, err := deploy.Plan(context.Background(), o); err != nil {
-		t.Fatal(err)
+	assertNoLeak := func(cmd string, err error) {
+		t.Helper()
+		if err != nil {
+			t.Fatalf("%s: %v", cmd, err)
+		}
+		combined := out.String() + errOut.String()
+		if strings.Contains(combined, secret) {
+			t.Fatalf("%s output leaked secret (len=%d)", cmd, len(combined))
+		}
+		out.Reset()
+		errOut.Reset()
 	}
-	combined := out.String() + errOut.String()
-	if strings.Contains(combined, secret) {
-		t.Fatalf("plan output leaked secret (len=%d)", len(combined))
-	}
+	assertNoLeak("apply", deploy.Apply(context.Background(), o))
+	_, err := deploy.Plan(context.Background(), o)
 	if !strings.Contains(errOut.String(), "Identity:") {
 		t.Fatal("expected Identity banner line on stderr")
 	}
+	assertNoLeak("plan", err)
+	assertNoLeak("status", deploy.Status(context.Background(), o))
+	do := o
+	do.AllowDestroy = true
+	assertNoLeak("destroy", deploy.Destroy(context.Background(), do))
+}
+
+func TestE2E_EnvOnlyChangeTriggersUpgrade(t *testing.T) {
+	t.Setenv("RTIFACT_E2E_MSG", "first")
+	dir := t.TempDir()
+	file := writeFixture(t, dir, func(doc *deploy.Document) {
+		doc.Releases[0].Values = map[string]any{"msg": "${env.RTIFACT_E2E_MSG}"}
+	})
+	o := e2eOpts(t, file)
+	e2eCleanupDeploy(t, file, o)
+	e2eMustApply(t, o)
+	nsA := e2eReleaseNS(t, file, "ok-a")
+	rev := e2eHelmRevision(t, "ok-a", nsA)
+
+	o.DetailedExitCode = true
+	code, _ := e2ePlan(t, o)
+	e2eIntEq(t, "plan exit with unchanged env", code, 0)
+
+	t.Setenv("RTIFACT_E2E_MSG", "second")
+	code, out := e2ePlan(t, o)
+	e2eIntEq(t, "plan exit after env rotation", code, 2)
+	if !strings.Contains(out, "ok-a") {
+		t.Fatalf("expected ok-a upgrade in plan:\n%s", out)
+	}
+	e2eMustApply(t, o)
+	e2eIntEq(t, "ok-a revision after env rotation", e2eHelmRevision(t, "ok-a", nsA), rev+1)
 }
 
 func TestE2E_S19_UnknownOnly(t *testing.T) {

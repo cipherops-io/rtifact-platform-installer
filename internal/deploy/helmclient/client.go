@@ -151,11 +151,20 @@ func (c *Client) Observe(ctx context.Context, opts ObserveOptions) ([]plan.Obser
 			continue
 		}
 		managed := r.Labels != nil && r.Labels[LabelDeployment] == c.deployment
+		releaseValues := r.Config
+		if releaseValues == nil {
+			releaseValues = map[string]any{}
+		}
+		valuesDigest, err := plan.ValuesDigest(releaseValues)
+		if err != nil {
+			return nil, fmt.Errorf("values digest for release %q: %w", w.Name, err)
+		}
 		out = append(out, plan.Observed{
 			Name:                r.Name,
 			Namespace:           r.Namespace,
 			Chart:               r.Chart.Metadata.Name,
 			Version:             r.Chart.Metadata.Version,
+			ValuesDigest:        valuesDigest,
 			Status:              string(r.Info.Status),
 			Revision:            r.Version,
 			ManagedByDeployment: managed,

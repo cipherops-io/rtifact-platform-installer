@@ -58,6 +58,7 @@ func (o *RunOptions) err() io.Writer {
 
 // Plan prints pending changes without mutating the cluster.
 func Plan(ctx context.Context, o RunOptions) (int, error) {
+	defer SetActiveRedactor(nil)
 	sess, err := OpenSession(ctx, o)
 	if err != nil {
 		return 1, err
@@ -67,33 +68,35 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 	rd := redact.New()
 	resolved, err := ResolveAllReleases(o.FilePath, doc, disc.OutputsPath, rd)
 	if err != nil {
-		return 1, err
+		return 1, RedactError(rd, err)
 	}
-	debugf(o, "registry host=%s plain_http=%v", doc.Registry.Host, doc.Registry.PlainHTTP)
+	SetActiveRedactor(rd)
+	o.withRedactedOutput(rd)
+	debugf(o, rd, "registry host=%s plain_http=%v", doc.Registry.Host, doc.Registry.PlainHTTP)
 	o.NeedsRegistry = true
 	regCfg := registryFromDoc(doc)
 	reg, err := registryClient(ctx, doc, true)
 	if err != nil {
-		return 1, err
+		return 1, RedactError(rd, err)
 	}
 	cs, err := newHelmClient(kcfg, doc, reg, o)
 	if err != nil {
-		return 1, err
+		return 1, RedactError(rd, err)
 	}
 	want, err := buildWanted(wantedBuildOpts{
 		deployPath: o.FilePath, doc: doc, outputsDir: disc.OutputsPath,
-		reg: regCfg, regClient: reg,
+		reg: regCfg, regClient: reg, rd: rd,
 	})
 	if err != nil {
-		return 1, err
+		return 1, RedactError(rd, err)
 	}
 	inv, err := inventory.Read(ctx, kcfg, DeploymentID(doc))
 	if err != nil {
-		return 1, err
+		return 1, RedactError(rd, err)
 	}
 	observed, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: observeTargets(want, inv)})
 	if err != nil {
-		return 1, err
+		return 1, RedactError(rd, err)
 	}
 	closure := onlyClosure(doc, o.Only)
 	res := plan.Build(plan.Input{
@@ -105,17 +108,17 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 		Only: o.Only, OnlyClosure: closure,
 	})
 	if err := PrintPlan(o.out(), rd, res, o.JSONOutput); err != nil {
-		return 1, err
+		return 1, RedactError(rd, err)
 	}
 	if err := printPlanManifestDiffs(ctx, planDiffOpts{
 		out: o.out(), stderr: o.err(), debug: o.Debug,
 		cs: cs, doc: doc, res: res, regCfg: regCfg,
 		resolved: resolved, rd: rd,
 	}); err != nil {
-		return 1, err
+		return 1, RedactError(rd, err)
 	}
 	if refusedBlocking(res) != nil {
-		return 1, refusedBlocking(res)
+		return 1, RedactError(rd, refusedBlocking(res))
 	}
 	if o.DetailedExitCode {
 		if res.HasChange {
