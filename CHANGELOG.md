@@ -8,7 +8,7 @@ First public release, paired with **boilerplates [v0.0.1](https://github.com/cip
 
 `rtifact deploy validate | plan | apply | status | rollback | destroy` with Helm v4.3.2 (SDK), an inventory ConfigMap per deployment, a Lease lock held from plan through apply, and stepped apply in dependency order.
 
-`deploy-e2e` (kind cluster plus authenticated Zot registry) was first green on `main` at `41f1759` ([CI run 45121102246](https://github.com/cipherops-io/rtifact-platform-installer/actions/runs/45121102246)); every CI check, `deploy-e2e` included, is green at `8d01e55` ([CI run 45129873664](https://github.com/cipherops-io/rtifact-platform-installer/actions/runs/45129873664)). It runs the Go scenarios in `tests/deploy/README.md` and `tests/deploy/rehearsal.sh` against the built binary:
+`deploy-e2e` (kind cluster plus authenticated Zot registry) was first green on `main` at `41f1759` ([CI run 45121102246](https://github.com/cipherops-io/rtifact-platform-installer/actions/runs/45121102246)); every CI check, `deploy-e2e` included, is green at `1b5474a`, the configurable-infra and bastion-outputs build ([ci run 45220770374](https://github.com/cipherops-io/rtifact-platform-installer/actions/runs/45220770374), [test run 45220770337](https://github.com/cipherops-io/rtifact-platform-installer/actions/runs/45220770337)). It runs the Go scenarios in `tests/deploy/README.md` and `tests/deploy/rehearsal.sh` against the built binary:
 
 - **S1–S4**: fresh apply, no-op re-apply, version bump, value-only change
 - **S5–S6**: failed release rollback, CRD upgrade (`crds: upgrade`)
