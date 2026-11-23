@@ -14,5 +14,5 @@ resource "aws_route53_record" "delegation" {
   name    = trimsuffix(local.cfg.zone_name, ".")
   type    = "NS"
   ttl     = 300
-  records = aws_route53_zone.main[0].name_servers
+  records = aws_route53_zone.main.name_servers
 }
