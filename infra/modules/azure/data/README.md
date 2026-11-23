@@ -58,7 +58,9 @@ PostgreSQL, Redis, ADLS corpus storage, Foundry non-HNS storage, ACR, private DN
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| acr | Container registry access (container_registry in customer YAML). Only Premium gets a private endpoint; public access defaults to off for Premium and on otherwise. | <pre>object({<br/>    admin_enabled                 = optional(bool, false)<br/>    public_network_access_enabled = optional(bool)<br/>  })</pre> | `{}` | no |
 | acr_sku | n/a | `string` | `"Premium"` | no |
+| azure_files | Azure Files share access (azure_files in customer YAML). | <pre>object({<br/>    public_network_access = optional(string, "Disabled")<br/>    enabled_protocol      = optional(string, "NFS")<br/>  })</pre> | `{}` | no |
 | azure_files_quota_gb | n/a | `number` | `1024` | no |
 | azure_files_share_name | n/a | `string` | `"aios-shared"` | no |
 | azure_files_zone_redundant | n/a | `bool` | `true` | no |
@@ -66,8 +68,10 @@ PostgreSQL, Redis, ADLS corpus storage, Foundry non-HNS storage, ACR, private DN
 | features | n/a | <pre>object({<br/>    postgresql_flexible_server = bool<br/>    container_registry         = bool<br/>    storage_account            = bool<br/>    redis_cache                = bool<br/>    azure_managed_redis        = optional(bool, false)<br/>    private_dns_zones          = bool<br/>    azure_files_share          = bool<br/>    disk_encryption_set        = optional(bool, false)<br/>    ai_foundry                 = optional(bool, false)<br/>  })</pre> | n/a | yes |
 | foundry_storage | Non-HNS storage for Azure AI Foundry; set from customer ai_foundry.storage YAML. | <pre>object({<br/>    account_tier             = string<br/>    account_replication_type = string<br/>    public_network_access    = string<br/>  })</pre> | n/a | yes |
 | location | n/a | `string` | n/a | yes |
+| managed_redis | Azure Managed Redis settings (azure_managed_redis in customer YAML). | <pre>object({<br/>    public_network_access = optional(string, "Disabled")<br/>    client_protocol       = optional(string, "Encrypted")<br/>    eviction_policy       = optional(string, "AllKeysLRU")<br/>  })</pre> | `{}` | no |
 | managed_redis_sku_name | n/a | `string` | `"Balanced_B3"` | no |
 | name_prefix | n/a | `string` | n/a | yes |
+| postgresql | PostgreSQL Flexible Server settings beyond SKU and storage (postgresql_flexible_server in customer YAML). | <pre>object({<br/>    administrator_login           = optional(string, "aiosadmin")<br/>    zone                          = optional(string, "1")<br/>    read_replica_zone             = optional(string, "2")<br/>    extensions                    = optional(list(string), ["CITEXT", "UUID-OSSP"])<br/>    public_network_access_enabled = optional(bool, false)<br/>    password_length               = optional(number, 24)<br/>    password_special              = optional(bool, true)<br/>  })</pre> | `{}` | no |
 | postgresql_backup_retention_days | n/a | `number` | `7` | no |
 | postgresql_ha_enabled | n/a | `bool` | `false` | no |
 | postgresql_ha_mode | n/a | `string` | `"ZoneRedundant"` | no |
@@ -76,12 +80,15 @@ PostgreSQL, Redis, ADLS corpus storage, Foundry non-HNS storage, ACR, private DN
 | postgresql_storage_iops | n/a | `number` | `null` | no |
 | postgresql_storage_mb | n/a | `number` | `1048576` | no |
 | postgresql_version | n/a | `string` | `"16"` | no |
+| private_endpoint_connection | Approval settings for the data service private endpoints (network.private_endpoint). | <pre>object({<br/>    is_manual_connection = optional(bool, false)<br/>    request_message      = optional(string)<br/>  })</pre> | `{}` | no |
 | private_endpoint_subnet_id | n/a | `string` | n/a | yes |
 | redis_capacity | n/a | `number` | `1` | no |
 | redis_family | n/a | `string` | `"P"` | no |
 | redis_minimum_tls_version | n/a | `string` | `"1.2"` | no |
+| redis_public_network_access_enabled | Allow public network access to Azure Cache for Redis (redis_cache.public_network_access_enabled). | `bool` | `false` | no |
 | redis_sku_tier | n/a | `string` | `"Premium"` | no |
 | resource_group_name | n/a | `string` | n/a | yes |
+| storage | Corpus/backup storage account (storage_account in customer YAML). | <pre>object({<br/>    account_tier             = optional(string, "Premium")<br/>    account_replication_type = optional(string, "LRS")<br/>    account_kind             = optional(string, "BlockBlobStorage")<br/>    public_network_access    = optional(string, "Disabled")<br/>    is_hns_enabled           = optional(bool, true)<br/>    delete_retention_days    = optional(number, 30)<br/>  })</pre> | `{}` | no |
 | storage_backup_gb | n/a | `number` | `250` | no |
 | storage_corpus_gb | n/a | `number` | `250` | no |
 | tags | n/a | `map(string)` | `{}` | no |

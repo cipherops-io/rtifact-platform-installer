@@ -30,8 +30,10 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| des_key | Disk encryption set key (disk_encryption_set.key in customer YAML). | <pre>object({<br/>    key_type                  = optional(string, "RSA")<br/>    key_size                  = optional(number, 3072)<br/>    auto_key_rotation_enabled = optional(bool, false)<br/>  })</pre> | `{}` | no |
 | features | n/a | <pre>object({<br/>    disk_encryption_set = optional(bool, false)<br/>    ai_foundry          = optional(bool, false)<br/>  })</pre> | <pre>{<br/>  "ai_foundry": false,<br/>  "disk_encryption_set": false<br/>}</pre> | no |
 | foundry_key_vault | Foundry-dedicated Key Vault (access-policy model); set from customer key_vault.foundry / ai_foundry.key_vault YAML. | <pre>object({<br/>    sku                              = string<br/>    soft_delete_retention_days       = number<br/>    purge_protection_enabled         = bool<br/>    grant_deployer_contributor       = bool<br/>    deployer_key_permissions         = list(string)<br/>    deployer_secret_permissions      = list(string)<br/>    deployer_certificate_permissions = list(string)<br/>  })</pre> | n/a | yes |
+| key_vault | Workload Key Vault settings (key_vault in customer YAML). | <pre>object({<br/>    soft_delete_retention_days = optional(number, 7)<br/>    purge_protection_enabled   = optional(bool, true)<br/>    rbac_authorization_enabled = optional(bool, true)<br/>  })</pre> | `{}` | no |
 | location | n/a | `string` | n/a | yes |
 | name_prefix | n/a | `string` | n/a | yes |
 | resource_group_name | n/a | `string` | n/a | yes |

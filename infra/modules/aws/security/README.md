@@ -20,7 +20,9 @@
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | deletion_window_days | n/a | `number` | `30` | no |
+| enable_key_rotation | Rotate the data services KMS key automatically (kms.enable_key_rotation). | `bool` | `true` | no |
 | name_prefix | n/a | `string` | n/a | yes |
+| rotation_period_in_days | Days between automatic rotations (kms.rotation_period_in_days); AWS default is 365. | `number` | `null` | no |
 | tags | n/a | `map(string)` | `{}` | no |
 
 ## Outputs

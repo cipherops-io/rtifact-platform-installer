@@ -27,6 +27,7 @@
 | location | n/a | `string` | n/a | yes |
 | name_prefix | n/a | `string` | n/a | yes |
 | resource_group_name | n/a | `string` | n/a | yes |
+| settings | Azure Bastion host settings (bastion.azure_bastion in customer YAML). tunneling_enabled is required for `az network bastion ssh`. | <pre>object({<br/>    sku                = optional(string, "Standard")<br/>    scale_units        = optional(number, 2)<br/>    tunneling_enabled  = optional(bool, true)<br/>    copy_paste_enabled = optional(bool, true)<br/>    file_copy_enabled  = optional(bool, false)<br/>    ip_connect_enabled = optional(bool, false)<br/>  })</pre> | `{}` | no |
 | tags | n/a | `map(string)` | `{}` | no |
 
 ## Outputs
@@ -34,4 +35,5 @@
 | Name | Description |
 |------|-------------|
 | bastion_host_id | n/a |
+| bastion_host_name | n/a |
 <!-- END_TF_DOCS -->

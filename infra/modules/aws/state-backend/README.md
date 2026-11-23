@@ -25,6 +25,7 @@
 | account_id | n/a | `string` | n/a | yes |
 | location | n/a | `string` | n/a | yes |
 | name_prefix | n/a | `string` | n/a | yes |
+| state | n/a | <pre>object({<br/>    bucket_name = optional(string)<br/>    encryption  = optional(string, "AES256")<br/>    versioning  = optional(bool, true)<br/>    lock_table = optional(object({<br/>      billing_mode   = optional(string, "PAY_PER_REQUEST")<br/>      read_capacity  = optional(number, 5)<br/>      write_capacity = optional(number, 5)<br/>    }), {})<br/>  })</pre> | `{}` | no |
 
 ## Outputs
 

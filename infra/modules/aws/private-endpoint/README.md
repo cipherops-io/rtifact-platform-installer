@@ -20,6 +20,7 @@
 |------|-------------|------|---------|:--------:|
 | location | n/a | `string` | n/a | yes |
 | name | n/a | `string` | n/a | yes |
+| private_dns_enabled | Associate the AWS-managed private hosted zone with the VPC so service hostnames resolve to the endpoint. | `bool` | `true` | no |
 | scope_name | n/a | `string` | n/a | yes |
 | service_name | n/a | `string` | n/a | yes |
 | subnet_id | n/a | `string` | n/a | yes |

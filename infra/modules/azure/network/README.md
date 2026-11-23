@@ -41,7 +41,9 @@
 | azure_bastion_subnet_cidr | n/a | `string` | `null` | no |
 | azure_firewall_subnet_cidr | n/a | `string` | `null` | no |
 | bastion_managed | n/a | `bool` | `false` | no |
+| dns_resolver_inbound | Inbound endpoint IP configuration for the private DNS resolver (private_dns_resolver in customer YAML). | <pre>object({<br/>    enabled                      = optional(bool, true)<br/>    private_ip_allocation_method = optional(string, "Dynamic")<br/>    private_ip_address           = optional(string)<br/>  })</pre> | `{}` | no |
 | dns_resolver_inbound_subnet_cidr | n/a | `string` | `null` | no |
+| dns_resolver_outbound_enabled | Create the private DNS resolver outbound endpoint (private_dns_resolver.outbound_endpoint_enabled). | `bool` | `true` | no |
 | dns_resolver_outbound_subnet_cidr | n/a | `string` | `null` | no |
 | features | n/a | <pre>object({<br/>    azure_firewall              = optional(bool, false)<br/>    azure_vpn_gateway           = optional(bool, false)<br/>    azure_express_route_gateway = optional(bool, false)<br/>    private_dns_resolver        = optional(bool, false)<br/>  })</pre> | <pre>{<br/>  "azure_express_route_gateway": false,<br/>  "azure_firewall": false,<br/>  "azure_vpn_gateway": false,<br/>  "private_dns_resolver": false<br/>}</pre> | no |
 | gateway_subnet_cidr | n/a | `string` | `null` | no |
@@ -49,6 +51,7 @@
 | location | n/a | `string` | n/a | yes |
 | management_subnet_cidr | n/a | `string` | n/a | yes |
 | name_prefix | n/a | `string` | n/a | yes |
+| nat | NAT gateway for the node subnet and its public IP (network.nat in customer YAML). | <pre>object({<br/>    sku_name = optional(string, "Standard")<br/>    public_ip = optional(object({<br/>      sku               = optional(string, "Standard")<br/>      allocation_method = optional(string, "Static")<br/>    }), {})<br/>  })</pre> | `{}` | no |
 | node_subnet_cidr | n/a | `string` | n/a | yes |
 | private_endpoint_subnet_cidr | n/a | `string` | n/a | yes |
 | resource_group_name | n/a | `string` | n/a | yes |

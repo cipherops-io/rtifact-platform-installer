@@ -26,14 +26,14 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| express_route | n/a | <pre>object({<br/>    sku                      = optional(string, "ErGw2AZ")<br/>    express_route_circuit_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "sku": "ErGw2AZ"<br/>}</pre> | no |
+| express_route | n/a | <pre>object({<br/>    sku                      = optional(string, "ErGw2AZ")<br/>    express_route_circuit_id = optional(string)<br/>    routing_weight           = optional(number, 0)<br/>  })</pre> | `{}` | no |
 | express_route_enabled | n/a | `bool` | `false` | no |
 | gateway_subnet_id | n/a | `string` | n/a | yes |
 | location | n/a | `string` | n/a | yes |
 | name_prefix | n/a | `string` | n/a | yes |
 | resource_group_name | n/a | `string` | n/a | yes |
 | tags | n/a | `map(string)` | `{}` | no |
-| vpn | n/a | <pre>object({<br/>    sku           = optional(string, "VpnGw2")<br/>    gateway_type  = optional(string, "Vpn")<br/>    vpn_type      = optional(string, "RouteBased")<br/>    active_active = optional(bool, false)<br/>  })</pre> | <pre>{<br/>  "active_active": false,<br/>  "gateway_type": "Vpn",<br/>  "sku": "VpnGw2",<br/>  "vpn_type": "RouteBased"<br/>}</pre> | no |
+| vpn | n/a | <pre>object({<br/>    sku           = optional(string, "VpnGw2")<br/>    gateway_type  = optional(string, "Vpn")<br/>    vpn_type      = optional(string, "RouteBased")<br/>    active_active = optional(bool, false)<br/>  })</pre> | `{}` | no |
 | vpn_enabled | n/a | `bool` | `false` | no |
 
 ## Outputs

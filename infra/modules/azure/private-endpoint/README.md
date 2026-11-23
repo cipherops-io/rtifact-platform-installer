@@ -22,6 +22,7 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| connection | Private service connection approval settings (network.private_endpoint in customer YAML). | <pre>object({<br/>    is_manual_connection = optional(bool, false)<br/>    request_message      = optional(string)<br/>  })</pre> | `{}` | no |
 | location | n/a | `string` | n/a | yes |
 | name | n/a | `string` | n/a | yes |
 | private_connection_resource_id | n/a | `string` | n/a | yes |
