@@ -42,8 +42,8 @@ record-boilerplate-source:
 	    ;; \
 	  *) \
 	    if [ -d "$(BOILERPLATES_REPO)/.git" ]; then \
-	      commit=$$(git -C "$(BOILERPLATES_REPO)" rev-parse "refs/tags/$$ref^{commit}" 2>/dev/null \
-	        || git -C "$(BOILERPLATES_REPO)" rev-parse "$$ref^{commit}" 2>/dev/null); \
+	      commit=$$(git -C "$(BOILERPLATES_REPO)" rev-parse --verify -q "refs/tags/$$ref^{commit}" 2>/dev/null \
+	        || git -C "$(BOILERPLATES_REPO)" rev-parse --verify -q "$$ref^{commit}" 2>/dev/null); \
 	    fi; \
 	    if [ -z "$$commit" ]; then \
 	      remote="https://github.com/cipherops-io/boilerplates.git"; \
@@ -71,8 +71,8 @@ verify-boilerplate-source:
 	[ -n "$$ref" ] && [ -n "$$want" ] || { echo "boilerplate-source.yaml missing ref or commit"; exit 1; }; \
 	got=""; \
 	if [ -d "$(BOILERPLATES_REPO)/.git" ]; then \
-	  got=$$(git -C "$(BOILERPLATES_REPO)" rev-parse "refs/tags/$$ref^{commit}" 2>/dev/null \
-	    || git -C "$(BOILERPLATES_REPO)" rev-parse "$$ref^{commit}" 2>/dev/null); \
+	  got=$$(git -C "$(BOILERPLATES_REPO)" rev-parse --verify -q "refs/tags/$$ref^{commit}" 2>/dev/null \
+	    || git -C "$(BOILERPLATES_REPO)" rev-parse --verify -q "$$ref^{commit}" 2>/dev/null); \
 	fi; \
 	if [ -z "$$got" ]; then \
 	  remote="https://github.com/cipherops-io/boilerplates.git"; \
