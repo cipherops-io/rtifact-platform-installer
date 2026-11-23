@@ -72,6 +72,10 @@ variable "network" {
     azure_bastion_subnet_cidr         = optional(string)
     dns_resolver_inbound_subnet_cidr  = optional(string)
     dns_resolver_outbound_subnet_cidr = optional(string)
+    private_endpoint = optional(object({
+      is_manual_connection = optional(bool)
+      request_message      = optional(string)
+    }))
   })
 }
 
@@ -80,7 +84,7 @@ variable "kubernetes_cluster" {
     kubernetes_version = string
     availability_zones = list(string)
     node_pools = map(object({
-      name       = string
+      name       = optional(string)
       vm_size    = string
       node_count = number
     }))
@@ -112,15 +116,23 @@ variable "postgresql_flexible_server" {
     read_replica = optional(object({
       enabled = bool
     }), { enabled = false })
+    administrator_login           = optional(string)
+    zone                          = optional(string)
+    read_replica_zone             = optional(string)
+    extensions                    = optional(list(string))
+    public_network_access_enabled = optional(bool)
+    password_length               = optional(number)
+    password_special              = optional(bool)
   })
 }
 
 variable "redis_cache" {
   type = object({
-    sku_name            = optional(string, "Premium")
-    family              = optional(string, "P")
-    capacity            = optional(number, 1)
-    minimum_tls_version = optional(string, "1.2")
+    sku_name                      = optional(string, "Premium")
+    family                        = optional(string, "P")
+    capacity                      = optional(number, 1)
+    minimum_tls_version           = optional(string, "1.2")
+    public_network_access_enabled = optional(bool)
   })
   default = {
     sku_name            = "Premium"
@@ -132,9 +144,11 @@ variable "redis_cache" {
 
 variable "azure_files" {
   type = object({
-    share_name     = optional(string, "aios-shared")
-    quota_gb       = optional(number, 1024)
-    zone_redundant = optional(bool, true)
+    share_name            = optional(string, "aios-shared")
+    quota_gb              = optional(number, 1024)
+    zone_redundant        = optional(bool, true)
+    public_network_access = optional(string)
+    enabled_protocol      = optional(string)
   })
   default = {
     share_name     = "aios-shared"
@@ -145,20 +159,31 @@ variable "azure_files" {
 
 variable "storage_account" {
   type = object({
-    corpus_gb = number
-    backup_gb = number
+    corpus_gb                = number
+    backup_gb                = number
+    account_tier             = optional(string)
+    account_replication_type = optional(string)
+    account_kind             = optional(string)
+    public_network_access    = optional(string)
+    is_hns_enabled           = optional(bool)
+    delete_retention_days    = optional(number)
   })
 }
 
 variable "container_registry" {
   type = object({
-    sku = string
+    sku                           = string
+    admin_enabled                 = optional(bool)
+    public_network_access_enabled = optional(bool)
   })
 }
 
 variable "key_vault" {
   type = object({
-    sku = string
+    sku                        = string
+    soft_delete_retention_days = optional(number)
+    purge_protection_enabled   = optional(bool)
+    rbac_authorization_enabled = optional(bool)
     foundry = object({
       sku                              = optional(string)
       soft_delete_retention_days       = number
@@ -267,13 +292,20 @@ variable "application_gateway" {
 variable "disk_encryption_set" {
   type = object({
     rotation_to_latest_version = optional(bool, true)
+    key = optional(object({
+      key_type = optional(string)
+      key_size = optional(number)
+    }))
   })
   default = { rotation_to_latest_version = true }
 }
 
 variable "azure_managed_redis" {
   type = object({
-    sku_name = optional(string, "Balanced_B3")
+    sku_name              = optional(string, "Balanced_B3")
+    public_network_access = optional(string)
+    client_protocol       = optional(string)
+    eviction_policy       = optional(string)
   })
   default = { sku_name = "Balanced_B3" }
 }

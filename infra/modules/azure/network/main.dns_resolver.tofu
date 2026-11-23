@@ -63,7 +63,7 @@ resource "azurerm_private_dns_resolver" "main" {
 }
 
 resource "azurerm_private_dns_resolver_inbound_endpoint" "main" {
-  count = local.dns_resolver_enabled ? 1 : 0
+  count = local.dns_resolver_enabled && var.dns_resolver_inbound.enabled ? 1 : 0
 
   name                    = "${var.name_prefix}-dnsr-in"
   private_dns_resolver_id = azurerm_private_dns_resolver.main[0].id
@@ -71,13 +71,14 @@ resource "azurerm_private_dns_resolver_inbound_endpoint" "main" {
   tags                    = var.tags
 
   ip_configurations {
-    private_ip_allocation_method = "Dynamic"
+    private_ip_allocation_method = var.dns_resolver_inbound.private_ip_allocation_method
+    private_ip_address           = var.dns_resolver_inbound.private_ip_allocation_method == "Static" ? var.dns_resolver_inbound.private_ip_address : null
     subnet_id                    = azurerm_subnet.dns_resolver_inbound[0].id
   }
 }
 
 resource "azurerm_private_dns_resolver_outbound_endpoint" "main" {
-  count = local.dns_resolver_enabled ? 1 : 0
+  count = local.dns_resolver_enabled && var.dns_resolver_outbound_enabled ? 1 : 0
 
   name                    = "${var.name_prefix}-dnsr-out"
   private_dns_resolver_id = azurerm_private_dns_resolver.main[0].id

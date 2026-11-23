@@ -21,8 +21,8 @@ resource "azurerm_application_gateway" "main" {
   }
 
   ssl_policy {
-    policy_type = "Predefined"
-    policy_name = "AppGwSslPolicy20170401S"
+    policy_type = var.ssl_policy.policy_type
+    policy_name = var.ssl_policy.policy_name
   }
 
   gateway_ip_configuration {
@@ -32,7 +32,7 @@ resource "azurerm_application_gateway" "main" {
 
   frontend_port {
     name = "http"
-    port = 80
+    port = var.frontend_port
   }
 
   frontend_ip_configuration {
@@ -46,11 +46,11 @@ resource "azurerm_application_gateway" "main" {
 
   backend_http_settings {
     name                  = "placeholder"
-    cookie_based_affinity = "Disabled"
-    path                  = "/"
-    port                  = 80
-    protocol              = "Http"
-    request_timeout       = 30
+    cookie_based_affinity = var.backend_http_settings.cookie_based_affinity
+    path                  = var.backend_http_settings.path
+    port                  = var.backend_http_settings.port
+    protocol              = var.backend_http_settings.protocol
+    request_timeout       = var.backend_http_settings.request_timeout
   }
 
   http_listener {
@@ -63,7 +63,7 @@ resource "azurerm_application_gateway" "main" {
   request_routing_rule {
     name                       = "default"
     rule_type                  = "Basic"
-    priority                   = 1
+    priority                   = var.routing_rule_priority
     http_listener_name         = "http"
     backend_address_pool_name  = "placeholder"
     backend_http_settings_name = "placeholder"

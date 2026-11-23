@@ -9,6 +9,7 @@ core-network:
   - load_balancer_subnet_id
   - private_endpoint_subnet_id
   - management_subnet_id
+  - azure_bastion_name
 data-platform:
   - key_vault_id
   - key_vault_uri
@@ -21,3 +22,6 @@ app-platform:
   - oidc_issuer_url
   - bastion_private_ip
   - bastion_ssh_private_key_pem
+  - bastion_public_ip
+  - bastion_ssh_command
+  - kubeconfig_raw

@@ -16,7 +16,7 @@ resource "azurerm_storage_account" "files" {
   account_replication_type = var.azure_files_zone_redundant ? "ZRS" : "LRS"
   account_kind             = "FileStorage"
   min_tls_version          = "TLS1_2"
-  public_network_access    = "Disabled"
+  public_network_access    = var.azure_files.public_network_access
   tags                     = var.tags
 }
 
@@ -26,7 +26,7 @@ resource "azurerm_storage_share" "aios" {
   name               = var.azure_files_share_name
   storage_account_id = azurerm_storage_account.files[0].id
   quota              = var.azure_files_quota_gb
-  enabled_protocol   = "NFS"
+  enabled_protocol   = var.azure_files.enabled_protocol
 }
 
 resource "azurerm_private_dns_zone" "file" {
@@ -59,7 +59,8 @@ resource "azurerm_private_endpoint" "files" {
     name                           = "files"
     private_connection_resource_id = azurerm_storage_account.files[0].id
     subresource_names              = ["file"]
-    is_manual_connection           = false
+    is_manual_connection           = var.private_endpoint_connection.is_manual_connection
+    request_message                = var.private_endpoint_connection.request_message
   }
 
   dynamic "private_dns_zone_group" {

@@ -1,8 +1,8 @@
 resource "random_password" "pg" {
   count = var.features.postgresql_flexible_server ? 1 : 0
 
-  length  = 24
-  special = true
+  length  = var.postgresql.password_length
+  special = var.postgresql.password_special
 }
 
 resource "azurerm_postgresql_flexible_server" "main" {
@@ -12,14 +12,14 @@ resource "azurerm_postgresql_flexible_server" "main" {
   resource_group_name    = var.resource_group_name
   location               = var.location
   version                = var.postgresql_version
-  administrator_login    = "aiosadmin"
+  administrator_login    = var.postgresql.administrator_login
   administrator_password = random_password.pg[0].result
   sku_name               = var.postgresql_sku_name
   storage_mb             = var.postgresql_storage_mb
-  zone                   = "1"
+  zone                   = var.postgresql.zone == "" ? null : var.postgresql.zone
   tags                   = var.tags
 
-  public_network_access_enabled = false
+  public_network_access_enabled = var.postgresql.public_network_access_enabled
   backup_retention_days         = var.postgresql_backup_retention_days
 
   dynamic "high_availability" {
@@ -38,19 +38,19 @@ resource "azurerm_postgresql_flexible_server" "read_replica" {
   location            = var.location
   create_mode         = "Replica"
   source_server_id    = azurerm_postgresql_flexible_server.main[0].id
-  zone                = "2"
+  zone                = var.postgresql.read_replica_zone == "" ? null : var.postgresql.read_replica_zone
   tags                = var.tags
 
-  public_network_access_enabled = false
+  public_network_access_enabled = var.postgresql.public_network_access_enabled
 
   # Replica create fails while primary PE is UpdatingPrivateEndpointConnection (parallel apply race).
   depends_on = [azurerm_private_endpoint.postgres]
 }
 
 resource "azurerm_postgresql_flexible_server_configuration" "extensions" {
-  count = var.features.postgresql_flexible_server ? 1 : 0
+  count = var.features.postgresql_flexible_server && length(var.postgresql.extensions) > 0 ? 1 : 0
 
   name      = "azure.extensions"
   server_id = azurerm_postgresql_flexible_server.main[0].id
-  value     = "CITEXT,UUID-OSSP"
+  value     = join(",", var.postgresql.extensions)
 }

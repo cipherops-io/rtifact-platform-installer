@@ -29,6 +29,7 @@ module "key_vault_pe" {
   private_connection_resource_id = module.security[0].key_vault_id
   subresource_names              = ["vault"]
   private_dns_zone_ids           = [azurerm_private_dns_zone.vault[0].id]
+  connection                     = var.network.private_endpoint
   tags                           = local.core.tags
 
   depends_on = [module.security]
@@ -45,6 +46,7 @@ module "foundry_key_vault_pe" {
   private_connection_resource_id = module.security[0].ai_foundry_key_vault_id
   subresource_names              = ["vault"]
   private_dns_zone_ids           = [azurerm_private_dns_zone.vault[0].id]
+  connection                     = var.network.private_endpoint
   tags                           = local.core.tags
 
   depends_on = [module.security]

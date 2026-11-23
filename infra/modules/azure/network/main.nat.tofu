@@ -2,8 +2,8 @@ resource "azurerm_public_ip" "nat" {
   name                = "${var.name_prefix}-nat-pip"
   location            = var.location
   resource_group_name = var.resource_group_name
-  allocation_method   = "Static"
-  sku                 = "Standard"
+  allocation_method   = var.nat.public_ip.allocation_method
+  sku                 = var.nat.public_ip.sku
   tags                = var.tags
 }
 
@@ -11,7 +11,7 @@ resource "azurerm_nat_gateway" "main" {
   name                = "${var.name_prefix}-nat"
   location            = var.location
   resource_group_name = var.resource_group_name
-  sku_name            = "Standard"
+  sku_name            = var.nat.sku_name
   tags                = var.tags
 }
 

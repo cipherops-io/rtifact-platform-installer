@@ -72,6 +72,6 @@ resource "azurerm_virtual_network_gateway_connection" "er" {
   type                       = "ExpressRoute"
   virtual_network_gateway_id = azurerm_virtual_network_gateway.express_route[0].id
   express_route_circuit_id   = var.express_route.express_route_circuit_id
-  routing_weight             = 0
+  routing_weight             = var.express_route.routing_weight
   tags                       = var.tags
 }

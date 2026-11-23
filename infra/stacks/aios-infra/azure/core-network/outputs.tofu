@@ -46,6 +46,10 @@ output "bastion_host_id" {
   value = length(module.bastion_host) > 0 ? module.bastion_host[0].bastion_host_id : null
 }
 
+output "azure_bastion_name" {
+  value = length(module.bastion_host) > 0 ? module.bastion_host[0].bastion_host_name : null
+}
+
 output "private_dns_resolver_id" {
   value = var.features.virtual_network ? module.network[0].private_dns_resolver_id : null
 }

@@ -77,6 +77,13 @@ variable "network" {
     azure_bastion_subnet_cidr         = optional(string)
     dns_resolver_inbound_subnet_cidr  = optional(string)
     dns_resolver_outbound_subnet_cidr = optional(string)
+    nat = optional(object({
+      sku_name = optional(string)
+      public_ip = optional(object({
+        sku               = optional(string)
+        allocation_method = optional(string)
+      }))
+    }))
   })
 }
 
@@ -85,7 +92,7 @@ variable "kubernetes_cluster" {
     kubernetes_version = string
     availability_zones = list(string)
     node_pools = map(object({
-      name       = string
+      name       = optional(string)
       vm_size    = string
       node_count = number
     }))
@@ -169,17 +176,39 @@ variable "communication_services" {
 
 variable "bastion" {
   type = object({
-    managed         = bool
-    vm_size         = optional(string, "Standard_D4s_v5")
-    os_disk_size_gb = optional(number, 100)
-    os_disk_type    = optional(string, "Premium_LRS")
+    managed           = optional(bool, false)
+    access            = optional(string, "private")
+    allowed_ssh_cidrs = optional(list(string))
+    vm_size           = optional(string)
+    os_disk_size_gb   = optional(number)
+    os_disk_type      = optional(string)
+    os_disk_caching   = optional(string)
+    admin_username    = optional(string)
+    image = optional(object({
+      publisher = optional(string)
+      offer     = optional(string)
+      sku       = optional(string)
+      version   = optional(string)
+    }))
+    ssh_key = optional(object({
+      algorithm = optional(string)
+      rsa_bits  = optional(number)
+    }))
+    private_ip = optional(object({
+      allocation_method = optional(string)
+      address           = optional(string)
+    }))
+    azure_bastion = optional(object({
+      sku                = optional(string)
+      scale_units        = optional(number)
+      tunneling_enabled  = optional(bool)
+      copy_paste_enabled = optional(bool)
+      file_copy_enabled  = optional(bool)
+      ip_connect_enabled = optional(bool)
+    }))
   })
-  default = {
-    managed         = false
-    vm_size         = "Standard_D4s_v5"
-    os_disk_size_gb = 100
-    os_disk_type    = "Premium_LRS"
-  }
+  default  = {}
+  nullable = false
 }
 
 variable "azure_firewall" {
@@ -208,14 +237,17 @@ variable "azure_express_route" {
   type = object({
     sku                      = optional(string, "ErGw2AZ")
     express_route_circuit_id = optional(string)
+    routing_weight           = optional(number)
   })
   default = { sku = "ErGw2AZ" }
 }
 
 variable "private_dns_resolver" {
   type = object({
-    inbound_endpoint_enabled  = optional(bool, true)
-    outbound_endpoint_enabled = optional(bool, true)
+    inbound_endpoint_enabled             = optional(bool, true)
+    outbound_endpoint_enabled            = optional(bool, true)
+    inbound_private_ip_allocation_method = optional(string)
+    inbound_private_ip_address           = optional(string)
   })
   default = {
     inbound_endpoint_enabled  = true

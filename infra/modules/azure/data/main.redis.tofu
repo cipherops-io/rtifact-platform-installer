@@ -9,5 +9,5 @@ resource "azurerm_redis_cache" "main" {
   sku_name                      = var.redis_sku_tier
   minimum_tls_version           = var.redis_minimum_tls_version
   tags                          = var.tags
-  public_network_access_enabled = false
+  public_network_access_enabled = var.redis_public_network_access_enabled
 }

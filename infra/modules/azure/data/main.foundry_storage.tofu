@@ -35,7 +35,8 @@ resource "azurerm_private_endpoint" "foundry_blob" {
     name                           = "foundry-blob"
     private_connection_resource_id = azurerm_storage_account.foundry[0].id
     subresource_names              = ["blob"]
-    is_manual_connection           = false
+    is_manual_connection           = var.private_endpoint_connection.is_manual_connection
+    request_message                = var.private_endpoint_connection.request_message
   }
 
   dynamic "private_dns_zone_group" {

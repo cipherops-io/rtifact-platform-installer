@@ -11,7 +11,8 @@ resource "azurerm_private_endpoint" "postgres" {
     name                           = "postgres"
     private_connection_resource_id = azurerm_postgresql_flexible_server.main[0].id
     subresource_names              = ["postgresqlServer"]
-    is_manual_connection           = false
+    is_manual_connection           = var.private_endpoint_connection.is_manual_connection
+    request_message                = var.private_endpoint_connection.request_message
   }
 
   dynamic "private_dns_zone_group" {
@@ -36,7 +37,8 @@ resource "azurerm_private_endpoint" "redis" {
     name                           = "redis"
     private_connection_resource_id = azurerm_redis_cache.main[0].id
     subresource_names              = ["redisCache"]
-    is_manual_connection           = false
+    is_manual_connection           = var.private_endpoint_connection.is_manual_connection
+    request_message                = var.private_endpoint_connection.request_message
   }
 
   dynamic "private_dns_zone_group" {
@@ -61,7 +63,8 @@ resource "azurerm_private_endpoint" "blob" {
     name                           = "blob"
     private_connection_resource_id = azurerm_storage_account.main[0].id
     subresource_names              = ["blob"]
-    is_manual_connection           = false
+    is_manual_connection           = var.private_endpoint_connection.is_manual_connection
+    request_message                = var.private_endpoint_connection.request_message
   }
 
   dynamic "private_dns_zone_group" {
@@ -74,7 +77,7 @@ resource "azurerm_private_endpoint" "blob" {
 }
 
 resource "azurerm_private_endpoint" "acr" {
-  count = var.features.container_registry ? 1 : 0
+  count = local.acr_private_endpoint ? 1 : 0
 
   name                = "${var.name_prefix}-acr-pe"
   location            = var.location
@@ -86,7 +89,8 @@ resource "azurerm_private_endpoint" "acr" {
     name                           = "acr"
     private_connection_resource_id = azurerm_container_registry.main[0].id
     subresource_names              = ["registry"]
-    is_manual_connection           = false
+    is_manual_connection           = var.private_endpoint_connection.is_manual_connection
+    request_message                = var.private_endpoint_connection.request_message
   }
 
   dynamic "private_dns_zone_group" {
@@ -111,7 +115,8 @@ resource "azurerm_private_endpoint" "managed_redis" {
     name                           = "managed-redis"
     private_connection_resource_id = azurerm_managed_redis.main[0].id
     subresource_names              = ["redisEnterprise"]
-    is_manual_connection           = false
+    is_manual_connection           = var.private_endpoint_connection.is_manual_connection
+    request_message                = var.private_endpoint_connection.request_message
   }
 
   dynamic "private_dns_zone_group" {

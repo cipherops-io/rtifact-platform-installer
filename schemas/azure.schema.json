@@ -37,18 +37,24 @@
     "state": {
       "type": "object",
       "properties": {
-        "backend": {
-          "type": "string",
-          "enum": ["local", "azurerm", "s3", "gcs"]
-        },
+        "backend": { "type": "string", "enum": ["local", "azurerm", "s3", "gcs"] },
         "bootstrap": { "type": "boolean" },
-        "air_gapped": {
-          "type": "boolean",
-          "default": true
-        },
+        "air_gapped": { "type": "boolean", "default": true },
         "bucket_name": { "type": "string", "minLength": 3 },
         "encryption": { "type": "string" },
-        "versioning": { "type": "boolean" }
+        "versioning": { "type": "boolean" },
+        "storage_account": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Azure remote state storage account created by the state-backend layer.",
+          "properties": {
+            "account_tier": { "type": "string", "enum": ["Standard", "Premium"] },
+            "account_replication_type": {
+              "type": "string",
+              "enum": ["LRS", "GRS", "RAGRS", "ZRS", "GZRS", "RAGZRS"]
+            }
+          }
+        }
       },
       "additionalProperties": false
     },
@@ -156,21 +162,47 @@
         "pod_cidr": { "type": "string" },
         "service_cidr": { "type": "string" },
         "dns_service_ip": { "type": "string" },
-        "subnet_prefixes": { "type": "object", "additionalProperties": { "type": "string" } }
+        "subnet_prefixes": { "type": "object", "additionalProperties": { "type": "string" } },
+        "nat": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "NAT gateway for the AKS node subnet.",
+          "properties": {
+            "sku_name": { "type": "string", "enum": ["Standard", "StandardV2"] },
+            "public_ip": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sku": { "type": "string", "enum": ["Standard", "StandardV2"] },
+                "allocation_method": { "type": "string", "enum": ["Static"] }
+              }
+            }
+          }
+        },
+        "private_endpoint": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Approval settings for every private endpoint the installer creates.",
+          "properties": {
+            "is_manual_connection": { "type": "boolean" },
+            "request_message": { "type": "string", "maxLength": 140 }
+          }
+        }
       }
     },
     "kubernetes_cluster": {
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "sku_tier": { "type": "string" },
+        "sku_tier": { "type": "string", "enum": ["Free", "Standard", "Premium"] },
         "system_pool": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
             "vm_size": { "type": "string" },
-            "node_count": { "type": "integer", "minimum": 1 },
-            "os_disk_size_gb": { "type": "integer", "minimum": 30 }
+            "node_count": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "os_disk_size_gb": { "type": "integer", "minimum": 30, "maximum": 2048 },
+            "name": { "type": "string", "pattern": "^[a-z][a-z0-9]{0,11}$" }
           }
         },
         "master_cidr": { "type": "string" },
@@ -181,29 +213,375 @@
             "additionalProperties": false,
             "properties": {
               "vm_size": { "type": "string" },
-              "node_count": { "type": "integer", "minimum": 1 },
-              "os_disk_size_gb": { "type": "integer", "minimum": 30 }
+              "node_count": { "type": "integer", "minimum": 0, "maximum": 1000 },
+              "os_disk_size_gb": { "type": "integer", "minimum": 30, "maximum": 2048 },
+              "name": { "type": "string", "pattern": "^[a-z][a-z0-9]{0,11}$" },
+              "mode": { "type": "string", "enum": ["System", "User"] }
+            }
+          }
+        },
+        "kubernetes_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$" },
+        "availability_zones": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["1", "2", "3"] }
+        },
+        "os_disk_type": { "type": "string", "enum": ["Managed", "Ephemeral"] },
+        "oidc_issuer_enabled": { "type": "boolean" },
+        "workload_identity_enabled": { "type": "boolean" },
+        "node_provisioning_mode": { "type": "string", "enum": ["Manual", "Auto"] },
+        "api_server": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "API server exposure. authorized_ip_ranges applies only when private_cluster_enabled is false.",
+          "properties": {
+            "private_cluster_enabled": { "type": "boolean" },
+            "private_dns_zone_id": { "type": "string" },
+            "authorized_ip_ranges": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "network_profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "network_plugin": { "type": "string", "enum": ["azure", "kubenet", "none"] },
+            "network_plugin_mode": { "type": "string", "enum": ["overlay", "none"] },
+            "outbound_type": {
+              "type": "string",
+              "enum": [
+                "loadBalancer",
+                "userDefinedRouting",
+                "managedNATGateway",
+                "userAssignedNATGateway",
+                "none"
+              ]
             }
           }
         }
       }
     },
-    "key_vault": { "type": "object", "additionalProperties": true },
-    "postgresql_flexible_server": { "type": "object", "additionalProperties": true },
-    "container_registry": { "type": "object", "additionalProperties": true },
-    "storage_account": { "type": "object", "additionalProperties": true },
-    "redis_cache": { "type": "object", "additionalProperties": true },
-    "azure_managed_redis": { "type": "object", "additionalProperties": true },
+    "key_vault": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "sku": { "type": "string", "enum": ["standard", "premium"] },
+        "soft_delete_retention_days": { "type": "integer", "minimum": 7, "maximum": 90 },
+        "purge_protection_enabled": { "type": "boolean" },
+        "rbac_authorization_enabled": { "type": "boolean" }
+      }
+    },
+    "postgresql_flexible_server": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sku_name": { "type": "string", "pattern": "^(B|GP|MO)_Standard_[A-Za-z0-9_]+$" },
+        "version": { "type": "string", "enum": ["11", "12", "13", "14", "15", "16", "17", "18"] },
+        "storage_mb": {
+          "type": "integer",
+          "enum": [
+            32768,
+            65536,
+            131072,
+            262144,
+            524288,
+            1048576,
+            2097152,
+            4193280,
+            4194304,
+            8388608,
+            16777216,
+            33553408
+          ]
+        },
+        "iops": { "type": "integer", "minimum": 0 },
+        "backup_retention_days": { "type": "integer", "minimum": 7, "maximum": 35 },
+        "high_availability": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "mode": { "type": "string", "enum": ["SameZone", "ZoneRedundant"] }
+          }
+        },
+        "read_replica": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "enabled": { "type": "boolean" } }
+        },
+        "administrator_login": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,62}$" },
+        "zone": { "type": "string", "enum": ["1", "2", "3", ""] },
+        "read_replica_zone": { "type": "string", "enum": ["1", "2", "3", ""] },
+        "extensions": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z0-9_-]+$" } },
+        "public_network_access_enabled": { "type": "boolean" },
+        "password_length": { "type": "integer", "minimum": 16, "maximum": 128 },
+        "password_special": { "type": "boolean" }
+      }
+    },
+    "container_registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sku": { "type": "string", "enum": ["Basic", "Standard", "Premium"] },
+        "admin_enabled": { "type": "boolean" },
+        "public_network_access_enabled": { "type": "boolean" }
+      }
+    },
+    "storage_account": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "corpus_gb": { "type": "integer", "minimum": 1 },
+        "backup_gb": { "type": "integer", "minimum": 1 },
+        "account_tier": { "type": "string", "enum": ["Standard", "Premium"] },
+        "account_replication_type": {
+          "type": "string",
+          "enum": ["LRS", "GRS", "RAGRS", "ZRS", "GZRS", "RAGZRS"]
+        },
+        "account_kind": {
+          "type": "string",
+          "enum": ["BlobStorage", "BlockBlobStorage", "Storage", "StorageV2"]
+        },
+        "public_network_access": {
+          "type": "string",
+          "enum": ["Enabled", "Disabled", "SecuredByPerimeter"]
+        },
+        "is_hns_enabled": { "type": "boolean" },
+        "delete_retention_days": { "type": "integer", "minimum": 1, "maximum": 365 }
+      }
+    },
+    "redis_cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sku_name": { "type": "string", "enum": ["Basic", "Standard", "Premium"] },
+        "family": { "type": "string", "enum": ["C", "P"] },
+        "capacity": { "type": "integer", "minimum": 0, "maximum": 6 },
+        "minimum_tls_version": { "type": "string", "enum": ["1.2"] },
+        "public_network_access_enabled": { "type": "boolean" }
+      }
+    },
+    "azure_managed_redis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sku_name": {
+          "type": "string",
+          "pattern": "^(Balanced_B|ComputeOptimized_X|FlashOptimized_A|MemoryOptimized_M)[0-9]+$"
+        },
+        "public_network_access": { "type": "string", "enum": ["Enabled", "Disabled"] },
+        "client_protocol": { "type": "string", "enum": ["Encrypted", "Plaintext"] },
+        "eviction_policy": {
+          "type": "string",
+          "enum": [
+            "AllKeysLFU",
+            "AllKeysLRU",
+            "AllKeysRandom",
+            "VolatileLRU",
+            "VolatileLFU",
+            "VolatileTTL",
+            "VolatileRandom",
+            "NoEviction"
+          ]
+        }
+      }
+    },
     "azure_bastion": { "type": "object", "additionalProperties": true },
-    "bastion": { "type": "object", "additionalProperties": true },
-    "azure_firewall": { "type": "object", "additionalProperties": true },
+    "bastion": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Jump host VM in the management subnet. access selects private (VNet only), public_ip (NSG allow-list) or azure_bastion (Azure Bastion tunnel).",
+      "properties": {
+        "managed": {
+          "type": "boolean",
+          "description": "Deprecated: true maps to access azure_bastion."
+        },
+        "access": { "type": "string", "enum": ["private", "public_ip", "azure_bastion"] },
+        "allowed_ssh_cidrs": { "type": "array", "items": { "type": "string" } },
+        "vm_size": { "type": "string" },
+        "os_disk_size_gb": { "type": "integer", "minimum": 30, "maximum": 4095 },
+        "os_disk_type": {
+          "type": "string",
+          "enum": [
+            "Standard_LRS",
+            "StandardSSD_LRS",
+            "Premium_LRS",
+            "StandardSSD_ZRS",
+            "Premium_ZRS"
+          ]
+        },
+        "os_disk_caching": { "type": "string", "enum": ["None", "ReadOnly", "ReadWrite"] },
+        "admin_username": { "type": "string", "pattern": "^[a-z_][a-z0-9_-]{0,31}$" },
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "publisher": { "type": "string" },
+            "offer": { "type": "string" },
+            "sku": { "type": "string" },
+            "version": { "type": "string" }
+          }
+        },
+        "ssh_key": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": { "type": "string", "enum": ["RSA", "ED25519"] },
+            "rsa_bits": { "type": "integer", "enum": [2048, 3072, 4096] }
+          }
+        },
+        "private_ip": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "allocation_method": { "type": "string", "enum": ["Dynamic", "Static"] },
+            "address": { "type": "string", "format": "ipv4" }
+          }
+        },
+        "azure_bastion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sku": { "type": "string", "enum": ["Basic", "Standard", "Premium"] },
+            "scale_units": { "type": "integer", "minimum": 2, "maximum": 50 },
+            "tunneling_enabled": { "type": "boolean" },
+            "copy_paste_enabled": { "type": "boolean" },
+            "file_copy_enabled": { "type": "boolean" },
+            "ip_connect_enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "azure_firewall": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "sku_tier": { "type": "string", "enum": ["Basic", "Standard", "Premium"] } }
+    },
     "ai_foundry": { "type": "object", "additionalProperties": true },
-    "disk_encryption_set": { "type": "object", "additionalProperties": true },
-    "application_gateway": { "type": "object", "additionalProperties": true },
+    "disk_encryption_set": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rotation_to_latest_version": { "type": "boolean" },
+        "key": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "key_type": { "type": "string", "enum": ["RSA", "RSA-HSM"] },
+            "key_size": { "type": "integer", "enum": [2048, 3072, 4096] }
+          }
+        }
+      }
+    },
+    "application_gateway": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sku_name": { "type": "string", "enum": ["Basic", "Standard_v2", "WAF_v2"] },
+        "sku_tier": { "type": "string", "enum": ["Basic", "Standard_v2", "WAF_v2"] },
+        "capacity": { "type": "integer", "minimum": 1, "maximum": 125 },
+        "ssl_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "policy_type": { "type": "string", "enum": ["Predefined"] },
+            "policy_name": {
+              "type": "string",
+              "enum": [
+                "AppGwSslPolicy20150501",
+                "AppGwSslPolicy20170401",
+                "AppGwSslPolicy20170401S",
+                "AppGwSslPolicy20220101",
+                "AppGwSslPolicy20220101S"
+              ]
+            }
+          }
+        },
+        "frontend_port": { "type": "integer", "minimum": 1, "maximum": 65199 },
+        "backend_http_settings": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+            "protocol": { "type": "string", "enum": ["Http", "Https"] },
+            "path": { "type": "string", "pattern": "^/" },
+            "cookie_based_affinity": { "type": "string", "enum": ["Enabled", "Disabled"] },
+            "request_timeout": { "type": "integer", "minimum": 1, "maximum": 86400 }
+          }
+        },
+        "routing_rule_priority": { "type": "integer", "minimum": 1, "maximum": 20000 }
+      }
+    },
     "public_dns": { "type": "object", "additionalProperties": true },
     "private_dns": { "type": "object", "additionalProperties": true },
-    "azure_files": { "type": "object", "additionalProperties": true },
+    "azure_files": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "share_name": { "type": "string", "pattern": "^[a-z0-9](?:[a-z0-9]|-[a-z0-9]){2,62}$" },
+        "quota_gb": { "type": "integer", "minimum": 100, "maximum": 102400 },
+        "zone_redundant": { "type": "boolean" },
+        "public_network_access": {
+          "type": "string",
+          "enum": ["Enabled", "Disabled", "SecuredByPerimeter"]
+        },
+        "enabled_protocol": { "type": "string", "enum": ["NFS", "SMB"] }
+      }
+    },
     "communication_services": { "type": "object", "additionalProperties": true },
+    "azure_vpn": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sku": {
+          "type": "string",
+          "enum": [
+            "Basic",
+            "VpnGw1",
+            "VpnGw2",
+            "VpnGw3",
+            "VpnGw4",
+            "VpnGw5",
+            "VpnGw1AZ",
+            "VpnGw2AZ",
+            "VpnGw3AZ",
+            "VpnGw4AZ",
+            "VpnGw5AZ"
+          ]
+        },
+        "gateway_type": { "type": "string", "enum": ["Vpn"] },
+        "vpn_type": { "type": "string", "enum": ["RouteBased", "PolicyBased"] },
+        "active_active": { "type": "boolean" }
+      }
+    },
+    "azure_express_route": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sku": {
+          "type": "string",
+          "enum": [
+            "Standard",
+            "HighPerformance",
+            "UltraPerformance",
+            "ErGwScale",
+            "ErGw1AZ",
+            "ErGw2AZ",
+            "ErGw3AZ"
+          ]
+        },
+        "express_route_circuit_id": { "type": "string" },
+        "routing_weight": { "type": "integer", "minimum": 0, "maximum": 32000 }
+      }
+    },
+    "private_dns_resolver": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inbound_endpoint_enabled": { "type": "boolean" },
+        "outbound_endpoint_enabled": { "type": "boolean" },
+        "inbound_private_ip_allocation_method": { "type": "string", "enum": ["Dynamic", "Static"] },
+        "inbound_private_ip_address": { "type": "string", "format": "ipv4" }
+      }
+    },
     "backend": {
       "oneOf": [
         {

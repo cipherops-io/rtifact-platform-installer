@@ -80,11 +80,33 @@ variable "kubernetes_cluster" {
     kubernetes_version = string
     availability_zones = list(string)
     node_pools = map(object({
-      name       = string
-      vm_size    = string
-      node_count = number
+      name            = optional(string)
+      vm_size         = string
+      node_count      = number
+      os_disk_size_gb = optional(number)
+      mode            = optional(string)
     }))
-    os_disk_type = optional(string, "Managed")
+    os_disk_type              = optional(string)
+    sku_tier                  = optional(string)
+    oidc_issuer_enabled       = optional(bool)
+    workload_identity_enabled = optional(bool)
+    node_provisioning_mode    = optional(string)
+    system_pool = optional(object({
+      name            = optional(string)
+      vm_size         = optional(string)
+      node_count      = optional(number)
+      os_disk_size_gb = optional(number)
+    }))
+    api_server = optional(object({
+      private_cluster_enabled = optional(bool)
+      private_dns_zone_id     = optional(string)
+      authorized_ip_ranges    = optional(list(string))
+    }))
+    network_profile = optional(object({
+      network_plugin      = optional(string)
+      network_plugin_mode = optional(string)
+      outbound_type       = optional(string)
+    }))
   })
 }
 
@@ -145,17 +167,39 @@ variable "key_vault" {
 
 variable "bastion" {
   type = object({
-    managed         = bool
-    vm_size         = optional(string, "Standard_D4s_v5")
-    os_disk_size_gb = optional(number, 100)
-    os_disk_type    = optional(string, "Premium_LRS")
+    managed           = optional(bool, false)
+    access            = optional(string, "private")
+    allowed_ssh_cidrs = optional(list(string))
+    vm_size           = optional(string)
+    os_disk_size_gb   = optional(number)
+    os_disk_type      = optional(string)
+    os_disk_caching   = optional(string)
+    admin_username    = optional(string)
+    image = optional(object({
+      publisher = optional(string)
+      offer     = optional(string)
+      sku       = optional(string)
+      version   = optional(string)
+    }))
+    ssh_key = optional(object({
+      algorithm = optional(string)
+      rsa_bits  = optional(number)
+    }))
+    private_ip = optional(object({
+      allocation_method = optional(string)
+      address           = optional(string)
+    }))
+    azure_bastion = optional(object({
+      sku                = optional(string)
+      scale_units        = optional(number)
+      tunneling_enabled  = optional(bool)
+      copy_paste_enabled = optional(bool)
+      file_copy_enabled  = optional(bool)
+      ip_connect_enabled = optional(bool)
+    }))
   })
-  default = {
-    managed         = false
-    vm_size         = "Standard_D4s_v5"
-    os_disk_size_gb = 100
-    os_disk_type    = "Premium_LRS"
-  }
+  default  = {}
+  nullable = false
 }
 
 variable "azure_firewall" {

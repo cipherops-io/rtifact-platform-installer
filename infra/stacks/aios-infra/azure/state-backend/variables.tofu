@@ -34,6 +34,17 @@ variable "resource_group_create" {
   default = true
 }
 
+variable "state" {
+  type = object({
+    storage_account = optional(object({
+      account_tier             = optional(string)
+      account_replication_type = optional(string)
+    }))
+  })
+  default  = {}
+  nullable = false
+}
+
 variable "workload_environment" {
   type    = string
   default = null
@@ -89,7 +100,7 @@ variable "kubernetes_cluster" {
     kubernetes_version = string
     availability_zones = list(string)
     node_pools = map(object({
-      name       = string
+      name       = optional(string)
       vm_size    = string
       node_count = number
     }))

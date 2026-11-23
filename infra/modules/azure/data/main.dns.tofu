@@ -3,7 +3,7 @@ locals {
   redis_dns       = var.features.private_dns_zones && (var.features.redis_cache || var.features.azure_managed_redis)
   blob_dns        = var.features.private_dns_zones && (var.features.storage_account || var.features.ai_foundry)
   foundry_blob_pe = var.features.ai_foundry && var.private_endpoint_subnet_id != null && var.private_endpoint_subnet_id != ""
-  acr_dns         = var.features.private_dns_zones && var.features.container_registry
+  acr_dns         = var.features.private_dns_zones && local.acr_private_endpoint
   file_dns        = var.features.private_dns_zones && var.features.azure_files_share
 }
 

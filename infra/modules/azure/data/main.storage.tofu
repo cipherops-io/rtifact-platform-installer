@@ -4,17 +4,17 @@ resource "azurerm_storage_account" "main" {
   name                     = "${substr(replace(var.name_prefix, "-", ""), 0, 12)}${random_string.suffix[0].result}"
   resource_group_name      = var.resource_group_name
   location                 = var.location
-  account_tier             = "Premium"
-  account_replication_type = "LRS"
-  account_kind             = "BlockBlobStorage"
+  account_tier             = var.storage.account_tier
+  account_replication_type = var.storage.account_replication_type
+  account_kind             = var.storage.account_kind
   min_tls_version          = "TLS1_2"
-  public_network_access    = "Disabled"
-  is_hns_enabled           = true
+  public_network_access    = var.storage.public_network_access
+  is_hns_enabled           = var.storage.is_hns_enabled
   tags                     = var.tags
 
   blob_properties {
     delete_retention_policy {
-      days = 30
+      days = var.storage.delete_retention_days
     }
   }
 }

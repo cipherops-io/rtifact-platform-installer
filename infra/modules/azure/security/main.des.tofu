@@ -12,8 +12,8 @@ resource "azurerm_key_vault_key" "des" {
 
   name         = "${replace(var.name_prefix, "-", "")}-des"
   key_vault_id = azurerm_key_vault.main.id
-  key_type     = "RSA"
-  key_size     = 3072
+  key_type     = var.des_key.key_type
+  key_size     = var.des_key.key_size
 
   key_opts = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
 
@@ -26,11 +26,12 @@ resource "azurerm_key_vault_key" "des" {
 resource "azurerm_disk_encryption_set" "main" {
   count = var.features.disk_encryption_set ? 1 : 0
 
-  name                = "${var.name_prefix}-des"
-  resource_group_name = var.resource_group_name
-  location            = var.location
-  key_vault_key_id    = azurerm_key_vault_key.des[0].id
-  tags                = var.tags
+  name                      = "${var.name_prefix}-des"
+  resource_group_name       = var.resource_group_name
+  location                  = var.location
+  key_vault_key_id          = var.des_key.auto_key_rotation_enabled ? azurerm_key_vault_key.des[0].versionless_id : azurerm_key_vault_key.des[0].id
+  auto_key_rotation_enabled = var.des_key.auto_key_rotation_enabled
+  tags                      = var.tags
 
   identity {
     type = "UserAssigned"

@@ -39,3 +39,17 @@ features:
   kubernetes_cluster: true
   azure_bastion: true
   private_dns_zones: true
+
+# Bastion VM (features.azure_bastion). rtifact writes <name_prefix>-bastion.pem and prints the ssh command after apply.
+#   private:       VM on the management subnet only (reach it over VPN / ExpressRoute)
+#   public_ip:     VM gets a public IP; its NSG allows SSH only from allowed_ssh_cidrs
+#   azure_bastion: Azure Bastion (Standard, tunneling) in front of the VM; needs network.azure_bastion_subnet_cidr /26 or larger
+bastion:
+  access: public_ip
+  allowed_ssh_cidrs: ["203.0.113.0/24"] # replace with your office / VPN egress range
+
+# Uncomment for a public AKS API restricted to known ranges (requires private_cluster_enabled: false).
+# kubernetes_cluster:
+#   api_server:
+#     private_cluster_enabled: false
+#     authorized_ip_ranges: ["203.0.113.0/24"]

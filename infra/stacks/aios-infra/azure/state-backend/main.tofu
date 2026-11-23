@@ -8,4 +8,5 @@ module "state_backend" {
   subscription_id       = var.subscription_id
   resource_group_name   = var.resource_group_name
   create_resource_group = var.resource_group_create
+  storage_account       = var.state.storage_account
 }

@@ -80,7 +80,7 @@ variable "kubernetes_cluster" {
     kubernetes_version = string
     availability_zones = list(string)
     node_pools = map(object({
-      name       = string
+      name       = optional(string)
       vm_size    = string
       node_count = number
     }))

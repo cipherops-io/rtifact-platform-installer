@@ -9,8 +9,9 @@ module "naming" {
 }
 
 locals {
-  net_tags = var.features.resource_group ? module.naming[0].tags : {}
-  net_rg   = var.features.resource_group ? module.naming[0].resource_group_name : null
+  azure_bastion_host = var.features.azure_bastion && var.bastion.access == "azure_bastion"
+  net_tags           = var.features.resource_group ? module.naming[0].tags : {}
+  net_rg             = var.features.resource_group ? module.naming[0].resource_group_name : null
 }
 
 module "network" {
@@ -32,7 +33,14 @@ module "network" {
   azure_bastion_subnet_cidr         = try(var.network.azure_bastion_subnet_cidr, null)
   dns_resolver_inbound_subnet_cidr  = try(var.network.dns_resolver_inbound_subnet_cidr, null)
   dns_resolver_outbound_subnet_cidr = try(var.network.dns_resolver_outbound_subnet_cidr, null)
-  bastion_managed                   = var.features.azure_bastion && var.bastion.managed
+  bastion_managed                   = local.azure_bastion_host
+  nat                               = var.network.nat
+  dns_resolver_outbound_enabled     = var.private_dns_resolver.outbound_endpoint_enabled
+  dns_resolver_inbound = {
+    enabled                      = var.private_dns_resolver.inbound_endpoint_enabled
+    private_ip_allocation_method = var.private_dns_resolver.inbound_private_ip_allocation_method
+    private_ip_address           = var.private_dns_resolver.inbound_private_ip_address
+  }
 }
 
 module "firewall" {
@@ -67,7 +75,7 @@ module "connectivity" {
 }
 
 module "bastion_host" {
-  count = var.features.azure_bastion && var.bastion.managed && var.features.virtual_network && try(var.network.azure_bastion_subnet_cidr, null) != null ? 1 : 0
+  count = local.azure_bastion_host && var.features.virtual_network && try(var.network.azure_bastion_subnet_cidr, null) != null ? 1 : 0
 
   source              = "../../../../modules/azure/bastion-host"
   resource_group_name = local.net_rg
@@ -75,6 +83,7 @@ module "bastion_host" {
   name_prefix         = var.name_prefix
   tags                = local.net_tags
   bastion_subnet_id   = module.network[0].bastion_subnet_id
+  settings            = var.bastion.azure_bastion
 
   depends_on = [module.network]
 }

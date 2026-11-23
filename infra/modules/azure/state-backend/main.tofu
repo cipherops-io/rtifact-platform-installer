@@ -33,8 +33,8 @@ resource "azurerm_storage_account" "tfstate" {
   name                     = "${substr(replace(var.name_prefix, "-", ""), 0, 17)}tfstate"
   resource_group_name      = local.resource_group_name
   location                 = var.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
+  account_tier             = var.storage_account.account_tier
+  account_replication_type = var.storage_account.account_replication_type
   min_tls_version          = "TLS1_2"
 }
 

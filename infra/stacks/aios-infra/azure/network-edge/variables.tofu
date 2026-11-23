@@ -80,7 +80,7 @@ variable "kubernetes_cluster" {
     kubernetes_version = string
     availability_zones = list(string)
     node_pools = map(object({
-      name       = string
+      name       = optional(string)
       vm_size    = string
       node_count = number
     }))
@@ -218,6 +218,19 @@ variable "application_gateway" {
     sku_name = optional(string, "WAF_v2")
     sku_tier = optional(string, "WAF_v2")
     capacity = optional(number, 2)
+    ssl_policy = optional(object({
+      policy_type = optional(string)
+      policy_name = optional(string)
+    }))
+    frontend_port = optional(number)
+    backend_http_settings = optional(object({
+      port                  = optional(number)
+      protocol              = optional(string)
+      path                  = optional(string)
+      cookie_based_affinity = optional(string)
+      request_timeout       = optional(number)
+    }))
+    routing_rule_priority = optional(number)
   })
   default = {
     sku_name = "WAF_v2"
