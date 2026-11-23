@@ -122,7 +122,7 @@ func (c *Client) configFor(ns string) (*action.Configuration, error) {
 		return cfg, nil
 	}
 	cfg := action.NewConfiguration()
-	if err := cfg.Init(c.kube.RESTClientGetter(), ns, helmDriver); err != nil {
+	if err := cfg.Init(c.kube.RESTClientGetter(ns), ns, helmDriver); err != nil {
 		return nil, err
 	}
 	if c.reg != nil {

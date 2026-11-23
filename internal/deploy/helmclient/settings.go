@@ -12,23 +12,23 @@ import (
 type kubeAccess struct {
 	kubeConfig string
 	context    string
-	flags      *genericclioptions.ConfigFlags
 }
 
 func newKubeAccess(k kube.Config) *kubeAccess {
-	ka := &kubeAccess{
+	return &kubeAccess{
 		kubeConfig: k.Kubeconfig,
 		context:    k.Context,
 	}
-	ka.flags = &genericclioptions.ConfigFlags{
-		KubeConfig: &ka.kubeConfig,
-		Context:    &ka.context,
-	}
-	return ka
 }
 
-func (ka *kubeAccess) RESTClientGetter() genericclioptions.RESTClientGetter {
-	return ka.flags
+// RESTClientGetter is scoped to ns: Helm places manifest objects without
+// metadata.namespace in the getter's namespace, not the release namespace.
+func (ka *kubeAccess) RESTClientGetter(ns string) genericclioptions.RESTClientGetter {
+	return &genericclioptions.ConfigFlags{
+		KubeConfig: &ka.kubeConfig,
+		Context:    &ka.context,
+		Namespace:  &ns,
+	}
 }
 
 // chartLocateEnv supplies cache paths for Helm chart download without cli.New() defaults.
