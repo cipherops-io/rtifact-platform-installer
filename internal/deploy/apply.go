@@ -70,14 +70,20 @@ func (ar *applyRun) run(ctx context.Context) error {
 	if err := refusedBlocking(ar.res); err != nil {
 		return err
 	}
+	// Pull secrets follow the registry credentials, which the release plan does
+	// not see, so they are synced on every apply.
+	base := []engine.Step{ar.stepEnsureNamespaces(), ar.stepPullSecrets()}
 	if !ar.res.HasChange {
+		if err := engine.Run(ctx, base); err != nil {
+			return err
+		}
 		fmt.Fprintln(o.out(), "No changes.")
 		return nil
 	}
 	if err := ar.confirm(ctx); err != nil {
 		return err
 	}
-	steps := []engine.Step{ar.stepEnsureNamespaces(), ar.stepPullSecrets()}
+	steps := base
 	releaseSteps, err := ar.releaseSteps()
 	if err != nil {
 		return err
