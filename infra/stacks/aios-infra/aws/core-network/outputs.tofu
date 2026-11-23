@@ -29,3 +29,22 @@ output "nat_gateway_public_ips" {
 output "bastion_instance_id" {
   value = length(module.bastion) > 0 ? module.bastion[0].instance_id : null
 }
+
+output "bastion_private_ip" {
+  value = length(module.bastion) > 0 ? module.bastion[0].private_ip : null
+}
+
+output "bastion_public_ip" {
+  value = length(module.bastion) > 0 ? module.bastion[0].public_ip : null
+}
+
+output "bastion_ssh_private_key_pem" {
+  description = "Generated bastion SSH private key; rtifact outputs writes it to <name_prefix>-bastion.pem."
+  value       = length(module.bastion) > 0 ? module.bastion[0].ssh_private_key_pem : null
+  sensitive   = true
+}
+
+output "bastion_ssh_command" {
+  description = "Command to reach the bastion (ssh for access=ssh, SSM Session Manager for access=ssm)."
+  value       = local.bastion_ssh_command
+}

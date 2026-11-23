@@ -12,12 +12,14 @@ variable "cluster_name" {
 
 variable "network" {
   type = object({
-    vpc_cidr           = string
-    secondary_cidrs    = optional(list(string), [])
-    availability_zones = list(string)
-    nat_gateway        = optional(string, "single")
-    gateway_endpoints  = optional(list(string), [])
-    flow_logs          = optional(bool, false)
+    vpc_cidr             = string
+    secondary_cidrs      = optional(list(string), [])
+    availability_zones   = list(string)
+    nat_gateway          = optional(string, "single")
+    gateway_endpoints    = optional(list(string), [])
+    flow_logs            = optional(bool, false)
+    enable_dns_support   = optional(bool, true)
+    enable_dns_hostnames = optional(bool, true)
     subnets = map(object({
       cidrs               = list(string)
       route               = string

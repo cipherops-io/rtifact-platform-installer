@@ -20,10 +20,12 @@ locals {
 module "security" {
   count = try(var.features.kms, false) ? 1 : 0
 
-  source               = "../../../../modules/aws/security"
-  name_prefix          = var.name_prefix
-  tags                 = local.core.tags
-  deletion_window_days = var.kms.deletion_window_days
+  source                  = "../../../../modules/aws/security"
+  name_prefix             = var.name_prefix
+  tags                    = local.core.tags
+  deletion_window_days    = var.kms.deletion_window_days
+  enable_key_rotation     = var.kms.enable_key_rotation
+  rotation_period_in_days = var.kms.rotation_period_in_days
 }
 
 module "data" {

@@ -28,8 +28,8 @@ locals {
 
 resource "aws_vpc" "main" {
   cidr_block           = var.network.vpc_cidr
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+  enable_dns_support   = var.network.enable_dns_support
+  enable_dns_hostnames = var.network.enable_dns_hostnames
   tags                 = merge(var.tags, { Name = "${var.name_prefix}-vpc" })
 }
 

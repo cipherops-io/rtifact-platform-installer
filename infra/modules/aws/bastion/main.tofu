@@ -4,9 +4,10 @@ data "aws_ssm_parameter" "al2023_ami" {
 }
 
 locals {
-  ssh_mode = var.bastion.access == "ssh"
-  disk     = var.bastion.disk
-  ami_id   = var.bastion.ami_id != "" ? var.bastion.ami_id : data.aws_ssm_parameter.al2023_ami[0].value
+  ssh_mode     = var.bastion.access == "ssh"
+  generate_key = local.ssh_mode && var.bastion.ssh_public_key == ""
+  disk         = var.bastion.disk
+  ami_id       = var.bastion.ami_id != "" ? var.bastion.ami_id : data.aws_ssm_parameter.al2023_ami[0].value
 }
 
 resource "aws_iam_role" "bastion" {
@@ -42,8 +43,8 @@ resource "aws_security_group" "bastion" {
   dynamic "ingress" {
     for_each = local.ssh_mode ? var.bastion.allowed_cidrs : []
     content {
-      from_port   = 22
-      to_port     = 22
+      from_port   = var.bastion.ssh_port
+      to_port     = var.bastion.ssh_port
       protocol    = "tcp"
       cidr_blocks = [ingress.value]
     }
@@ -59,10 +60,16 @@ resource "aws_security_group" "bastion" {
   tags = merge(var.tags, { Name = "${var.name_prefix}-bastion-sg" })
 }
 
+resource "tls_private_key" "bastion" {
+  count     = local.generate_key ? 1 : 0
+  algorithm = var.bastion.ssh_key.algorithm
+  rsa_bits  = var.bastion.ssh_key.algorithm == "RSA" ? var.bastion.ssh_key.rsa_bits : null
+}
+
 resource "aws_key_pair" "bastion" {
-  count      = local.ssh_mode && var.bastion.ssh_public_key != "" ? 1 : 0
+  count      = local.ssh_mode ? 1 : 0
   key_name   = "${var.name_prefix}-bastion"
-  public_key = var.bastion.ssh_public_key
+  public_key = local.generate_key ? tls_private_key.bastion[0].public_key_openssh : var.bastion.ssh_public_key
   tags       = var.tags
 }
 
@@ -78,19 +85,19 @@ resource "aws_instance" "bastion" {
   subnet_id              = var.subnet_id
   vpc_security_group_ids = [aws_security_group.bastion.id]
   iam_instance_profile   = aws_iam_instance_profile.bastion.name
-  key_name               = local.ssh_mode && length(aws_key_pair.bastion) > 0 ? aws_key_pair.bastion[0].key_name : null
+  key_name               = one(aws_key_pair.bastion[*].key_name)
 
   metadata_options {
-    http_endpoint               = "enabled"
-    http_tokens                 = "required"
-    http_put_response_hop_limit = 2
+    http_endpoint               = var.bastion.metadata.http_endpoint
+    http_tokens                 = var.bastion.metadata.http_tokens
+    http_put_response_hop_limit = var.bastion.metadata.hop_limit
   }
 
   root_block_device {
     volume_size           = local.disk.size_gb
     volume_type           = local.disk.type
     encrypted             = local.disk.encrypted
-    delete_on_termination = true
+    delete_on_termination = local.disk.delete_on_termination
   }
 
   tags = merge(var.tags, { Name = "${var.name_prefix}-bastion" })

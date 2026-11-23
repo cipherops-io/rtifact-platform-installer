@@ -7,7 +7,7 @@ resource "aws_acm_certificate" "regional" {
   domain_name               = local.cfg.names[0]
   subject_alternative_names = slice(local.cfg.names, 1, length(local.cfg.names))
   validation_method         = "DNS"
-  key_algorithm             = try(local.cfg.key_algorithm, "RSA_2048")
+  key_algorithm             = var.key_algorithm
   tags                      = var.tags
 }
 
@@ -23,7 +23,7 @@ resource "aws_route53_record" "validation" {
   allow_overwrite = true
   name            = each.value.name
   records         = [each.value.record]
-  ttl             = 60
+  ttl             = var.validation_record_ttl
   type            = each.value.type
   zone_id         = var.zone_id
 }
@@ -40,7 +40,7 @@ resource "aws_acm_certificate" "cloudfront" {
   domain_name               = local.cfg.names[0]
   subject_alternative_names = slice(local.cfg.names, 1, length(local.cfg.names))
   validation_method         = "DNS"
-  key_algorithm             = try(local.cfg.key_algorithm, "RSA_2048")
+  key_algorithm             = var.key_algorithm
   tags                      = var.tags
 }
 
@@ -56,7 +56,7 @@ resource "aws_route53_record" "validation_cloudfront" {
   allow_overwrite = true
   name            = each.value.name
   records         = [each.value.record]
-  ttl             = 60
+  ttl             = var.validation_record_ttl
   type            = each.value.type
   zone_id         = var.zone_id
 }

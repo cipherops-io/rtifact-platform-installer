@@ -11,10 +11,11 @@ locals {
 module "dns_public" {
   count = var.features.public_dns ? 1 : 0
 
-  source      = "../../../../modules/aws/dns-public"
-  name_prefix = var.name_prefix
-  tags        = local.base_tags
-  public_dns  = var.public_dns
+  source         = "../../../../modules/aws/dns-public"
+  name_prefix    = var.name_prefix
+  tags           = local.base_tags
+  public_dns     = var.public_dns
+  delegation_ttl = try(var.public_dns.delegation_ttl, null)
 }
 
 module "certificates" {
@@ -26,6 +27,9 @@ module "certificates" {
   tags         = local.base_tags
   certificates = var.certificates
   zone_id      = module.dns_public[0].zone_id
+
+  validation_record_ttl = try(var.certificates.validation_record_ttl, null)
+  key_algorithm         = try(var.certificates.key_algorithm, null)
 
   providers = {
     aws.us_east_1 = aws.us_east_1

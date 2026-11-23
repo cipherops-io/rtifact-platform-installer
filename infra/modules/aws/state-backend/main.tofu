@@ -5,8 +5,8 @@ locals {
   )
   lock_table_name = substr(replace(var.name_prefix, "-", "_"), 0, 200)
   lock_table      = "${local.lock_table_name}_tfstate_lock"
-  versioning      = try(var.state.versioning, true)
-  sse_algorithm   = try(var.state.encryption, "AES256")
+  versioning      = var.state.versioning
+  sse_algorithm   = var.state.encryption
 }
 
 resource "aws_s3_bucket" "tfstate" {
@@ -42,9 +42,11 @@ resource "aws_s3_bucket_public_access_block" "tfstate" {
 }
 
 resource "aws_dynamodb_table" "tfstate_lock" {
-  name         = local.lock_table
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
+  name           = local.lock_table
+  billing_mode   = var.state.lock_table.billing_mode
+  read_capacity  = var.state.lock_table.billing_mode == "PROVISIONED" ? var.state.lock_table.read_capacity : null
+  write_capacity = var.state.lock_table.billing_mode == "PROVISIONED" ? var.state.lock_table.write_capacity : null
+  hash_key       = "LockID"
 
   attribute {
     name = "LockID"

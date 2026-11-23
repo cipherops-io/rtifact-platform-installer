@@ -100,7 +100,7 @@ resource "aws_eks_pod_identity_association" "karpenter" {
 resource "aws_sqs_queue" "karpenter" {
   name                      = "${var.name_prefix}-karpenter"
   message_retention_seconds = try(local.cfg.queue_retention_seconds, 300)
-  sqs_managed_sse_enabled   = true
+  sqs_managed_sse_enabled   = try(local.cfg.queue_managed_sse_enabled, true)
   tags                      = var.tags
 }
 

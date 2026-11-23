@@ -21,8 +21,8 @@ resource "aws_vpc_security_group_ingress_rule" "redis" {
   security_group_id = aws_security_group.redis[0].id
   cidr_ipv4         = each.value
   ip_protocol       = "tcp"
-  from_port         = 6379
-  to_port           = 6379
+  from_port         = var.redis.port
+  to_port           = var.redis.port
 }
 
 resource "aws_elasticache_replication_group" "redis" {
@@ -30,17 +30,17 @@ resource "aws_elasticache_replication_group" "redis" {
 
   replication_group_id       = "${local.base_name}-redis"
   description                = "${var.name_prefix} Redis"
-  engine                     = "redis"
+  engine                     = var.redis.engine
   engine_version             = var.redis.engine_version
   node_type                  = var.redis.node_type
   num_cache_clusters         = var.redis.num_cache_clusters
   automatic_failover_enabled = var.redis.num_cache_clusters > 1
   multi_az_enabled           = var.redis.num_cache_clusters > 1
-  port                       = 6379
+  port                       = var.redis.port
   subnet_group_name          = aws_elasticache_subnet_group.redis[0].name
   security_group_ids         = [aws_security_group.redis[0].id]
-  at_rest_encryption_enabled = true
-  transit_encryption_enabled = true
-  kms_key_id                 = var.kms_key_arn
+  at_rest_encryption_enabled = var.redis.at_rest_encryption_enabled
+  transit_encryption_enabled = var.redis.transit_encryption_enabled
+  kms_key_id                 = var.redis.at_rest_encryption_enabled ? var.kms_key_arn : null
   tags                       = var.tags
 }

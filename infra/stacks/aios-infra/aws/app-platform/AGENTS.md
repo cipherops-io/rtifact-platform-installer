@@ -24,8 +24,6 @@ Kubernetes clusters, node pools, workload identity, compute VMs.
 
 - `eks`
 
-- `compute`
-
 - `karpenter-infra`
 
 - `pod-identity`

@@ -13,6 +13,6 @@ resource "aws_route53_record" "delegation" {
   zone_id = local.cfg.parent_zone_id
   name    = trimsuffix(local.cfg.zone_name, ".")
   type    = "NS"
-  ttl     = 300
+  ttl     = var.delegation_ttl
   records = aws_route53_zone.main.name_servers
 }

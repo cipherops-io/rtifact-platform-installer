@@ -30,7 +30,9 @@
               "roles": { "type": "array", "items": { "type": "string" } }
             }
           }
-        }
+        },
+        "enable_dns_support": { "type": "boolean" },
+        "enable_dns_hostnames": { "type": "boolean" }
       }
     },
     "kubernetes_cluster": {
@@ -49,7 +51,7 @@
             "public_access_cidrs": { "type": "array", "items": { "type": "string" } }
           }
         },
-        "authentication_mode": { "type": "string" },
+        "authentication_mode": { "type": "string", "enum": ["API", "API_AND_CONFIG_MAP"] },
         "admin_principal_arns": { "type": "array", "items": { "type": "string" } },
         "service_cidr": { "type": "string" },
         "log_types": { "type": "array", "items": { "type": "string" } },
@@ -63,10 +65,126 @@
         },
         "deletion_protection": { "type": "boolean" },
         "service_security_groups": { "type": "object" },
-        "addons": { "type": "object" },
+        "addons": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "version": { "type": "string" },
+              "configuration": { "type": "object" },
+              "resolve_conflicts_on_create": { "type": "string", "enum": ["NONE", "OVERWRITE"] },
+              "resolve_conflicts_on_update": {
+                "type": "string",
+                "enum": ["NONE", "OVERWRITE", "PRESERVE"]
+              }
+            }
+          }
+        },
         "node_role_policies": { "type": "array", "items": { "type": "string" } },
-        "node_groups": { "type": "object" },
-        "karpenter": { "type": "object" },
+        "node_groups": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "instance_types",
+              "capacity_type",
+              "min_size",
+              "desired_size",
+              "max_size",
+              "disk",
+              "metadata",
+              "max_unavailable"
+            ],
+            "properties": {
+              "instance_types": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+              "capacity_type": { "type": "string", "enum": ["ON_DEMAND", "SPOT"] },
+              "ami_type": {
+                "type": "string",
+                "enum": [
+                  "AL2_x86_64",
+                  "AL2_x86_64_GPU",
+                  "AL2_ARM_64",
+                  "CUSTOM",
+                  "BOTTLEROCKET_ARM_64",
+                  "BOTTLEROCKET_x86_64",
+                  "BOTTLEROCKET_ARM_64_FIPS",
+                  "BOTTLEROCKET_x86_64_FIPS",
+                  "BOTTLEROCKET_ARM_64_NVIDIA",
+                  "BOTTLEROCKET_x86_64_NVIDIA",
+                  "BOTTLEROCKET_ARM_64_NVIDIA_FIPS",
+                  "BOTTLEROCKET_x86_64_NVIDIA_FIPS",
+                  "WINDOWS_CORE_2019_x86_64",
+                  "WINDOWS_FULL_2019_x86_64",
+                  "WINDOWS_CORE_2022_x86_64",
+                  "WINDOWS_FULL_2022_x86_64",
+                  "WINDOWS_CORE_2025_x86_64",
+                  "WINDOWS_FULL_2025_x86_64",
+                  "AL2023_x86_64_STANDARD",
+                  "AL2023_ARM_64_STANDARD",
+                  "AL2023_x86_64_NEURON",
+                  "AL2023_x86_64_NVIDIA",
+                  "AL2023_ARM_64_NVIDIA"
+                ]
+              },
+              "min_size": { "type": "integer", "minimum": 0 },
+              "desired_size": { "type": "integer", "minimum": 0 },
+              "max_size": { "type": "integer", "minimum": 1 },
+              "max_unavailable": { "type": "integer", "minimum": 1 },
+              "subnet_tier": { "type": "string" },
+              "disk": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "size_gb": { "type": "integer", "minimum": 1, "maximum": 16384 },
+                  "type": {
+                    "type": "string",
+                    "enum": ["standard", "gp2", "gp3", "io1", "io2", "sc1", "st1"]
+                  },
+                  "encrypted": { "type": "boolean" },
+                  "delete_on_termination": { "type": "boolean" },
+                  "device_name": { "type": "string", "pattern": "^/dev/[a-z0-9]+$" }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "http_endpoint": { "type": "string", "enum": ["enabled", "disabled"] },
+                  "http_tokens": { "type": "string", "enum": ["optional", "required"] },
+                  "hop_limit": { "type": "integer", "minimum": 1, "maximum": 64 }
+                }
+              },
+              "labels": { "type": "object", "additionalProperties": { "type": "string" } },
+              "taints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["key", "effect"],
+                  "properties": {
+                    "key": { "type": "string", "maxLength": 63 },
+                    "value": { "type": "string", "maxLength": 63 },
+                    "effect": {
+                      "type": "string",
+                      "enum": ["NO_SCHEDULE", "NO_EXECUTE", "PREFER_NO_SCHEDULE"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "karpenter": {
+          "type": "object",
+          "properties": {
+            "namespace": { "type": "string" },
+            "service_account": { "type": "string" },
+            "queue_retention_seconds": { "type": "integer", "minimum": 60, "maximum": 1209600 },
+            "queue_managed_sse_enabled": { "type": "boolean" }
+          }
+        },
         "pod_identities": {
           "type": "array",
           "items": {
@@ -93,6 +211,25 @@
               { "required": ["policy"] }
             ]
           }
+        },
+        "bootstrap_cluster_creator_admin_permissions": { "type": "boolean" },
+        "cluster_role_policies": { "type": "array", "items": { "type": "string" } },
+        "admin_access": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "policy": {
+              "type": "string",
+              "enum": [
+                "AmazonEKSClusterAdminPolicy",
+                "AmazonEKSAdminPolicy",
+                "AmazonEKSEditPolicy",
+                "AmazonEKSViewPolicy"
+              ]
+            },
+            "scope": { "type": "string", "enum": ["cluster", "namespace"] },
+            "namespaces": { "type": "array", "items": { "type": "string" } }
+          }
         }
       }
     },
@@ -101,21 +238,47 @@
       "additionalProperties": false,
       "properties": {
         "access": { "type": "string", "enum": ["ssm", "ssh"] },
-        "instance_type": { "type": "string" },
+        "instance_type": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*[0-9][a-z0-9-]*\\.[a-z0-9]+$"
+        },
         "subnet_tier": { "type": "string" },
         "public_ip": { "type": "boolean" },
         "allowed_cidrs": { "type": "array", "items": { "type": "string" } },
         "ssh_public_key": { "type": "string" },
         "iam_policy_arns": { "type": "array", "items": { "type": "string" } },
         "architecture": { "type": "string", "enum": ["x86_64", "arm64"] },
-        "ami_id": { "type": "string" },
+        "ami_id": { "type": "string", "pattern": "^(ami-[0-9a-f]{8,17})?$" },
         "disk": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "size_gb": { "type": "integer", "minimum": 8 },
-            "type": { "type": "string" },
-            "encrypted": { "type": "boolean" }
+            "size_gb": { "type": "integer", "minimum": 8, "maximum": 16384 },
+            "type": {
+              "type": "string",
+              "enum": ["standard", "gp2", "gp3", "io1", "io2", "sc1", "st1"]
+            },
+            "encrypted": { "type": "boolean" },
+            "delete_on_termination": { "type": "boolean" }
+          }
+        },
+        "ssh_port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "admin_username": { "type": "string", "pattern": "^[a-z_][a-z0-9_-]{0,31}$" },
+        "ssh_key": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": { "type": "string", "enum": ["RSA", "ED25519"] },
+            "rsa_bits": { "type": "integer", "enum": [2048, 3072, 4096] }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "http_endpoint": { "type": "string", "enum": ["enabled", "disabled"] },
+            "http_tokens": { "type": "string", "enum": ["optional", "required"] },
+            "hop_limit": { "type": "integer", "minimum": 1, "maximum": 64 }
           }
         }
       }
@@ -126,7 +289,8 @@
       "properties": {
         "zone_name": { "type": "string" },
         "parent_zone_id": { "type": "string" },
-        "delegated": { "type": "boolean" }
+        "delegated": { "type": "boolean" },
+        "delegation_ttl": { "type": "integer", "minimum": 0, "maximum": 2147483647 }
       }
     },
     "certificates": {
@@ -134,53 +298,86 @@
       "additionalProperties": false,
       "properties": {
         "names": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-        "key_algorithm": { "type": "string" },
-        "cloudfront": { "type": "boolean" }
+        "key_algorithm": {
+          "type": "string",
+          "enum": [
+            "RSA_1024",
+            "RSA_2048",
+            "RSA_3072",
+            "RSA_4096",
+            "EC_prime256v1",
+            "EC_secp384r1",
+            "EC_secp521r1"
+          ]
+        },
+        "cloudfront": { "type": "boolean" },
+        "validation_record_ttl": { "type": "integer", "minimum": 0, "maximum": 172800 }
       }
     },
     "kms": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "deletion_window_days": { "type": "integer", "minimum": 7, "maximum": 30 }
+        "deletion_window_days": { "type": "integer", "minimum": 7, "maximum": 30 },
+        "enable_key_rotation": { "type": "boolean" },
+        "rotation_period_in_days": { "type": "integer", "minimum": 90, "maximum": 2560 }
       }
     },
     "postgresql": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "engine_version": { "type": "string" },
+        "engine_version": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
         "instance_class": { "type": "string", "pattern": "^db\\." },
-        "allocated_storage_gb": { "type": "integer", "minimum": 20 },
+        "allocated_storage_gb": { "type": "integer", "minimum": 20, "maximum": 65536 },
         "max_allocated_storage_gb": { "type": "integer", "minimum": 0 },
         "multi_az": { "type": "boolean" },
         "backup_retention_days": { "type": "integer", "minimum": 0, "maximum": 35 },
         "deletion_protection": { "type": "boolean" },
-        "subnet_tier": { "type": "string" }
+        "subnet_tier": { "type": "string" },
+        "storage_type": { "type": "string", "enum": ["standard", "gp2", "gp3", "io1", "io2"] },
+        "port": { "type": "integer", "minimum": 1150, "maximum": 65535 },
+        "db_name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]{0,62}$" },
+        "username": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]{0,62}$" },
+        "publicly_accessible": { "type": "boolean" },
+        "copy_tags_to_snapshot": { "type": "boolean" },
+        "skip_final_snapshot": { "type": "boolean" }
       }
     },
     "redis": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "engine_version": { "type": "string" },
+        "engine_version": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" },
         "node_type": { "type": "string", "pattern": "^cache\\." },
         "num_cache_clusters": { "type": "integer", "minimum": 1, "maximum": 6 },
-        "subnet_tier": { "type": "string" }
+        "subnet_tier": { "type": "string" },
+        "engine": { "type": "string", "enum": ["redis", "valkey"] },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "at_rest_encryption_enabled": { "type": "boolean" },
+        "transit_encryption_enabled": { "type": "boolean" }
       }
     },
     "object_storage": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "versioning": { "type": "boolean" }
+        "versioning": { "type": "boolean" },
+        "object_ownership": {
+          "type": "string",
+          "enum": ["BucketOwnerEnforced", "BucketOwnerPreferred", "ObjectWriter"]
+        },
+        "block_public_access": { "type": "boolean" }
       }
     },
     "container_registry": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "image_tag_mutability": { "type": "string", "enum": ["IMMUTABLE", "MUTABLE"] },
+        "image_tag_mutability": {
+          "type": "string",
+          "enum": ["MUTABLE", "IMMUTABLE", "IMMUTABLE_WITH_EXCLUSION", "MUTABLE_WITH_EXCLUSION"]
+        },
         "scan_on_push": { "type": "boolean" }
       }
     }

@@ -10,6 +10,10 @@ core-network:
   - route_table_ids
   - nat_gateway_public_ips
   - bastion_instance_id
+  - bastion_private_ip
+  - bastion_public_ip
+  - bastion_ssh_private_key_pem
+  - bastion_ssh_command
 app-platform:
   - cluster_name
   - cluster_endpoint
@@ -17,6 +21,7 @@ app-platform:
   - oidc_issuer_url
   - karpenter_queue_name
   - pod_identity_role_arns
+  - kubeconfig_raw
 network-edge:
   - dns_zone_id
   - dns_name_servers

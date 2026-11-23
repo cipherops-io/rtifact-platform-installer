@@ -7,6 +7,7 @@ locals {
   ]))
   node_subnet_ids  = try(var.subnet_ids_by_tier[try(local.cfg.node_groups.initial.subnet_tier, "node")], local.cluster_subnet_ids)
   vpc_cidr_strings = var.vpc_cidrs
+  admin_access     = try(local.cfg.admin_access, {})
 }
 
 resource "aws_iam_role" "cluster" {
@@ -25,7 +26,7 @@ resource "aws_iam_role" "cluster" {
 }
 
 resource "aws_iam_role_policy_attachment" "cluster" {
-  for_each   = toset(["AmazonEKSClusterPolicy", "AmazonEKSVPCResourceController"])
+  for_each   = toset(try(local.cfg.cluster_role_policies, ["AmazonEKSClusterPolicy", "AmazonEKSVPCResourceController"]))
   role       = aws_iam_role.cluster.name
   policy_arn = "arn:aws:iam::aws:policy/${each.value}"
 }
@@ -98,7 +99,7 @@ resource "aws_eks_cluster" "main" {
 
   access_config {
     authentication_mode                         = try(local.cfg.authentication_mode, "API_AND_CONFIG_MAP")
-    bootstrap_cluster_creator_admin_permissions = false
+    bootstrap_cluster_creator_admin_permissions = try(local.cfg.bootstrap_cluster_creator_admin_permissions, false)
   }
 
   vpc_config {
@@ -141,10 +142,11 @@ resource "aws_eks_access_policy_association" "admin" {
 
   cluster_name  = aws_eks_cluster.main.name
   principal_arn = aws_eks_access_entry.admin[each.key].principal_arn
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/${try(local.admin_access.policy, "AmazonEKSClusterAdminPolicy")}"
 
   access_scope {
-    type = "cluster"
+    type       = try(local.admin_access.scope, "cluster")
+    namespaces = try(local.admin_access.scope, "cluster") == "namespace" ? local.admin_access.namespaces : null
   }
 }
 
@@ -181,17 +183,17 @@ resource "aws_launch_template" "node" {
   name = "${local.name}-${each.key}-lt"
 
   block_device_mappings {
-    device_name = "/dev/xvda"
+    device_name = try(each.value.disk.device_name, "/dev/xvda")
     ebs {
       volume_size           = each.value.disk.size_gb
       volume_type           = each.value.disk.type
       encrypted             = each.value.disk.encrypted
-      delete_on_termination = true
+      delete_on_termination = try(each.value.disk.delete_on_termination, true)
     }
   }
 
   metadata_options {
-    http_endpoint               = "enabled"
+    http_endpoint               = try(each.value.metadata.http_endpoint, "enabled")
     http_tokens                 = each.value.metadata.http_tokens
     http_put_response_hop_limit = each.value.metadata.hop_limit
   }
@@ -210,9 +212,19 @@ resource "aws_eks_node_group" "pool" {
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = try(var.subnet_ids_by_tier[each.value.subnet_tier], local.node_subnet_ids)
   capacity_type   = each.value.capacity_type
+  ami_type        = try(each.value.ami_type, null)
   instance_types  = each.value.instance_types
   labels          = try(each.value.labels, {})
   tags            = var.tags
+
+  dynamic "taint" {
+    for_each = try(each.value.taints, [])
+    content {
+      key    = taint.value.key
+      value  = try(taint.value.value, null)
+      effect = taint.value.effect
+    }
+  }
 
   launch_template {
     id      = aws_launch_template.node[each.key].id
@@ -239,6 +251,6 @@ resource "aws_eks_addon" "addon" {
   addon_name                  = each.key
   addon_version               = try(each.value.version, null)
   configuration_values        = try(jsonencode(each.value.configuration), null)
-  resolve_conflicts_on_create = "OVERWRITE"
-  resolve_conflicts_on_update = "OVERWRITE"
+  resolve_conflicts_on_create = try(each.value.resolve_conflicts_on_create, "OVERWRITE")
+  resolve_conflicts_on_update = try(each.value.resolve_conflicts_on_update, "OVERWRITE")
 }

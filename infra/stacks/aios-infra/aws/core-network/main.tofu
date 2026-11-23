@@ -13,6 +13,20 @@ locals {
   public_subnet_tier = try(var.bastion.subnet_tier, "public")
 }
 
+locals {
+  bastion_key_file = "${var.name_prefix}-bastion.pem"
+  bastion_ssh_command = length(module.bastion) == 0 ? null : (
+    module.bastion[0].access == "ssm"
+    ? "aws ssm start-session --target ${module.bastion[0].instance_id} --region ${var.location}"
+    : join(" ", compact([
+      "ssh",
+      try(var.bastion.ssh_public_key, "") == "" ? "-i ${local.bastion_key_file}" : "",
+      module.bastion[0].ssh_port != 22 ? "-p ${module.bastion[0].ssh_port}" : "",
+      "${module.bastion[0].admin_username}@${coalesce(module.bastion[0].public_ip, module.bastion[0].private_ip)}",
+    ]))
+  )
+}
+
 module "network" {
   count = var.features.network ? 1 : 0
 

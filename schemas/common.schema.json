@@ -21,8 +21,30 @@
         "bootstrap": { "type": "boolean" },
         "air_gapped": { "type": "boolean", "default": true },
         "bucket_name": { "type": "string", "minLength": 3 },
-        "encryption": { "type": "string" },
-        "versioning": { "type": "boolean" }
+        "encryption": { "type": "string", "enum": ["AES256", "aws:kms", "aws:kms:dsse"] },
+        "versioning": { "type": "boolean" },
+        "storage_account": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Azure remote state storage account created by the state-backend layer.",
+          "properties": {
+            "account_tier": { "type": "string", "enum": ["Standard", "Premium"] },
+            "account_replication_type": {
+              "type": "string",
+              "enum": ["LRS", "GRS", "RAGRS", "ZRS", "GZRS", "RAGZRS"]
+            }
+          }
+        },
+        "lock_table": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "AWS DynamoDB state lock table created by the state-backend layer.",
+          "properties": {
+            "billing_mode": { "type": "string", "enum": ["PAY_PER_REQUEST", "PROVISIONED"] },
+            "read_capacity": { "type": "integer", "minimum": 1 },
+            "write_capacity": { "type": "integer", "minimum": 1 }
+          }
+        }
       },
       "additionalProperties": false
     },

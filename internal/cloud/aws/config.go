@@ -78,6 +78,11 @@ func (*Provider) Validate(merged map[string]any) error {
 		if !subnetTierCoversZones(subnets, zones, "cluster") {
 			return fmt.Errorf("features.kubernetes_cluster: include a subnet tier with role cluster in two zones")
 		}
+		for _, k := range []string{"enable_dns_support", "enable_dns_hostnames"} {
+			if v, ok := netw[k].(bool); ok && !v {
+				return fmt.Errorf("features.kubernetes_cluster: network.%s must be true (EKS private endpoint access needs VPC DNS)", k)
+			}
+		}
 		var ok bool
 		kc, ok = merged["kubernetes_cluster"].(map[string]any)
 		if !ok {
@@ -102,7 +107,33 @@ func (*Provider) Validate(merged map[string]any) error {
 	if err := validatePodIdentities(features, kc); err != nil {
 		return err
 	}
+	if err := validateBastion(merged, features); err != nil {
+		return err
+	}
 	return validateDataServices(merged, features)
+}
+
+func validateBastion(merged, features map[string]any) error {
+	if !maputil.Truthy(features["bastion"]) {
+		return nil
+	}
+	b, _ := merged["bastion"].(map[string]any)
+	if access, _ := b["access"].(string); access != "ssh" {
+		return nil
+	}
+	cidrs, _ := maputil.StringSlice(b["allowed_cidrs"])
+	if len(cidrs) == 0 {
+		return fmt.Errorf("bastion.access ssh: set bastion.allowed_cidrs to the networks allowed to SSH in")
+	}
+	for _, c := range cidrs {
+		if _, _, err := net.ParseCIDR(c); err != nil {
+			return fmt.Errorf("bastion.allowed_cidrs: %q is not a CIDR", c)
+		}
+		if c == "0.0.0.0/0" {
+			return fmt.Errorf("bastion.allowed_cidrs: 0.0.0.0/0 opens SSH to the internet; list specific networks")
+		}
+	}
+	return nil
 }
 
 func validateDataServices(merged, features map[string]any) error {

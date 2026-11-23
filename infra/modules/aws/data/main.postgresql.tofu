@@ -21,8 +21,8 @@ resource "aws_vpc_security_group_ingress_rule" "postgresql" {
   security_group_id = aws_security_group.postgresql[0].id
   cidr_ipv4         = each.value
   ip_protocol       = "tcp"
-  from_port         = 5432
-  to_port           = 5432
+  from_port         = var.postgresql.port
+  to_port           = var.postgresql.port
 }
 
 resource "aws_db_instance" "postgresql" {
@@ -34,21 +34,22 @@ resource "aws_db_instance" "postgresql" {
   instance_class                = var.postgresql.instance_class
   allocated_storage             = var.postgresql.allocated_storage_gb
   max_allocated_storage         = var.postgresql.max_allocated_storage_gb
-  storage_type                  = "gp3"
+  storage_type                  = var.postgresql.storage_type
   storage_encrypted             = true
   kms_key_id                    = var.kms_key_arn
-  db_name                       = "aios"
-  username                      = "aiosadmin"
+  db_name                       = var.postgresql.db_name
+  username                      = var.postgresql.username
+  port                          = var.postgresql.port
   manage_master_user_password   = true
   master_user_secret_kms_key_id = var.kms_key_arn
   db_subnet_group_name          = aws_db_subnet_group.postgresql[0].name
   vpc_security_group_ids        = [aws_security_group.postgresql[0].id]
-  publicly_accessible           = false
+  publicly_accessible           = var.postgresql.publicly_accessible
   multi_az                      = var.postgresql.multi_az
   backup_retention_period       = var.postgresql.backup_retention_days
   deletion_protection           = var.postgresql.deletion_protection
-  copy_tags_to_snapshot         = true
-  skip_final_snapshot           = false
-  final_snapshot_identifier     = "${local.base_name}-pg-final"
+  copy_tags_to_snapshot         = var.postgresql.copy_tags_to_snapshot
+  skip_final_snapshot           = var.postgresql.skip_final_snapshot
+  final_snapshot_identifier     = var.postgresql.skip_final_snapshot ? null : "${local.base_name}-pg-final"
   tags                          = var.tags
 }

@@ -10,7 +10,7 @@ resource "aws_s3_bucket_ownership_controls" "main" {
 
   bucket = aws_s3_bucket.main[0].id
   rule {
-    object_ownership = "BucketOwnerEnforced"
+    object_ownership = var.object_storage.object_ownership
   }
 }
 
@@ -18,10 +18,10 @@ resource "aws_s3_bucket_public_access_block" "main" {
   count = var.features.object_storage ? 1 : 0
 
   bucket                  = aws_s3_bucket.main[0].id
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  block_public_acls       = var.object_storage.block_public_access
+  block_public_policy     = var.object_storage.block_public_access
+  ignore_public_acls      = var.object_storage.block_public_access
+  restrict_public_buckets = var.object_storage.block_public_access
 }
 
 resource "aws_s3_bucket_versioning" "main" {

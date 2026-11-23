@@ -8,3 +8,10 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "private_dns_enabled" {
+  description = "Associate the AWS-managed private hosted zone with the VPC so service hostnames resolve to the endpoint."
+  type        = bool
+  default     = true
+  nullable    = false
+}
