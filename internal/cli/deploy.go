@@ -144,9 +144,11 @@ func addDeployGroup(root *cobra.Command) {
 		Example: `  rtifact deploy apply releases.yaml
   rtifact deploy apply --yes --timeout 15m releases.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx, stop := deploy.SignalContext(context.Background())
+			defer stop()
 			o := runFlags(cmd)
 			o.FilePath = args[0]
-			return deploy.Apply(context.Background(), o)
+			return deploy.Apply(ctx, o)
 		},
 	}
 	addClusterFlags(applyCmd)
@@ -174,9 +176,11 @@ func addDeployGroup(root *cobra.Command) {
 		Example: `  rtifact deploy destroy releases.yaml
   rtifact deploy destroy --yes releases.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx, stop := deploy.SignalContext(context.Background())
+			defer stop()
 			o := runFlags(cmd)
 			o.FilePath = args[0]
-			return deploy.Destroy(context.Background(), o)
+			return deploy.Destroy(ctx, o)
 		},
 	}
 	addClusterFlags(destroyCmd)
@@ -188,9 +192,11 @@ func addDeployGroup(root *cobra.Command) {
 		Short: "Roll back one release to the previous revision",
 		Example: `  rtifact deploy rollback releases.yaml my-release`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx, stop := deploy.SignalContext(context.Background())
+			defer stop()
 			o := runFlags(cmd)
 			o.FilePath = args[0]
-			return deploy.Rollback(context.Background(), o, args[1])
+			return deploy.Rollback(ctx, o, args[1])
 		},
 	}
 	rollbackCmd.Flags().Bool("yes", false, "Skip confirmation prompts")

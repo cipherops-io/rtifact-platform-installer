@@ -15,30 +15,36 @@ import (
 func Destroy(ctx context.Context, o RunOptions) error {
 	sess, err := OpenSession(ctx, o)
 	if err != nil {
-		return err
+		return AsInterrupted(err)
 	}
 	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
 	PrintBanner(o.err(), doc, disc, kcfg, sess.Identity)
 	deployment := DeploymentID(doc)
 	if err := engine.ConfirmDeployDestroy(o.Yes, deployment); err != nil {
-		return err
+		return AsInterrupted(err)
 	}
 	if err := ensureSystemNS(ctx, kcfg); err != nil {
-		return err
+		return AsInterrupted(err)
 	}
 	runID := newRunID()
-	h, err := lock.Acquire(ctx, kcfg, deployment, lock.HolderIdentity(runID), o.ForceUnlock)
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	h, err := lock.Acquire(runCtx, kcfg, deployment, lock.HolderIdentity(runID), o.ForceUnlock)
 	if err != nil {
-		return err
+		return AsInterrupted(err)
 	}
+	h.OnRenewFailure(func(err error) {
+		fmt.Fprintf(o.err(), "deploy lock renewal failed: %v\n", err)
+		cancel()
+	})
 	defer func() {
 		releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = h.Release(releaseCtx, kcfg, deployment)
 	}()
-	inv, err := inventory.Read(ctx, kcfg, deployment)
+	inv, err := inventory.Read(runCtx, kcfg, deployment)
 	if err != nil {
-		return err
+		return AsInterrupted(err)
 	}
 	for _, e := range inv {
 		if e.Protect && !o.AllowDestroy {
@@ -51,7 +57,7 @@ func Destroy(ctx context.Context, o RunOptions) error {
 	}
 	cs, err := newHelmClient(kcfg, doc, nil, o)
 	if err != nil {
-		return err
+		return AsInterrupted(err)
 	}
 	order := plan.RemovalOrder(inv)
 	remaining := map[string]inventory.Entry{}
@@ -60,20 +66,20 @@ func Destroy(ctx context.Context, o RunOptions) error {
 	}
 	for _, e := range order {
 		fmt.Fprintf(o.out(), "  uninstall %s/%s\n", e.Namespace, e.Name)
-		manifest, err := fetchReleaseManifest(ctx, cs, e.Name, e.Namespace)
+		manifest, err := fetchReleaseManifest(runCtx, cs, e.Name, e.Namespace)
 		if err != nil {
-			return err
+			return AsInterrupted(err)
 		}
-		if err := cs.Uninstall(ctx, e.Name, e.Namespace); err != nil {
-			return err
+		if err := cs.Uninstall(runCtx, e.Name, e.Namespace); err != nil {
+			return AsInterrupted(err)
 		}
 		delete(remaining, entryKey(e.Name, e.Namespace))
-		if err := inventory.Write(ctx, kcfg, deployment, inventoryFromMap(remaining)); err != nil {
-			return err
+		if err := inventory.Write(runCtx, kcfg, deployment, inventoryFromMap(remaining)); err != nil {
+			return AsInterrupted(err)
 		}
 		opt := purgeRemovalOpts{ReleaseName: e.Name, ReleaseNS: e.Namespace, Manifest: manifest}
-		if err := reportOrPurgeRemovalData(ctx, kcfg, doc, remaining, opt, o.Purge, o.out()); err != nil {
-			return err
+		if err := reportOrPurgeRemovalData(runCtx, kcfg, doc, remaining, opt, o.Purge, o.out()); err != nil {
+			return AsInterrupted(err)
 		}
 	}
 	return nil

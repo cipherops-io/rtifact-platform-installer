@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -23,6 +22,14 @@ import (
 )
 
 const helmDriver = "secret"
+
+// ErrNoPreviousDeployedRevision is returned when rollback has no deployed history target.
+var ErrNoPreviousDeployedRevision = errors.New("no previous deployed revision")
+
+// IsPendingInstall reports a first install that never completed (no revision to roll back to).
+func IsPendingInstall(r *release.Release) bool {
+	return r != nil && r.Info != nil && r.Info.Status == releasecommon.StatusPendingInstall
+}
 
 // ReleaseRequest is one install/upgrade target.
 type ReleaseRequest struct {
@@ -138,7 +145,7 @@ func (c *Client) Observe(ctx context.Context, opts ObserveOptions) ([]plan.Obser
 		get := action.NewGet(cfg)
 		rel, err := get.Run(w.Name)
 		if err != nil {
-			if errors.Is(err, driver.ErrReleaseNotFound) || strings.Contains(err.Error(), "not found") {
+			if errors.Is(err, driver.ErrReleaseNotFound) {
 				continue
 			}
 			return nil, err
@@ -183,6 +190,18 @@ func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chart
 	exists, err := c.releaseExists(cfg, rel.Name, rel.Namespace)
 	if err != nil {
 		return err
+	}
+	if exists {
+		failedOnly, err := c.failedWithoutDeployed(cfg, rel.Name, rel.Namespace)
+		if err != nil {
+			return err
+		}
+		if failedOnly {
+			if err := c.Uninstall(ctx, rel.Name, rel.Namespace); err != nil {
+				return err
+			}
+			exists = false
+		}
 	}
 	lbl := labels(c.deployment)
 	if !exists {
@@ -250,7 +269,7 @@ func (c *Client) releaseExists(cfg *action.Configuration, name, ns string) (bool
 	get.Version = 0
 	rel, err := get.Run(name)
 	if err != nil {
-		if errors.Is(err, driver.ErrReleaseNotFound) || strings.Contains(err.Error(), "not found") {
+		if errors.Is(err, driver.ErrReleaseNotFound) {
 			return false, nil
 		}
 		return false, err
@@ -275,7 +294,7 @@ func (c *Client) Uninstall(ctx context.Context, name, ns string) error {
 	un.WaitStrategy = waitStrategy(true)
 	un.Timeout = c.timeout
 	_, err = un.Run(name)
-	if err != nil && (errors.Is(err, driver.ErrReleaseNotFound) || strings.Contains(err.Error(), "not found")) {
+	if err != nil && errors.Is(err, driver.ErrReleaseNotFound) {
 		return nil
 	}
 	return err
@@ -345,9 +364,42 @@ func (c *Client) PreviousDeployedRevision(ctx context.Context, name, ns string) 
 		}
 	}
 	if target < 1 {
-		return 0, fmt.Errorf("release %q has no previous deployed revision", name)
+		return 0, fmt.Errorf("release %q: %w", name, ErrNoPreviousDeployedRevision)
 	}
 	return target, nil
+}
+
+func (c *Client) failedWithoutDeployed(cfg *action.Configuration, name, ns string) (bool, error) {
+	get := action.NewGet(cfg)
+	rel, err := get.Run(name)
+	if err != nil {
+		if errors.Is(err, driver.ErrReleaseNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	r, ok := rel.(*release.Release)
+	if !ok || r.Namespace != ns {
+		return false, nil
+	}
+	if r.Info.Status != releasecommon.StatusFailed {
+		return false, nil
+	}
+	hist := action.NewHistory(cfg)
+	revs, err := hist.Run(name)
+	if err != nil {
+		return false, err
+	}
+	for _, item := range revs {
+		rev, ok := item.(*release.Release)
+		if !ok {
+			continue
+		}
+		if rev.Info.Status == releasecommon.StatusDeployed {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 // Rollback rolls back to previous revision.

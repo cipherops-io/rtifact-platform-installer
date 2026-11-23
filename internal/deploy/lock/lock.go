@@ -19,10 +19,11 @@ const leaseSeconds = 3600
 
 // Handle is an exclusive deploy lock.
 type Handle struct {
-	name      string
-	holder    string
-	cancelMu  sync.Mutex
-	stopRenew context.CancelFunc
+	name           string
+	holder         string
+	cancelMu       sync.Mutex
+	stopRenew      context.CancelFunc
+	onRenewFailure func(error)
 }
 
 // HolderIdentity formats user@host pid+runID for the lease holder.
@@ -39,6 +40,11 @@ func HolderIdentity(runID string) string {
 		host = "unknown"
 	}
 	return fmt.Sprintf("%s@%s %d+%s", user, host, os.Getpid(), runID)
+}
+
+// OnRenewFailure runs when lease renewal fails (fail closed).
+func (h *Handle) OnRenewFailure(fn func(error)) {
+	h.onRenewFailure = fn
 }
 
 // Acquire takes the deployment Lease; second holder is refused (S12).
@@ -71,6 +77,9 @@ func Acquire(ctx context.Context, kcfg kube.Config, deployment, holder string, f
 				"Wait for the other run to finish or use --force-unlock if it is stale.",
 			)
 		}
+		if cur != holder {
+			fmt.Fprintf(os.Stderr, "Taking over expired deploy lock held by %q (lease older than %ds).\n", cur, leaseSeconds)
+		}
 	}
 	now := metav1.NewMicroTime(time.Now())
 	dur := int32(leaseSeconds)
@@ -97,7 +106,15 @@ func Acquire(ctx context.Context, kcfg kube.Config, deployment, holder string, f
 			)
 		}
 	} else {
+		lease.ObjectMeta.ResourceVersion = existing.ObjectMeta.ResourceVersion
 		_, err = leaseClient.Update(ctx, lease, metav1.UpdateOptions{})
+		if apierrors.IsConflict(err) {
+			return nil, usererr.New(
+				"Another deploy is already running.",
+				"The deploy lock changed while this run was taking it.",
+				"Wait for the other run to finish or use --force-unlock if it is stale.",
+			)
+		}
 	}
 	if err != nil {
 		return nil, err
@@ -121,7 +138,14 @@ func (h *Handle) renewLoop(ctx context.Context, kcfg kube.Config) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			_ = h.renew(ctx, kcfg)
+			if err := h.renew(ctx, kcfg); err != nil {
+				if h.onRenewFailure != nil {
+					h.onRenewFailure(err)
+				} else {
+					fmt.Fprintf(os.Stderr, "deploy lock renewal failed: %v\n", err)
+				}
+				return
+			}
 		}
 	}
 }

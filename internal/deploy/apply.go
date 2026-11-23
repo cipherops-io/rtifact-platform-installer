@@ -3,10 +3,7 @@ package deploy
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/signal"
 	"sort"
-	"syscall"
 	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/crds"
@@ -89,9 +86,10 @@ type applyRun struct {
 
 func entryKey(name, ns string) string { return ns + "/" + name }
 
-// Apply installs or upgrades releases.
+// Apply installs or upgrades releases. The deploy lock is held before the
+// cluster is observed so the plan cannot go stale under a concurrent run.
 func Apply(ctx context.Context, o RunOptions) error {
-	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	ctx, stop := SignalContext(ctx)
 	defer stop()
 	defer SetActiveRedactor(nil)
 
@@ -100,24 +98,32 @@ func Apply(ctx context.Context, o RunOptions) error {
 		return AsInterrupted(err)
 	}
 	PrintBanner(o.err(), sess.Doc, sess.Disc, sess.Kube, sess.Identity)
-	ar, err := prepareApplyRun(ctx, o, sess)
+	deployID := DeploymentID(sess.Doc)
+	if err := ensureSystemNS(ctx, sess.Kube); err != nil {
+		return AsInterrupted(err)
+	}
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	h, err := lock.Acquire(runCtx, sess.Kube, deployID, lock.HolderIdentity(newRunID()), o.ForceUnlock)
 	if err != nil {
-		return AsInterrupted(RedactError(ActiveRedactor(), err))
+		return AsInterrupted(err)
 	}
-	if err := ensureSystemNS(ctx, ar.kcfg); err != nil {
-		return AsInterrupted(RedactError(ar.rd, err))
-	}
-	h, err := lock.Acquire(ctx, ar.kcfg, ar.deployID, lock.HolderIdentity(newRunID()), o.ForceUnlock)
-	if err != nil {
-		return AsInterrupted(RedactError(ar.rd, err))
-	}
-	ar.lockHold = h
+	h.OnRenewFailure(func(err error) {
+		fmt.Fprintf(o.err(), "deploy lock renewal failed; stopping apply: %v\n", err)
+		cancel()
+	})
 	defer func() {
 		releaseCtx, rcancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer rcancel()
-		_ = h.Release(releaseCtx, ar.kcfg, ar.deployID)
+		_ = h.Release(releaseCtx, sess.Kube, deployID)
 	}()
-	return AsInterrupted(RedactError(ar.rd, ar.run(ctx)))
+
+	ar, err := prepareApplyRun(runCtx, o, sess)
+	if err != nil {
+		return AsInterrupted(RedactError(ActiveRedactor(), err))
+	}
+	ar.lockHold = h
+	return AsInterrupted(RedactError(ar.rd, ar.run(runCtx)))
 }
 
 func (ar *applyRun) run(ctx context.Context) error {

@@ -10,6 +10,12 @@ func TestNormalizeServer(t *testing.T) {
 	if normalizeServer(" https://a/ ") != "https://a" {
 		t.Fatalf("normalize failed")
 	}
+	if normalizeServer("https://EXAMPLE.COM:443") != "https://example.com" {
+		t.Fatalf("host case-fold and default https port")
+	}
+	if normalizeServer("http://Host:80") != "http://host" {
+		t.Fatalf("default http port")
+	}
 }
 
 func TestClusterEndpointFromOutputs_missingNotError(t *testing.T) {
