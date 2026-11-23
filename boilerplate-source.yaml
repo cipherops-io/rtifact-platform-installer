@@ -1,5 +1,5 @@
 # DO NOT EDIT — managed by cipherops-io/boilerplates (rtifact-product).
 # commit is refreshed by make boilerplate-update (record-boilerplate-source).
-ref: v0.0.1
-commit: c4c616a44142356cc6f30726f235a73f39c203eb
-template_url: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v0.0.1
+ref: 3e269f3dd5bc01cb40117dd44878e1af16dfdbc2
+commit: 3e269f3dd5bc01cb40117dd44878e1af16dfdbc2
+template_url: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=3e269f3dd5bc01cb40117dd44878e1af16dfdbc2

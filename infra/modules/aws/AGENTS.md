@@ -26,7 +26,6 @@ Registered modules (from `boilerplate-vars.yml` → `Modules`), grouped by layer
 ### app-platform
 
 - `eks/`
-- `compute/`
 - `karpenter-infra/`
 - `pod-identity/`
 

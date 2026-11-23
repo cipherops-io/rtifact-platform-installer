@@ -155,6 +155,8 @@ CLOUDS ?= azure aws gcp
 PROFILES ?= $(shell set -e; for f in "$(REPO_ROOT)"/profiles/*/profile.yaml; do \
 	[ -f "$$f" ] || continue; basename "$$(dirname "$$f")"; \
 	done | tr '\n' ' ' | sed 's/[[:space:]]*$$//')
+# Module directories: infra/modules/<cloud>/<module>/providers.tofu.
+MODULE_DIRS = $(shell find "$(REPO_ROOT)/infra/modules" -mindepth 3 -maxdepth 3 -type f -name providers.tofu -not -path '*/.terraform/*' -exec dirname {} \; | sort)
 
 .PHONY: help check-tools
 .PHONY: tofu-fmt tofu-fmt-check tofu-docs tofu-docs-check
@@ -180,14 +182,14 @@ tofu-fmt-check:
 
 tofu-docs:
 	@set -e; \
-	for d in $$(find "$(REPO_ROOT)/infra/modules" -mindepth 2 -maxdepth 2 -type f -name providers.tofu -exec dirname {} \;); do \
+	for d in $(MODULE_DIRS); do \
 	  echo "==> docs $$d"; \
 	  (cd "$$d" && "$(REPO_ROOT)/build/scripts/terraform-docs-module.sh" "$(TERRAFORM_DOCS_CONFIG)"); \
 	done
 
 tofu-docs-check:
 	@set -e; \
-	for d in $$(find "$(REPO_ROOT)/infra/modules" -mindepth 2 -maxdepth 2 -type f -name providers.tofu -exec dirname {} \;); do \
+	for d in $(MODULE_DIRS); do \
 	  (cd "$$d" && "$(REPO_ROOT)/build/scripts/terraform-docs-module.sh" "$(TERRAFORM_DOCS_CONFIG)" --output-check); \
 	done
 
@@ -215,7 +217,7 @@ tofu-lock tofu-providers-lock:
 
 tofu-test-fast: tofu-fmt-check check-tools
 	@set -e; \
-	for d in $$(find "$(REPO_ROOT)/infra/modules" -mindepth 2 -maxdepth 2 -type f -name providers.tofu -exec dirname {} \;); do \
+	for d in $(MODULE_DIRS); do \
 	  echo "==> module $$d"; \
 	  (cd "$$d" && tofu fmt -check -diff && tofu init -backend=false -input=false && tofu validate); \
 	done; \

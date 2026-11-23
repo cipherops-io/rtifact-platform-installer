@@ -115,7 +115,6 @@ Variables:
             - data-platform/security
             - data-platform/private-endpoint
             - app-platform/eks
-            - app-platform/compute
             - app-platform/karpenter-infra
             - app-platform/pod-identity
             - network-edge/dns-public
@@ -155,10 +154,10 @@ Variables:
         gcp: opentofu/google
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-23T07:27:55Z"
-TemplateURL: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=v0.0.1
+Timestamp: "2026-11-23T16:34:13Z"
+TemplateURL: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=3e269f3dd5bc01cb40117dd44878e1af16dfdbc2
 BoilerplateVersion: v0.17.0
-SourceChecksum: git-sha1:c4c616a44142356cc6f30726f235a73f39c203eb
+SourceChecksum: git-sha1:3e269f3dd5bc01cb40117dd44878e1af16dfdbc2
 OutputDir: .
 Dependencies:
     - Variables:
@@ -280,7 +279,6 @@ Dependencies:
                 - data-platform/security
                 - data-platform/private-endpoint
                 - app-platform/eks
-                - app-platform/compute
                 - app-platform/karpenter-infra
                 - app-platform/pod-identity
                 - network-edge/dns-public
@@ -448,7 +446,6 @@ Dependencies:
                 - data-platform/security
                 - data-platform/private-endpoint
                 - app-platform/eks
-                - app-platform/compute
                 - app-platform/karpenter-infra
                 - app-platform/pod-identity
                 - network-edge/dns-public
@@ -494,7 +491,7 @@ Dependencies:
       ForEachReference: Clouds
       Files:
         - Path: AGENTS.md
-          Checksum: sha256:00d905c7af17045adb17bcd3518673727bbfb26f54fda5c921f7f40a69d329be
+          Checksum: sha256:37c74853cf2cb9e355db2595330c8cb120ce387815562b22a79bd6ff121e5584
       ForEach:
         - aws
     - Variables:
@@ -616,7 +613,6 @@ Dependencies:
                 - data-platform/security
                 - data-platform/private-endpoint
                 - app-platform/eks
-                - app-platform/compute
                 - app-platform/karpenter-infra
                 - app-platform/pod-identity
                 - network-edge/dns-public
@@ -784,7 +780,6 @@ Dependencies:
                 - data-platform/security
                 - data-platform/private-endpoint
                 - app-platform/eks
-                - app-platform/compute
                 - app-platform/karpenter-infra
                 - app-platform/pod-identity
                 - network-edge/dns-public
@@ -951,7 +946,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -1120,7 +1114,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -1289,7 +1282,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -1458,7 +1450,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -1627,7 +1618,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -1796,7 +1786,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -1964,7 +1953,6 @@ Dependencies:
                 - data-platform/security
                 - data-platform/private-endpoint
                 - app-platform/eks
-                - app-platform/compute
                 - app-platform/karpenter-infra
                 - app-platform/pod-identity
                 - network-edge/dns-public
@@ -2131,7 +2119,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -2300,7 +2287,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -2469,7 +2455,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -2638,7 +2623,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -2684,7 +2668,7 @@ Dependencies:
           ForEachReference: Layers
           Files:
             - Path: AGENTS.md
-              Checksum: sha256:e8566277ee3edd508ef16db707b645532e83a23a3104871f2a752938e9345e2a
+              Checksum: sha256:96e302edef80d2554224f07702edf8a2c0e81c2cac7805ef1590298abe87e673
           ForEach:
             - app-platform
         - Variables:
@@ -2807,7 +2791,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -2976,7 +2959,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -3144,7 +3126,6 @@ Dependencies:
                 - data-platform/security
                 - data-platform/private-endpoint
                 - app-platform/eks
-                - app-platform/compute
                 - app-platform/karpenter-infra
                 - app-platform/pod-identity
                 - network-edge/dns-public
@@ -3311,7 +3292,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -3480,7 +3460,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -3649,7 +3628,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -3818,7 +3796,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -3987,7 +3964,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -4156,7 +4132,6 @@ Dependencies:
                     - data-platform/security
                     - data-platform/private-endpoint
                     - app-platform/eks
-                    - app-platform/compute
                     - app-platform/karpenter-infra
                     - app-platform/pod-identity
                     - network-edge/dns-public
@@ -4221,7 +4196,7 @@ Files:
     - Path: CLAUDE.md
       Checksum: sha256:a695d559cdc2e9e42ff21477bc97db4111eb0fd88a756ce232cc69d0d0a6ff7e
     - Path: boilerplate.mk
-      Checksum: sha256:80bf10e05d28d6ccf18d87129fd830df05a382b926af41548334be6a11435228
+      Checksum: sha256:cb04d52b1e064a5832680f8dec0d23ba3717eb60eb6a7c23e3fdedece948c826
     - Path: build/scripts/terraform-docs-module.sh
       Checksum: sha256:edf53e942fd1e54c1ebcb1610e1dba7e36223d67c14bdfe6af14ad46ae777395
     - Path: deploy/AGENTS.md
