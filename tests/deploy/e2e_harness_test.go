@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,6 +20,9 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/lock"
+	releasecommon "helm.sh/helm/v4/pkg/release/common"
+	release "helm.sh/helm/v4/pkg/release/v1"
+	"helm.sh/helm/v4/pkg/storage/driver"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
@@ -239,6 +243,30 @@ func (m ioMultiWriter) Write(p []byte) (int, error) {
 		_, _ = m.a.Write(p)
 	}
 	return m.b.Write(p)
+}
+
+// e2eMarkLatestRevision rewrites the newest Helm release record's status, as a
+// Helm process killed mid-operation leaves it.
+func e2eMarkLatestRevision(t *testing.T, name, ns string, status releasecommon.Status) {
+	t.Helper()
+	store := driver.NewSecrets(e2eClientset(t).CoreV1().Secrets(ns))
+	rels, err := store.Query(map[string]string{"name": name, "owner": "helm"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var latest *release.Release
+	for _, rl := range rels {
+		if r, ok := rl.(*release.Release); ok && (latest == nil || r.Version > latest.Version) {
+			latest = r
+		}
+	}
+	if latest == nil {
+		t.Fatalf("no helm release records for %s/%s", ns, name)
+	}
+	latest.Info.Status = status
+	if err := store.Update(fmt.Sprintf("sh.helm.release.v1.%s.v%d", name, latest.Version), latest); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func e2eEnv(t *testing.T, key string) string {

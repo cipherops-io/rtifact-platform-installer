@@ -15,6 +15,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/lock"
+	releasecommon "helm.sh/helm/v4/pkg/release/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -183,16 +184,17 @@ func TestE2E_S11_StuckReportsRecovery(t *testing.T) {
 	e2eMustApply(t, o)
 	nsA := e2eReleaseNS(t, file, "ok-a")
 	e2eHelmUpgradeNoWait(t, "ok-a", nsA, "broken", "1.0.0")
-	o.DetailedExitCode = true
+	e2eMarkLatestRevision(t, "ok-a", nsA, releasecommon.StatusPendingUpgrade)
 	var buf strings.Builder
 	oo := e2eOpts(t, file)
 	oo.Stdout = &buf
+	oo.DetailedExitCode = true
 	code, err := deploy.Plan(context.Background(), oo)
 	if err != nil {
 		t.Fatalf("plan: %v", err)
 	}
-	if code == 0 {
-		t.Fatalf("expected plan pending changes, exit 0 with:\n%s", buf.String())
+	if code != 2 {
+		t.Fatalf("expected plan exit 2 for a stuck release, got %d with:\n%s", code, buf.String())
 	}
 	e2eAssertPlanStuckRecovery(t, buf.String(), file, "ok-a")
 	if err := deploy.Rollback(context.Background(), o, "ok-a"); err != nil {
