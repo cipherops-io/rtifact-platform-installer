@@ -5,6 +5,11 @@ features:
   karpenter: false
   public_dns: false
   certificates: false
+  kms: false
+  postgresql: false
+  redis: false
+  object_storage: false
+  container_registry: false
 
 network:
   nat_gateway: single
@@ -21,6 +26,32 @@ public_dns:
 certificates:
   key_algorithm: RSA_2048
   cloudfront: false
+
+kms:
+  deletion_window_days: 30
+
+postgresql:
+  engine_version: "16"
+  instance_class: db.t4g.medium
+  allocated_storage_gb: 100
+  max_allocated_storage_gb: 500
+  multi_az: false
+  backup_retention_days: 7
+  deletion_protection: true
+  subnet_tier: datastore
+
+redis:
+  engine_version: "7.1"
+  node_type: cache.t4g.small
+  num_cache_clusters: 1
+  subnet_tier: datastore
+
+object_storage:
+  versioning: true
+
+container_registry:
+  image_tag_mutability: IMMUTABLE
+  scan_on_push: true
 
 state:
   backend: s3

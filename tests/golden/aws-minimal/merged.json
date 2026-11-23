@@ -8,13 +8,25 @@
     "cloudfront": false,
     "key_algorithm": "RSA_2048"
   },
+  "container_registry": {
+    "image_tag_mutability": "IMMUTABLE",
+    "scan_on_push": true
+  },
   "features": {
     "bastion": false,
     "certificates": false,
+    "container_registry": false,
     "karpenter": false,
+    "kms": false,
     "kubernetes_cluster": false,
     "network": true,
-    "public_dns": false
+    "object_storage": false,
+    "postgresql": false,
+    "public_dns": false,
+    "redis": false
+  },
+  "kms": {
+    "deletion_window_days": 30
   },
   "kubernetes_cluster": {
     "node_groups": {
@@ -90,8 +102,27 @@
     },
     "vpc_cidr": "10.30.0.0/16"
   },
+  "object_storage": {
+    "versioning": true
+  },
+  "postgresql": {
+    "allocated_storage_gb": 100,
+    "backup_retention_days": 7,
+    "deletion_protection": true,
+    "engine_version": "16",
+    "instance_class": "db.t4g.medium",
+    "max_allocated_storage_gb": 500,
+    "multi_az": false,
+    "subnet_tier": "datastore"
+  },
   "public_dns": {
     "delegated": false
+  },
+  "redis": {
+    "engine_version": "7.1",
+    "node_type": "cache.t4g.small",
+    "num_cache_clusters": 1,
+    "subnet_tier": "datastore"
   },
   "state": {
     "air_gapped": true,

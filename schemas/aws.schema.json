@@ -137,6 +137,52 @@
         "key_algorithm": { "type": "string" },
         "cloudfront": { "type": "boolean" }
       }
+    },
+    "kms": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deletion_window_days": { "type": "integer", "minimum": 7, "maximum": 30 }
+      }
+    },
+    "postgresql": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "engine_version": { "type": "string" },
+        "instance_class": { "type": "string", "pattern": "^db\\." },
+        "allocated_storage_gb": { "type": "integer", "minimum": 20 },
+        "max_allocated_storage_gb": { "type": "integer", "minimum": 0 },
+        "multi_az": { "type": "boolean" },
+        "backup_retention_days": { "type": "integer", "minimum": 0, "maximum": 35 },
+        "deletion_protection": { "type": "boolean" },
+        "subnet_tier": { "type": "string" }
+      }
+    },
+    "redis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "engine_version": { "type": "string" },
+        "node_type": { "type": "string", "pattern": "^cache\\." },
+        "num_cache_clusters": { "type": "integer", "minimum": 1, "maximum": 6 },
+        "subnet_tier": { "type": "string" }
+      }
+    },
+    "object_storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "versioning": { "type": "boolean" }
+      }
+    },
+    "container_registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image_tag_mutability": { "type": "string", "enum": ["IMMUTABLE", "MUTABLE"] },
+        "scan_on_push": { "type": "boolean" }
+      }
     }
   }
 }

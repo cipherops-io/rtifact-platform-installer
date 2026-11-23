@@ -27,3 +27,23 @@ features:
     status: stable
     requires: [public_dns]
     description: ACM certificates (regional and us-east-1)
+  kms:
+    status: preview
+    requires: []
+    description: Customer-managed KMS key encrypting the data services below
+  postgresql:
+    status: preview
+    requires: [network]
+    description: RDS for PostgreSQL in a private subnet tier; master password managed in Secrets Manager
+  redis:
+    status: preview
+    requires: [network]
+    description: ElastiCache for Redis replication group with TLS and at-rest encryption
+  object_storage:
+    status: preview
+    requires: []
+    description: S3 bucket (versioned, encrypted, public access blocked)
+  container_registry:
+    status: preview
+    requires: []
+    description: ECR repository (immutable tags, scan on push)

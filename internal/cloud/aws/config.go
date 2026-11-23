@@ -18,6 +18,7 @@ func (*Provider) TFVarSections() []string {
 	return []string{
 		"features", "state", "tags", "certificates", "network",
 		"kubernetes_cluster", "bastion", "public_dns",
+		"kms", "postgresql", "redis", "object_storage", "container_registry",
 	}
 }
 
@@ -101,7 +102,49 @@ func (*Provider) Validate(merged map[string]any) error {
 	if err := validatePodIdentities(features, kc); err != nil {
 		return err
 	}
+	return validateDataServices(merged, features)
+}
+
+func validateDataServices(merged, features map[string]any) error {
+	netw, _ := merged["network"].(map[string]any)
+	subnets, _ := netw["subnets"].(map[string]any)
+	for _, svc := range []string{"postgresql", "redis"} {
+		if !maputil.Truthy(features[svc]) {
+			continue
+		}
+		block, _ := merged[svc].(map[string]any)
+		tier, _ := block["subnet_tier"].(string)
+		if tier == "" {
+			return fmt.Errorf("features.%s: set %s.subnet_tier", svc, svc)
+		}
+		tierMap, ok := subnets[tier].(map[string]any)
+		if !ok {
+			return fmt.Errorf("features.%s: %s.subnet_tier %q is not a tier in network.subnets", svc, svc, tier)
+		}
+		if cidrs, _ := maputil.StringSlice(tierMap["cidrs"]); len(cidrs) < 2 {
+			return fmt.Errorf("features.%s: network.subnets.%s must span at least two zones", svc, tier)
+		}
+	}
+	if maputil.Truthy(features["postgresql"]) {
+		pg, _ := merged["postgresql"].(map[string]any)
+		alloc, maxAlloc := number(pg["allocated_storage_gb"]), number(pg["max_allocated_storage_gb"])
+		if maxAlloc != 0 && maxAlloc <= alloc {
+			return fmt.Errorf("postgresql.max_allocated_storage_gb must be 0 (autoscaling off) or greater than allocated_storage_gb")
+		}
+	}
 	return nil
+}
+
+func number(v any) float64 {
+	switch n := v.(type) {
+	case int:
+		return float64(n)
+	case int64:
+		return float64(n)
+	case float64:
+		return n
+	}
+	return 0
 }
 
 func (p *Provider) Preflight(ctx context.Context, merged map[string]any) error {

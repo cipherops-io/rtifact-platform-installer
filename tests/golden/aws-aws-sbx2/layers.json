@@ -29,14 +29,26 @@
           "*.sbx2.rtifact.ai"
         ]
       },
+      "container_registry": {
+        "image_tag_mutability": "IMMUTABLE",
+        "scan_on_push": true
+      },
       "features": {
         "bastion": true,
         "certificates": true,
+        "container_registry": false,
         "karpenter": true,
+        "kms": false,
         "kubernetes_cluster": true,
         "network": true,
+        "object_storage": false,
         "pod_identities": true,
-        "public_dns": true
+        "postgresql": false,
+        "public_dns": true,
+        "redis": false
+      },
+      "kms": {
+        "deletion_window_days": 30
       },
       "kubernetes_cluster": {
         "addons": {
@@ -246,10 +258,29 @@
         },
         "vpc_cidr": "10.20.0.0/16"
       },
+      "object_storage": {
+        "versioning": true
+      },
+      "postgresql": {
+        "allocated_storage_gb": 100,
+        "backup_retention_days": 7,
+        "deletion_protection": true,
+        "engine_version": "16",
+        "instance_class": "db.t4g.medium",
+        "max_allocated_storage_gb": 500,
+        "multi_az": false,
+        "subnet_tier": "datastore"
+      },
       "public_dns": {
         "delegated": false,
         "parent_zone_id": "",
         "zone_name": "sbx2.rtifact.ai"
+      },
+      "redis": {
+        "engine_version": "7.1",
+        "node_type": "cache.t4g.small",
+        "num_cache_clusters": 1,
+        "subnet_tier": "datastore"
       },
       "state": {
         "air_gapped": false,
@@ -318,14 +349,26 @@
           "*.sbx2.rtifact.ai"
         ]
       },
+      "container_registry": {
+        "image_tag_mutability": "IMMUTABLE",
+        "scan_on_push": true
+      },
       "features": {
         "bastion": true,
         "certificates": true,
+        "container_registry": false,
         "karpenter": true,
+        "kms": false,
         "kubernetes_cluster": true,
         "network": true,
+        "object_storage": false,
         "pod_identities": true,
-        "public_dns": true
+        "postgresql": false,
+        "public_dns": true,
+        "redis": false
+      },
+      "kms": {
+        "deletion_window_days": 30
       },
       "kubernetes_cluster": {
         "addons": {
@@ -535,10 +578,29 @@
         },
         "vpc_cidr": "10.20.0.0/16"
       },
+      "object_storage": {
+        "versioning": true
+      },
+      "postgresql": {
+        "allocated_storage_gb": 100,
+        "backup_retention_days": 7,
+        "deletion_protection": true,
+        "engine_version": "16",
+        "instance_class": "db.t4g.medium",
+        "max_allocated_storage_gb": 500,
+        "multi_az": false,
+        "subnet_tier": "datastore"
+      },
       "public_dns": {
         "delegated": false,
         "parent_zone_id": "",
         "zone_name": "sbx2.rtifact.ai"
+      },
+      "redis": {
+        "engine_version": "7.1",
+        "node_type": "cache.t4g.small",
+        "num_cache_clusters": 1,
+        "subnet_tier": "datastore"
       },
       "state": {
         "air_gapped": false,
@@ -597,14 +659,26 @@
           "*.sbx2.rtifact.ai"
         ]
       },
+      "container_registry": {
+        "image_tag_mutability": "IMMUTABLE",
+        "scan_on_push": true
+      },
       "features": {
         "bastion": true,
         "certificates": true,
+        "container_registry": false,
         "karpenter": true,
+        "kms": false,
         "kubernetes_cluster": true,
         "network": true,
+        "object_storage": false,
         "pod_identities": true,
-        "public_dns": true
+        "postgresql": false,
+        "public_dns": true,
+        "redis": false
+      },
+      "kms": {
+        "deletion_window_days": 30
       },
       "kubernetes_cluster": {
         "addons": {
@@ -814,10 +888,29 @@
         },
         "vpc_cidr": "10.20.0.0/16"
       },
+      "object_storage": {
+        "versioning": true
+      },
+      "postgresql": {
+        "allocated_storage_gb": 100,
+        "backup_retention_days": 7,
+        "deletion_protection": true,
+        "engine_version": "16",
+        "instance_class": "db.t4g.medium",
+        "max_allocated_storage_gb": 500,
+        "multi_az": false,
+        "subnet_tier": "datastore"
+      },
       "public_dns": {
         "delegated": false,
         "parent_zone_id": "",
         "zone_name": "sbx2.rtifact.ai"
+      },
+      "redis": {
+        "engine_version": "7.1",
+        "node_type": "cache.t4g.small",
+        "num_cache_clusters": 1,
+        "subnet_tier": "datastore"
       },
       "state": {
         "air_gapped": false,
@@ -864,14 +957,26 @@
           "*.sbx2.rtifact.ai"
         ]
       },
+      "container_registry": {
+        "image_tag_mutability": "IMMUTABLE",
+        "scan_on_push": true
+      },
       "features": {
         "bastion": true,
         "certificates": true,
+        "container_registry": false,
         "karpenter": true,
+        "kms": false,
         "kubernetes_cluster": true,
         "network": true,
+        "object_storage": false,
         "pod_identities": true,
-        "public_dns": true
+        "postgresql": false,
+        "public_dns": true,
+        "redis": false
+      },
+      "kms": {
+        "deletion_window_days": 30
       },
       "kubernetes_cluster": {
         "addons": {
@@ -1081,10 +1186,29 @@
         },
         "vpc_cidr": "10.20.0.0/16"
       },
+      "object_storage": {
+        "versioning": true
+      },
+      "postgresql": {
+        "allocated_storage_gb": 100,
+        "backup_retention_days": 7,
+        "deletion_protection": true,
+        "engine_version": "16",
+        "instance_class": "db.t4g.medium",
+        "max_allocated_storage_gb": 500,
+        "multi_az": false,
+        "subnet_tier": "datastore"
+      },
       "public_dns": {
         "delegated": false,
         "parent_zone_id": "",
         "zone_name": "sbx2.rtifact.ai"
+      },
+      "redis": {
+        "engine_version": "7.1",
+        "node_type": "cache.t4g.small",
+        "num_cache_clusters": 1,
+        "subnet_tier": "datastore"
       },
       "state": {
         "air_gapped": false,
@@ -1143,14 +1267,26 @@
           "*.sbx2.rtifact.ai"
         ]
       },
+      "container_registry": {
+        "image_tag_mutability": "IMMUTABLE",
+        "scan_on_push": true
+      },
       "features": {
         "bastion": true,
         "certificates": true,
+        "container_registry": false,
         "karpenter": true,
+        "kms": false,
         "kubernetes_cluster": true,
         "network": true,
+        "object_storage": false,
         "pod_identities": true,
-        "public_dns": true
+        "postgresql": false,
+        "public_dns": true,
+        "redis": false
+      },
+      "kms": {
+        "deletion_window_days": 30
       },
       "kubernetes_cluster": {
         "addons": {
@@ -1360,10 +1496,29 @@
         },
         "vpc_cidr": "10.20.0.0/16"
       },
+      "object_storage": {
+        "versioning": true
+      },
+      "postgresql": {
+        "allocated_storage_gb": 100,
+        "backup_retention_days": 7,
+        "deletion_protection": true,
+        "engine_version": "16",
+        "instance_class": "db.t4g.medium",
+        "max_allocated_storage_gb": 500,
+        "multi_az": false,
+        "subnet_tier": "datastore"
+      },
       "public_dns": {
         "delegated": false,
         "parent_zone_id": "",
         "zone_name": "sbx2.rtifact.ai"
+      },
+      "redis": {
+        "engine_version": "7.1",
+        "node_type": "cache.t4g.small",
+        "num_cache_clusters": 1,
+        "subnet_tier": "datastore"
       },
       "state": {
         "air_gapped": false,
@@ -1422,14 +1577,26 @@
           "*.sbx2.rtifact.ai"
         ]
       },
+      "container_registry": {
+        "image_tag_mutability": "IMMUTABLE",
+        "scan_on_push": true
+      },
       "features": {
         "bastion": true,
         "certificates": true,
+        "container_registry": false,
         "karpenter": true,
+        "kms": false,
         "kubernetes_cluster": true,
         "network": true,
+        "object_storage": false,
         "pod_identities": true,
-        "public_dns": true
+        "postgresql": false,
+        "public_dns": true,
+        "redis": false
+      },
+      "kms": {
+        "deletion_window_days": 30
       },
       "kubernetes_cluster": {
         "addons": {
@@ -1639,10 +1806,29 @@
         },
         "vpc_cidr": "10.20.0.0/16"
       },
+      "object_storage": {
+        "versioning": true
+      },
+      "postgresql": {
+        "allocated_storage_gb": 100,
+        "backup_retention_days": 7,
+        "deletion_protection": true,
+        "engine_version": "16",
+        "instance_class": "db.t4g.medium",
+        "max_allocated_storage_gb": 500,
+        "multi_az": false,
+        "subnet_tier": "datastore"
+      },
       "public_dns": {
         "delegated": false,
         "parent_zone_id": "",
         "zone_name": "sbx2.rtifact.ai"
+      },
+      "redis": {
+        "engine_version": "7.1",
+        "node_type": "cache.t4g.small",
+        "num_cache_clusters": 1,
+        "subnet_tier": "datastore"
       },
       "state": {
         "air_gapped": false,
