@@ -12,6 +12,8 @@ CLUSTER_NAME="${DEPLOY_E2E_CLUSTER:-rtifact-deploy-e2e}"
 KUBECONFIG="${DEPLOY_E2E_KUBECONFIG:-/tmp/${CLUSTER_NAME}-kubeconfig}"
 REG_USER="${DEPLOY_E2E_REGISTRY_USER:-deploy}"
 REG_PASS="${DEPLOY_E2E_REGISTRY_PASSWORD:-deploypass}"
+REG_ROTATED_USER="${DEPLOY_E2E_REGISTRY_ROTATED_USER:-deploy-rotated}"
+REG_ROTATED_PASS="${DEPLOY_E2E_REGISTRY_ROTATED_PASSWORD:-deploypass-rotated}"
 
 cleanup() {
   local ec=$?
@@ -37,6 +39,8 @@ export DEPLOY_E2E_REGISTRY_USER="$REG_USER"
 export DEPLOY_E2E_REGISTRY_PASSWORD="$REG_PASS"
 export RTIFACT_REGISTRY_USER="$REG_USER"
 export RTIFACT_REGISTRY_PASSWORD="$REG_PASS"
+export DEPLOY_E2E_REGISTRY_ROTATED_USER="$REG_ROTATED_USER"
+export DEPLOY_E2E_REGISTRY_ROTATED_PASSWORD="$REG_ROTATED_PASS"
 
 command -v docker >/dev/null
 command -v curl >/dev/null
@@ -71,11 +75,17 @@ install_helm
 
 ZOT_CONFIG="$(mktemp /tmp/zot-config.XXXX.json)"
 ZOT_HTPASSWD="$(mktemp /tmp/zot-htpasswd.XXXX)"
-if command -v htpasswd >/dev/null; then
-  htpasswd -Bbn "$REG_USER" "$REG_PASS" >"$ZOT_HTPASSWD"
-else
-  docker run --rm --entrypoint htpasswd httpd:2 -Bbn "$REG_USER" "$REG_PASS" >"$ZOT_HTPASSWD"
-fi
+htpasswd_line() {
+  if command -v htpasswd >/dev/null; then
+    htpasswd -Bbn "$1" "$2"
+  else
+    docker run --rm --entrypoint htpasswd httpd:2 -Bbn "$1" "$2"
+  fi
+}
+{
+  htpasswd_line "$REG_USER" "$REG_PASS"
+  htpasswd_line "$REG_ROTATED_USER" "$REG_ROTATED_PASS"
+} | grep -v '^$' >"$ZOT_HTPASSWD"
 cat >"$ZOT_CONFIG" <<EOF
 {
   "distSpecVersion": "1.1.1",

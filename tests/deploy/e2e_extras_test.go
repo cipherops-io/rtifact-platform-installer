@@ -43,7 +43,7 @@ func TestE2E_Adopt_UnmanagedRelease(t *testing.T) {
 	}
 	o.AllowAdopt = true
 	e2eMustApply(t, o)
-	e2eAssertInventory(t, file, "ok-a")
+	e2eAssertInventory(t, file, "ok-a", "ok-b")
 }
 
 func TestE2E_Interrupt_CancelApply(t *testing.T) {

@@ -115,6 +115,7 @@ func TestE2E_S9_ProtectedRefusal(t *testing.T) {
 	nsB := e2eReleaseNS(t, file, "ok-b")
 	file = writeFixture(t, dir, func(doc *deploy.Document) {
 		doc.Releases = doc.Releases[1:]
+		doc.Releases[0].Requires = nil
 	})
 	o.FilePath = file
 	err := deploy.Apply(context.Background(), o)
@@ -247,7 +248,8 @@ func TestE2E_S15_PullSecretRefresh(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Setenv("RTIFACT_REGISTRY_PASSWORD", "newpass")
+	t.Setenv("RTIFACT_REGISTRY_USER", e2eEnv(t, "DEPLOY_E2E_REGISTRY_ROTATED_USER"))
+	t.Setenv("RTIFACT_REGISTRY_PASSWORD", e2eEnv(t, "DEPLOY_E2E_REGISTRY_ROTATED_PASSWORD"))
 	o.FilePath = file
 	e2eMustApply(t, o)
 	s2, err := cs.CoreV1().Secrets(nsA).Get(context.Background(), secretName, metav1.GetOptions{})

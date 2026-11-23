@@ -241,13 +241,18 @@ func (m ioMultiWriter) Write(p []byte) (int, error) {
 	return m.b.Write(p)
 }
 
+func e2eEnv(t *testing.T, key string) string {
+	t.Helper()
+	v := os.Getenv(key)
+	if v == "" {
+		t.Fatalf("%s not set", key)
+	}
+	return v
+}
+
 func e2eChartRef(t *testing.T) string {
 	t.Helper()
-	host := os.Getenv("DEPLOY_E2E_REGISTRY_HOST")
-	if host == "" {
-		t.Fatal("DEPLOY_E2E_REGISTRY_HOST not set")
-	}
-	return "oci://" + host + "/charts"
+	return "oci://" + e2eEnv(t, "DEPLOY_E2E_REGISTRY_HOST") + "/charts"
 }
 
 func e2eHelmUpgradeNoWait(t *testing.T, release, ns, chart, version string) {
