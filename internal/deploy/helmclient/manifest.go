@@ -26,7 +26,6 @@ func (c *Client) PlannedManifest(ctx context.Context, rel ReleaseRequest, chartR
 		up.HideSecret = true
 		up.Namespace = rel.Namespace
 		up.ChartPathOptions.Version = version
-		up.ChartPathOptions.RepoURL = chartRef
 		up.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
 		if c.reg != nil {
 			up.SetRegistryClient(c.reg)
@@ -43,7 +42,6 @@ func (c *Client) PlannedManifest(ctx context.Context, rel ReleaseRequest, chartR
 	ins.ReleaseName = rel.Name
 	ins.Namespace = rel.Namespace
 	ins.ChartPathOptions.Version = version
-	ins.ChartPathOptions.RepoURL = chartRef
 	ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
 	if c.reg != nil {
 		ins.SetRegistryClient(c.reg)

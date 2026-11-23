@@ -224,7 +224,6 @@ func (c *Client) install(ctx context.Context, cfg *action.Configuration, rel Rel
 	ins.PostRenderer = pvcKeepRenderer()
 	ins.Labels = labels(c.deployment)
 	ins.ChartPathOptions.Version = rel.Version
-	ins.ChartPathOptions.RepoURL = chartRef
 	ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
 	if c.reg != nil {
 		ins.SetRegistryClient(c.reg)
@@ -243,7 +242,6 @@ func (c *Client) upgrade(ctx context.Context, cfg *action.Configuration, rel Rel
 	up.Labels = labels(c.deployment)
 	up.MaxHistory = c.historyMax
 	up.ChartPathOptions.Version = rel.Version
-	up.ChartPathOptions.RepoURL = chartRef
 	up.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
 	if c.reg != nil {
 		up.SetRegistryClient(c.reg)
@@ -271,7 +269,6 @@ func (c *Client) chartArchive(chartRef, version string) ([]byte, error) {
 	}
 	ins := action.NewInstall(cfg)
 	ins.ChartPathOptions.Version = version
-	ins.ChartPathOptions.RepoURL = chartRef
 	ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
 	if c.reg != nil {
 		ins.SetRegistryClient(c.reg)
