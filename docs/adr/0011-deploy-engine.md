@@ -6,7 +6,7 @@ Accepted (v0.0.1)
 
 ## Context
 
-`rtifact deploy` must plan and apply Helm releases from versioned OCI charts on customer clusters, with the same identity and confirmation patterns as the infrastructure runner. The first **v0.0.1** tag shipped layout and CLI stubs before cluster behaviour was proven; this ADR records the design that `make deploy-e2e` exercises (results: the `deploy-e2e` CI job).
+`rtifact deploy` must plan and apply Helm releases from versioned OCI charts on customer clusters, with the same identity and confirmation patterns as the infrastructure runner. The first **v0.0.1** tag shipped layout and CLI stubs before cluster behaviour was proven; this ADR records the design that `make deploy-e2e` exercises (results: the `deploy-e2e` CI job, first green on `main` in [run 45121102246](https://github.com/cipherops-io/rtifact-platform-installer/actions/runs/45121102246)).
 
 ## Decision
 
