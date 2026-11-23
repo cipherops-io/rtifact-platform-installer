@@ -43,8 +43,8 @@ type Wanted struct {
 	ValuesDigest string
 	// FileValuesDigest is the digest of merged values from files (audit / inventory only).
 	FileValuesDigest string
-	Requires     []string
-	Protect      bool
+	Requires         []string
+	Protect          bool
 }
 
 // Observed is live cluster state for a release.
@@ -175,17 +175,31 @@ func decideWanted(w Wanted, o Observed, live bool, inv *Entry, in Input, opts Op
 		return row
 	}
 	row.FromVersion = o.Version
+	ov, blocked := gateLive(&row, w, o, in, opts)
+	if blocked {
+		return row
+	}
+	if wv.LessThan(ov) && !opts.AllowDowngrade {
+		row.Action = ActionRefused
+		row.Note = fmt.Sprintf("downgrade %s -> %s blocked (use --allow-downgrade)", o.Version, w.Version)
+		return row
+	}
+	row.Action, row.Note = detectChange(w, o, inv, wv, ov)
+	return row
+}
 
+// gateLive decides rows that cannot proceed to change detection (stuck, foreign, unparsable).
+func gateLive(row *Row, w Wanted, o Observed, in Input, opts Options) (*semver.Version, bool) {
 	if isStuck(o.Status) {
 		row.Action = ActionStuck
 		row.ToVersion = ""
 		row.Note = fmt.Sprintf("release is %s; recover with: %s", o.Status, RollbackCommand(in.FilePath, w.Name))
-		return row
+		return nil, true
 	}
 	if o.Status == StatusUninstalling {
 		row.Action = ActionRefused
 		row.Note = "release is being uninstalled; wait for it to finish and re-run"
-		return row
+		return nil, true
 	}
 	if !o.ManagedByDeployment {
 		if opts.AllowAdopt {
@@ -194,41 +208,33 @@ func decideWanted(w Wanted, o Observed, live bool, inv *Entry, in Input, opts Op
 			row.Action = ActionRefused
 			row.Note = "release exists but is not managed by this deployment (use --adopt)"
 		}
-		return row
+		return nil, true
 	}
-
 	ov, err := semver.NewVersion(o.Version)
 	if err != nil {
 		row.Action = ActionRefused
 		row.Note = fmt.Sprintf("deployed version %q is not valid semver", o.Version)
-		return row
+		return nil, true
 	}
-	if wv.LessThan(ov) && !opts.AllowDowngrade {
-		row.Action = ActionRefused
-		row.Note = fmt.Sprintf("downgrade %s -> %s blocked (use --allow-downgrade)", o.Version, w.Version)
-		return row
-	}
+	return ov, false
+}
 
+func detectChange(w Wanted, o Observed, inv *Entry, wv, ov *semver.Version) (Action, string) {
 	appliedChartDigest, appliedValuesDigest := appliedDigests(o, inv)
 	switch {
 	case o.Status != StatusDeployed:
-		row.Action = ActionUpgrade
-		row.Note = fmt.Sprintf("release status is %q, not deployed; re-applying", o.Status)
+		return ActionUpgrade, fmt.Sprintf("release status is %q, not deployed; re-applying", o.Status)
 	case o.Chart != w.Chart:
-		row.Action = ActionUpgrade
-		row.Note = fmt.Sprintf("chart changed %s -> %s", o.Chart, w.Chart)
+		return ActionUpgrade, fmt.Sprintf("chart changed %s -> %s", o.Chart, w.Chart)
 	case !wv.Equal(ov):
-		row.Action = ActionUpgrade
+		return ActionUpgrade, ""
 	case w.ChartDigest != "" && w.ChartDigest != appliedChartDigest:
-		row.Action = ActionUpgrade
-		row.Note = "chart digest changed for the same version"
+		return ActionUpgrade, "chart digest changed for the same version"
 	case w.ValuesDigest != appliedValuesDigest:
-		row.Action = ActionUpgrade
-		row.Note = "values changed"
+		return ActionUpgrade, "values changed"
 	default:
-		row.Action = ActionUnchanged
+		return ActionUnchanged, ""
 	}
-	return row
 }
 
 // appliedDigests returns the chart and values digests for comparing wanted state.

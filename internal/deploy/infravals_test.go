@@ -3,7 +3,6 @@ package deploy
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -37,18 +36,14 @@ func TestLookupInfraScalar_ambiguous(t *testing.T) {
 	writeOutputs(t, dir, "app-platform-outputs.json", `{"zone_id":"a"}`)
 	writeOutputs(t, dir, "network-edge-outputs.json", `{"zone_id":"b"}`)
 	_, err := LookupInfraScalar(dir, "zone_id")
-	if err == nil || !strings.Contains(err.Error(), "ambiguous") {
-		t.Fatalf("expected ambiguity, got %v", err)
-	}
+	wantErrContaining(t, err, "ambiguous")
 }
 
 func TestLookupInfraScalar_scalarOnly(t *testing.T) {
 	dir := t.TempDir()
 	writeOutputs(t, dir, "app-platform-outputs.json", `{"tags":{"env":"x"}}`)
 	_, err := LookupInfraScalar(dir, "app-platform.tags")
-	if err == nil || !strings.Contains(err.Error(), "scalar") {
-		t.Fatalf("expected scalar error, got %v", err)
-	}
+	wantErrContaining(t, err, "scalar")
 }
 
 func TestLookupInfraScalar_missing(t *testing.T) {

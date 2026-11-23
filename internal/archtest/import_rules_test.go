@@ -142,6 +142,63 @@ func deployHelmImportAllowed(rel, imp string) bool {
 	}
 }
 
+// TestDeployKubernetesImportsBounded keeps direct cluster API use in the
+// packages that own it; orchestration in internal/deploy goes through them.
+func TestDeployKubernetesImportsBounded(t *testing.T) {
+	root := repoRoot()
+	files, err := goFilesUnder(root, "internal/deploy", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	clusterPkgs := []string{
+		"internal/deploy/kube/", "internal/deploy/cluster/", "internal/deploy/lock/",
+		"internal/deploy/inventory/", "internal/deploy/crds/", "internal/deploy/helmclient/",
+	}
+	for _, goFile := range files {
+		imports, err := importPaths(goFile)
+		if err != nil {
+			t.Fatalf("%s: %v", goFile, err)
+		}
+		rel, _ := filepath.Rel(root, goFile)
+		rel = filepath.ToSlash(rel)
+		allowed := false
+		for _, p := range clusterPkgs {
+			if strings.HasPrefix(rel, p) {
+				allowed = true
+			}
+		}
+		for _, imp := range imports {
+			if allowed {
+				continue
+			}
+			if strings.HasPrefix(imp, "k8s.io/") || strings.HasPrefix(imp, "sigs.k8s.io/") {
+				t.Errorf("%s: only %v may import Kubernetes packages, got %q", rel, clusterPkgs, imp)
+			}
+		}
+	}
+}
+
+// TestDeployModelHasNoDependencies keeps the deploy file types importable from anywhere.
+func TestDeployModelHasNoDependencies(t *testing.T) {
+	root := repoRoot()
+	files, err := goFilesUnder(root, "internal/deploy/model", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, goFile := range files {
+		imports, err := importPaths(goFile)
+		if err != nil {
+			t.Fatalf("%s: %v", goFile, err)
+		}
+		for _, imp := range imports {
+			if strings.Contains(imp, ".") {
+				rel, _ := filepath.Rel(root, goFile)
+				t.Errorf("%s: model must only use the standard library, got %q", rel, imp)
+			}
+		}
+	}
+}
+
 func TestDeployForbiddenImports(t *testing.T) {
 	root := repoRoot()
 	files, err := goFilesUnder(root, "internal/deploy", false)

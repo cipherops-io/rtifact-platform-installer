@@ -3,130 +3,64 @@ package deploy
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"time"
 
-	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/cluster"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/lock"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/ocireg"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/redact"
 	"helm.sh/helm/v4/pkg/registry"
-	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// RunOptions common CLI flags.
-type RunOptions struct {
-	FilePath          string
-	KubeconfigCLI     string
-	Yes               bool
-	Only              string
-	DetailedExitCode  bool
-	Timeout           time.Duration
-	AllowDestroy      bool
-	AllowMassRemoval  bool
-	AllowDowngrade    bool
-	AllowAdopt        bool
-	ForceUnlock       bool
-	Purge             bool
-	Debug             bool
-	JSONOutput        bool
-	// NeedsRegistry is true for plan/apply (OCI chart digests); status, destroy, and rollback leave it false.
-	NeedsRegistry     bool
-	Stdout            io.Writer
-	Stderr            io.Writer
-}
-
-func (o *RunOptions) out() io.Writer {
-	if o.Stdout != nil {
-		return o.Stdout
-	}
-	return os.Stdout
-}
-
-func (o *RunOptions) err() io.Writer {
-	if o.Stderr != nil {
-		return o.Stderr
-	}
-	return os.Stderr
-}
-
-
 // Plan prints pending changes without mutating the cluster.
+// Exit codes: 0 no changes (or no --detailed-exitcode), 1 refusal or error, 2 pending changes.
 func Plan(ctx context.Context, o RunOptions) (int, error) {
 	defer SetActiveRedactor(nil)
 	sess, err := OpenSession(ctx, o)
 	if err != nil {
 		return 1, err
 	}
-	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
-	PrintBanner(o.err(), doc, disc, kcfg, sess.Identity)
-	rd := redact.New()
-	resolved, err := ResolveAllReleases(o.FilePath, doc, disc.OutputsPath, rd)
+	PrintBanner(o.err(), sess.Doc, sess.Disc, sess.Kube, sess.Identity)
+	pr, err := buildPlan(ctx, sess, &o)
 	if err != nil {
-		return 1, RedactError(rd, err)
+		return 1, RedactError(ActiveRedactor(), err)
 	}
-	SetActiveRedactor(rd)
-	o.withRedactedOutput(rd)
-	debugf(o, rd, "registry host=%s plain_http=%v", doc.Registry.Host, doc.Registry.PlainHTTP)
-	o.NeedsRegistry = true
-	regCfg := registryFromDoc(doc)
-	reg, err := registryClient(ctx, doc, true)
-	if err != nil {
-		return 1, RedactError(rd, err)
+	if err := pr.print(ctx, sess, o); err != nil {
+		return 1, RedactError(pr.rd, err)
 	}
-	cs, err := newHelmClient(kcfg, doc, reg, o)
-	if err != nil {
-		return 1, RedactError(rd, err)
+	if err := refusedBlocking(pr.res); err != nil {
+		return 1, RedactError(pr.rd, err)
 	}
-	want, err := buildWanted(wantedBuildOpts{
-		deployPath: o.FilePath, doc: doc, outputsDir: disc.OutputsPath,
-		reg: regCfg, regClient: reg, rd: rd,
-	})
-	if err != nil {
-		return 1, RedactError(rd, err)
-	}
-	inv, err := inventory.Read(ctx, kcfg, DeploymentID(doc))
-	if err != nil {
-		return 1, RedactError(rd, err)
-	}
-	observed, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: observeTargets(want, inv)})
-	if err != nil {
-		return 1, RedactError(rd, err)
-	}
-	closure := onlyClosure(doc, o.Only)
-	res := plan.Build(plan.Input{
-		Wanted: want, Observed: observed, Inventory: inv, Deployment: DeploymentID(doc),
-		FilePath: o.FilePath,
-	}, plan.Options{
-		AllowDestroy: o.AllowDestroy, AllowMassRemoval: o.AllowMassRemoval,
-		AllowDowngrade: o.AllowDowngrade, AllowAdopt: o.AllowAdopt, Purge: o.Purge,
-		Only: o.Only, OnlyClosure: closure,
-	})
-	if err := PrintPlan(o.out(), rd, res, o.JSONOutput); err != nil {
-		return 1, RedactError(rd, err)
-	}
-	if err := printPlanManifestDiffs(ctx, planDiffOpts{
-		out: o.out(), stderr: o.err(), debug: o.Debug,
-		cs: cs, doc: doc, res: res, regCfg: regCfg,
-		resolved: resolved, rd: rd,
-	}); err != nil {
-		return 1, RedactError(rd, err)
-	}
-	if refusedBlocking(res) != nil {
-		return 1, RedactError(rd, refusedBlocking(res))
-	}
-	if o.DetailedExitCode {
-		if res.HasChange {
-			return 2, nil
-		}
-		return 0, nil
+	if o.DetailedExitCode && pr.res.HasChange {
+		return 2, nil
 	}
 	return 0, nil
+}
+
+// withLock holds the deployment lock around fn. A failed lease renewal cancels
+// fn's context so the run stops instead of continuing unlocked.
+func withLock(ctx context.Context, sess *Session, o RunOptions, cmd string, fn func(context.Context) error) error {
+	if err := ensureSystemNS(ctx, sess.Client); err != nil {
+		return err
+	}
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	h, err := lock.Acquire(runCtx, sess.Client, sess.DeploymentID(), lock.HolderIdentity(newRunID()), o.ForceUnlock)
+	if err != nil {
+		return err
+	}
+	h.OnRenewFailure(func(err error) {
+		fmt.Fprintf(o.err(), "deploy lock renewal failed; stopping %s: %v\n", cmd, err)
+		cancel()
+	})
+	defer func() {
+		releaseCtx, rcancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer rcancel()
+		_ = h.Release(releaseCtx, sess.Client)
+	}()
+	return fn(runCtx)
 }
 
 func onlyClosure(doc *Document, only string) map[string]bool {
@@ -163,21 +97,7 @@ func refusedBlocking(res plan.Result) error {
 	return nil
 }
 
-func newHelmClient(kcfg kube.Config, doc *Document, reg *registry.Client, o RunOptions) (*helmclient.Client, error) {
-	deployment := DeploymentID(doc)
-	return helmclient.New(helmclient.Options{
-		Kube: kcfg, Deployment: deployment, RegistryClient: reg,
-		Defaults: helmDefaults(o, doc),
-		Registry: helmclient.RegistryOpts{PlainHTTP: doc.Registry.PlainHTTP},
-	})
-}
-
-func registryClient(ctx context.Context, doc *Document, needs bool) (*registry.Client, error) {
-	_ = ctx
-	if !needs {
-		return nil, nil
-	}
-	regCfg := registryFromDoc(doc)
+func registryClient(regCfg ocireg.Registry) (*registry.Client, error) {
 	cred, err := ocireg.LoadAuth(regCfg)
 	if err != nil {
 		return nil, err
@@ -197,81 +117,14 @@ func registryFromDoc(doc *Document) ocireg.Registry {
 	return r
 }
 
-func ensureSystemNS(ctx context.Context, kcfg kube.Config) error {
-	return ensureNamespace(ctx, kcfg, inventory.SystemNS, nil)
+func ensureSystemNS(ctx context.Context, cs cluster.Client) error {
+	return cluster.EnsureNamespace(ctx, cs, inventory.SystemNS, nil)
 }
 
-func ensureNamespaces(ctx context.Context, kcfg kube.Config, doc *Document) error {
+func ensureNamespaces(ctx context.Context, cs cluster.Client, doc *Document) error {
 	for _, ns := range doc.Namespaces {
-		if err := ensureNamespace(ctx, kcfg, ns.Name, ns.Labels); err != nil {
+		if err := cluster.EnsureNamespace(ctx, cs, ns.Name, ns.Labels); err != nil {
 			return err
-		}
-	}
-	return nil
-}
-
-func ensureNamespace(ctx context.Context, kcfg kube.Config, name string, labels map[string]string) error {
-	cs, err := kube.Clientset(kcfg)
-	if err != nil {
-		return err
-	}
-	existing, err := cs.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
-	if err == nil {
-		merged := mergeNamespaceLabels(existing.Labels, labels)
-		if labelsEqual(merged, existing.Labels) {
-			return nil
-		}
-		existing.Labels = merged
-		_, err = cs.CoreV1().Namespaces().Update(ctx, existing, metav1.UpdateOptions{})
-		return err
-	}
-	if !apierrors.IsNotFound(err) {
-		return err
-	}
-	createLabels := mergeNamespaceLabels(nil, labels)
-	createLabels[LabelNamespaceCreatedBy] = LabelNamespaceCreatedByValue
-	obj := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Labels: createLabels},
-	}
-	_, err = cs.CoreV1().Namespaces().Create(ctx, obj, metav1.CreateOptions{})
-	return err
-}
-
-func mergeNamespaceLabels(base, extra map[string]string) map[string]string {
-	out := map[string]string{}
-	for k, v := range base {
-		out[k] = v
-	}
-	for k, v := range extra {
-		out[k] = v
-	}
-	return out
-}
-
-func labelsEqual(a, b map[string]string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for k, v := range a {
-		if b[k] != v {
-			return false
-		}
-	}
-	return true
-}
-
-func hostname() string {
-	h, err := os.Hostname()
-	if err != nil {
-		return "unknown"
-	}
-	return h
-}
-
-func wantByName(want []plan.Wanted, name string) *plan.Wanted {
-	for i := range want {
-		if want[i].Name == name {
-			return &want[i]
 		}
 	}
 	return nil

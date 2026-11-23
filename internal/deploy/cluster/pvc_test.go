@@ -1,4 +1,4 @@
-package deploy
+package cluster
 
 import "testing"
 
@@ -23,7 +23,7 @@ spec:
         requests:
           storage: 1Gi
 `
-	got, err := pvcNamesFromManifest(m)
+	got, err := PVCNamesFromManifest(m)
 	if err != nil {
 		t.Fatal(err)
 	}

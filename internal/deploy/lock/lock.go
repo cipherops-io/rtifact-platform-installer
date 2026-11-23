@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
 	coordinationv1 "k8s.io/api/coordination/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	coordclient "k8s.io/client-go/kubernetes/typed/coordination/v1"
 )
 
 const leaseSeconds = 3600
@@ -44,46 +45,73 @@ func HolderIdentity(runID string) string {
 
 // OnRenewFailure runs when lease renewal fails (fail closed).
 func (h *Handle) OnRenewFailure(fn func(error)) {
+	h.cancelMu.Lock()
+	defer h.cancelMu.Unlock()
 	h.onRenewFailure = fn
 }
 
+func (h *Handle) renewFailed(err error) {
+	h.cancelMu.Lock()
+	fn := h.onRenewFailure
+	h.cancelMu.Unlock()
+	if fn != nil {
+		fn(err)
+		return
+	}
+	fmt.Fprintf(os.Stderr, "deploy lock renewal failed: %v\n", err)
+}
+
 // Acquire takes the deployment Lease; second holder is refused (S12).
-func Acquire(ctx context.Context, kcfg kube.Config, deployment, holder string, force bool) (*Handle, error) {
+func Acquire(ctx context.Context, cs kubernetes.Interface, deployment, holder string, force bool) (*Handle, error) {
 	if holder == "" {
 		holder = "unknown"
 	}
-	cs, err := kube.Clientset(kcfg)
-	if err != nil {
-		return nil, err
-	}
 	name := "rtifact-deploy-lock-" + deployment
-	leaseClient := cs.CoordinationV1().Leases(inventory.SystemNS)
-	existing, err := leaseClient.Get(ctx, name, metav1.GetOptions{})
-	if err != nil && !apierrors.IsNotFound(err) {
+	leases := cs.CoordinationV1().Leases(inventory.SystemNS)
+	existing, err := leases.Get(ctx, name, metav1.GetOptions{})
+	switch {
+	case apierrors.IsNotFound(err):
+		existing = nil
+	case err != nil:
 		return nil, err
 	}
 	if force && existing != nil && existing.Spec.HolderIdentity != nil {
 		fmt.Fprintf(os.Stderr, "Force-unlock: clearing lock held by %q\n", *existing.Spec.HolderIdentity)
-		_ = leaseClient.Delete(ctx, name, metav1.DeleteOptions{})
+		_ = leases.Delete(ctx, name, metav1.DeleteOptions{})
 		existing = nil
-		err = apierrors.NewNotFound(coordinationv1.Resource("leases"), name)
 	}
-	if err == nil && existing != nil && existing.Spec.HolderIdentity != nil {
-		cur := *existing.Spec.HolderIdentity
-		if cur != holder && !expired(existing) {
-			return nil, usererr.New(
-				"Another deploy is already running.",
-				fmt.Sprintf("Lock held by %q in namespace %q.", cur, inventory.SystemNS),
-				"Wait for the other run to finish or use --force-unlock if it is stale.",
-			)
-		}
-		if cur != holder {
-			fmt.Fprintf(os.Stderr, "Taking over expired deploy lock held by %q (lease older than %ds).\n", cur, leaseSeconds)
-		}
+	if err := checkHolder(existing, holder); err != nil {
+		return nil, err
 	}
+	if err := writeLease(ctx, leases, newLease(name, deployment, holder), existing); err != nil {
+		return nil, err
+	}
+	h := &Handle{name: name, holder: holder}
+	renewCtx, cancel := context.WithCancel(ctx)
+	h.stopRenew = cancel
+	go h.renewLoop(renewCtx, cs)
+	return h, nil
+}
+
+func checkHolder(existing *coordinationv1.Lease, holder string) error {
+	if existing == nil || existing.Spec.HolderIdentity == nil {
+		return nil
+	}
+	cur := *existing.Spec.HolderIdentity
+	if cur == holder {
+		return nil
+	}
+	if !expired(existing) {
+		return lockHeld(fmt.Sprintf("Lock held by %q in namespace %q.", cur, inventory.SystemNS))
+	}
+	fmt.Fprintf(os.Stderr, "Taking over expired deploy lock held by %q (lease older than %ds).\n", cur, leaseSeconds)
+	return nil
+}
+
+func newLease(name, deployment, holder string) *coordinationv1.Lease {
 	now := metav1.NewMicroTime(time.Now())
 	dur := int32(leaseSeconds)
-	lease := &coordinationv1.Lease{
+	return &coordinationv1.Lease{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: inventory.SystemNS,
@@ -96,37 +124,34 @@ func Acquire(ctx context.Context, kcfg kube.Config, deployment, holder string, f
 			RenewTime:            &now,
 		},
 	}
-	if apierrors.IsNotFound(err) {
-		_, err = leaseClient.Create(ctx, lease, metav1.CreateOptions{})
-		if apierrors.IsAlreadyExists(err) {
-			return nil, usererr.New(
-				"Another deploy is already running.",
-				"The deploy lock was taken by another process while starting.",
-				"Wait for the other run to finish or use --force-unlock if it is stale.",
-			)
-		}
-	} else {
-		lease.ObjectMeta.ResourceVersion = existing.ObjectMeta.ResourceVersion
-		_, err = leaseClient.Update(ctx, lease, metav1.UpdateOptions{})
-		if apierrors.IsConflict(err) {
-			return nil, usererr.New(
-				"Another deploy is already running.",
-				"The deploy lock changed while this run was taking it.",
-				"Wait for the other run to finish or use --force-unlock if it is stale.",
-			)
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	h := &Handle{name: name, holder: holder}
-	renewCtx, cancel := context.WithCancel(ctx)
-	h.stopRenew = cancel
-	go h.renewLoop(renewCtx, kcfg)
-	return h, nil
 }
 
-func (h *Handle) renewLoop(ctx context.Context, kcfg kube.Config) {
+// writeLease creates the lease, or replaces existing only if it is unchanged since it was read.
+func writeLease(ctx context.Context, leases coordclient.LeaseInterface, lease, existing *coordinationv1.Lease) error {
+	if existing == nil {
+		_, err := leases.Create(ctx, lease, metav1.CreateOptions{})
+		if apierrors.IsAlreadyExists(err) {
+			return lockHeld("The deploy lock was taken by another process while starting.")
+		}
+		return err
+	}
+	lease.ResourceVersion = existing.ResourceVersion
+	_, err := leases.Update(ctx, lease, metav1.UpdateOptions{})
+	if apierrors.IsConflict(err) {
+		return lockHeld("The deploy lock changed while this run was taking it.")
+	}
+	return err
+}
+
+func lockHeld(detail string) error {
+	return usererr.New(
+		"Another deploy is already running.",
+		detail,
+		"Wait for the other run to finish or use --force-unlock if it is stale.",
+	)
+}
+
+func (h *Handle) renewLoop(ctx context.Context, cs kubernetes.Interface) {
 	interval := time.Duration(leaseSeconds/6) * time.Second
 	if interval < 10*time.Second {
 		interval = 10 * time.Second
@@ -138,23 +163,15 @@ func (h *Handle) renewLoop(ctx context.Context, kcfg kube.Config) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := h.renew(ctx, kcfg); err != nil {
-				if h.onRenewFailure != nil {
-					h.onRenewFailure(err)
-				} else {
-					fmt.Fprintf(os.Stderr, "deploy lock renewal failed: %v\n", err)
-				}
+			if err := h.renew(ctx, cs); err != nil {
+				h.renewFailed(err)
 				return
 			}
 		}
 	}
 }
 
-func (h *Handle) renew(ctx context.Context, kcfg kube.Config) error {
-	cs, err := kube.Clientset(kcfg)
-	if err != nil {
-		return err
-	}
+func (h *Handle) renew(ctx context.Context, cs kubernetes.Interface) error {
 	leaseClient := cs.CoordinationV1().Leases(inventory.SystemNS)
 	existing, err := leaseClient.Get(ctx, h.name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
@@ -181,8 +198,7 @@ func expired(l *coordinationv1.Lease) bool {
 }
 
 // Release drops the lease when this process holds it.
-func (h *Handle) Release(ctx context.Context, kcfg kube.Config, deployment string) error {
-	_ = deployment
+func (h *Handle) Release(ctx context.Context, cs kubernetes.Interface) error {
 	h.cancelMu.Lock()
 	if h.stopRenew != nil {
 		h.stopRenew()
@@ -190,10 +206,6 @@ func (h *Handle) Release(ctx context.Context, kcfg kube.Config, deployment strin
 	}
 	h.cancelMu.Unlock()
 
-	cs, err := kube.Clientset(kcfg)
-	if err != nil {
-		return err
-	}
 	lease, err := cs.CoordinationV1().Leases(inventory.SystemNS).Get(ctx, h.name, metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		return nil

@@ -64,36 +64,28 @@ releases:
     requires: [ok-a]
 `
 	p := writeDeploy(t, dir, "d.yaml", content)
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "ok-a") {
-		t.Fatalf("expected missing require ok-a, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "ok-a")
 }
 
 func TestValidate_unknownRequire(t *testing.T) {
 	dir := t.TempDir()
 	p := writeDeploy(t, dir, "d.yaml", minimalDeployYAML(`    requires: [missing]
 `))
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "missing") {
-		t.Fatalf("expected unknown require error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "missing")
 }
 
 func TestValidate_namespaceNotListed(t *testing.T) {
 	dir := t.TempDir()
 	yaml := strings.Replace(minimalDeployYAML(""), "namespace: x", "namespace: other", 1)
 	p := writeDeploy(t, dir, "d.yaml", yaml)
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "other") {
-		t.Fatalf("expected namespace error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "other")
 }
 
 func TestValidate_missingValuesFile(t *testing.T) {
 	dir := t.TempDir()
 	p := writeDeploy(t, dir, "d.yaml", minimalDeployYAML(`    values_files: [no-such.yaml]
 `))
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "values file") {
-		t.Fatalf("expected values file error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "values file")
 }
 
 func TestValidate_duplicateReleaseName(t *testing.T) {
@@ -116,9 +108,7 @@ releases:
     version: 1.0.0
 `
 	p := writeDeploy(t, dir, "d.yaml", content)
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "duplicate") {
-		t.Fatalf("expected duplicate release error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "duplicate")
 }
 
 func TestValidate_defaultsTimeoutInvalid(t *testing.T) {
@@ -128,9 +118,7 @@ defaults:
   timeout: not-a-duration
 `, 1)
 	p := writeDeploy(t, dir, "d.yaml", yaml)
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "timeout") {
-		t.Fatalf("expected timeout error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "timeout")
 }
 
 func TestValidate_releaseVersionNotSemver(t *testing.T) {
@@ -146,9 +134,7 @@ func TestValidate_chartRefInvalidOCI(t *testing.T) {
 	dir := t.TempDir()
 	yaml := strings.Replace(minimalDeployYAML(""), "chart: c", "chart: oci://", 1)
 	p := writeDeploy(t, dir, "d.yaml", yaml)
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "oci://") {
-		t.Fatalf("expected chart error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "oci://")
 }
 
 func TestValidate_pullSecretRequiresRegistryAuth(t *testing.T) {
@@ -169,9 +155,7 @@ releases:
     version: 1.0.0
 `
 	p := writeDeploy(t, dir, "d.yaml", content)
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "registry.auth") {
-		t.Fatalf("expected registry.auth error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "registry.auth")
 }
 
 func TestValidate_attachPullSecretRequiresPullSecret(t *testing.T) {
@@ -195,9 +179,7 @@ releases:
     version: 1.0.0
 `
 	p := writeDeploy(t, dir, "d.yaml", content)
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "attach_pull_secret") {
-		t.Fatalf("expected attach error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "attach_pull_secret")
 }
 
 func TestValidate_deploymentNameTooLong(t *testing.T) {
@@ -217,9 +199,7 @@ releases:
     version: 1.0.0
 `, longEnv)
 	p := writeDeploy(t, dir, "d.yaml", content)
-	if err := ValidateFile(p); err == nil || !strings.Contains(err.Error(), "63") {
-		t.Fatalf("expected length error, got %v", err)
-	}
+	wantErrContaining(t, ValidateFile(p), "63")
 }
 
 func TestValidate_duplicateNamespace(t *testing.T) {
@@ -241,10 +221,5 @@ releases:
 `
 	p := writeDeploy(t, dir, "d.yaml", content)
 	err := ValidateFile(p)
-	if err == nil {
-		t.Fatal("expected validation error")
-	}
-	if !strings.Contains(err.Error(), "duplicate namespace") && !strings.Contains(err.Error(), "uniqueItems") {
-		t.Fatalf("expected duplicate namespace error, got %v", err)
-	}
+	wantErrContaining(t, err, "duplicate namespace", "uniqueItems")
 }

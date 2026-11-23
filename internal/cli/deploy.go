@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -56,8 +55,8 @@ func addDeployGroup(root *cobra.Command) {
 		return deploy.WriteInitConfig(out, force)
 	}
 	initCfg := &cobra.Command{
-		Use:   "init-config",
-		Short: "Write a minimal deploy file",
+		Use:     "init-config",
+		Short:   "Write a minimal deploy file",
 		Example: `  rtifact deploy init-config --out releases.yaml`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return writeInit(cmd)
@@ -81,17 +80,19 @@ func addDeployGroup(root *cobra.Command) {
 		return deploy.RunOptions{
 			KubeconfigCLI:    kubeconfigFlag,
 			Yes:              yes,
-			Only:             only,
 			DetailedExitCode: det,
 			Timeout:          timeout,
-			AllowDestroy:     mustBool(cmd, "allow-destroy"),
-			AllowMassRemoval: mustBool(cmd, "allow-mass-removal"),
-			AllowDowngrade:   mustBool(cmd, "allow-downgrade"),
-			AllowAdopt:       mustBool(cmd, "adopt"),
 			ForceUnlock:      mustBool(cmd, "force-unlock"),
-			Purge:            mustBool(cmd, "purge"),
 			Debug:            mustBool(cmd, "debug"),
 			JSONOutput:       outputJSON(cmd),
+			Guards: deploy.Guards{
+				Only:             only,
+				AllowDestroy:     mustBool(cmd, "allow-destroy"),
+				AllowMassRemoval: mustBool(cmd, "allow-mass-removal"),
+				AllowDowngrade:   mustBool(cmd, "allow-downgrade"),
+				AllowAdopt:       mustBool(cmd, "adopt"),
+				Purge:            mustBool(cmd, "purge"),
+			},
 		}
 	}
 
@@ -123,7 +124,7 @@ func addDeployGroup(root *cobra.Command) {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o := runFlags(cmd)
 			o.FilePath = args[0]
-			code, err := deploy.Plan(context.Background(), o)
+			code, err := deploy.Plan(cmd.Context(), o)
 			if err != nil {
 				return err
 			}
@@ -144,7 +145,7 @@ func addDeployGroup(root *cobra.Command) {
 		Example: `  rtifact deploy apply releases.yaml
   rtifact deploy apply --yes --timeout 15m releases.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx, stop := deploy.SignalContext(context.Background())
+			ctx, stop := deploy.SignalContext(cmd.Context())
 			defer stop()
 			o := runFlags(cmd)
 			o.FilePath = args[0]
@@ -163,7 +164,7 @@ func addDeployGroup(root *cobra.Command) {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o := runFlags(cmd)
 			o.FilePath = args[0]
-			return deploy.Status(context.Background(), o)
+			return deploy.Status(cmd.Context(), o)
 		},
 	}
 	addOutputFlag(statusCmd)
@@ -176,7 +177,7 @@ func addDeployGroup(root *cobra.Command) {
 		Example: `  rtifact deploy destroy releases.yaml
   rtifact deploy destroy --yes releases.yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx, stop := deploy.SignalContext(context.Background())
+			ctx, stop := deploy.SignalContext(cmd.Context())
 			defer stop()
 			o := runFlags(cmd)
 			o.FilePath = args[0]
@@ -187,12 +188,12 @@ func addDeployGroup(root *cobra.Command) {
 	grp.AddCommand(destroyCmd)
 
 	rollbackCmd := &cobra.Command{
-		Use:   "rollback [releases.yaml] [release]",
-		Args:  cobra.ExactArgs(2),
-		Short: "Roll back one release to the previous revision",
+		Use:     "rollback [releases.yaml] [release]",
+		Args:    cobra.ExactArgs(2),
+		Short:   "Roll back one release to the previous revision",
 		Example: `  rtifact deploy rollback releases.yaml my-release`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctx, stop := deploy.SignalContext(context.Background())
+			ctx, stop := deploy.SignalContext(cmd.Context())
 			defer stop()
 			o := runFlags(cmd)
 			o.FilePath = args[0]

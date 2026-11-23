@@ -1,6 +1,7 @@
 package helmclient
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -12,12 +13,13 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 	"helm.sh/helm/v4/pkg/action"
+	chart "helm.sh/helm/v4/pkg/chart/v2"
 	"helm.sh/helm/v4/pkg/chart/v2/loader"
 	"helm.sh/helm/v4/pkg/cli"
 	helmkube "helm.sh/helm/v4/pkg/kube"
+	"helm.sh/helm/v4/pkg/registry"
 	releasecommon "helm.sh/helm/v4/pkg/release/common"
 	release "helm.sh/helm/v4/pkg/release/v1"
-	"helm.sh/helm/v4/pkg/registry"
 	"helm.sh/helm/v4/pkg/storage/driver"
 )
 
@@ -25,11 +27,6 @@ const helmDriver = "secret"
 
 // ErrNoPreviousDeployedRevision is returned when rollback has no deployed history target.
 var ErrNoPreviousDeployedRevision = errors.New("no previous deployed revision")
-
-// IsPendingInstall reports a first install that never completed (no revision to roll back to).
-func IsPendingInstall(r *release.Release) bool {
-	return r != nil && r.Info != nil && r.Info.Status == releasecommon.StatusPendingInstall
-}
 
 // ReleaseRequest is one install/upgrade target.
 type ReleaseRequest struct {
@@ -68,6 +65,7 @@ type Client struct {
 	wait       bool
 	rollback   bool
 	historyMax int
+	charts     *ChartCache
 }
 
 // Options for Helm client construction.
@@ -77,6 +75,8 @@ type Options struct {
 	Defaults       Defaults
 	Registry       RegistryOpts
 	Deployment     string
+	// Charts is the session chart cache; nil disables caching.
+	Charts *ChartCache
 }
 
 // New builds a Helm client from explicit kubeconfig (not ambient KUBECONFIG or HELM_KUBEAPISERVER).
@@ -108,6 +108,7 @@ func New(opts Options) (*Client, error) {
 		wait:       wait,
 		rollback:   rb,
 		historyMax: opts.Defaults.HistoryMax,
+		charts:     opts.Charts,
 	}, nil
 }
 
@@ -181,9 +182,12 @@ func (c *Client) Observe(ctx context.Context, opts ObserveOptions) ([]plan.Obser
 }
 
 // InstallOrUpgrade applies one release.
-func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chartRef string, values map[string]any, digest string) error {
-	_ = digest
+func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chartRef string, values map[string]any) error {
 	cfg, err := c.configFor(rel.Namespace)
+	if err != nil {
+		return err
+	}
+	ch, err := c.locateChart(cfg, chartRef, rel.Version)
 	if err != nil {
 		return err
 	}
@@ -203,37 +207,40 @@ func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chart
 			exists = false
 		}
 	}
-	lbl := labels(c.deployment)
 	if !exists {
-		ins := action.NewInstall(cfg)
-		ins.ReleaseName = rel.Name
-		ins.Namespace = rel.Namespace
-		ins.CreateNamespace = false
-		ins.Timeout = c.timeout
-		ins.WaitStrategy = waitStrategy(c.wait)
-		ins.RollbackOnFailure = c.rollback
-		ins.PostRenderer = pvcKeepRenderer()
-		ins.Labels = lbl
-		ins.ChartPathOptions.Version = rel.Version
-		ins.ChartPathOptions.RepoURL = chartRef
-		ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
-		if c.reg != nil {
-			ins.SetRegistryClient(c.reg)
-		}
-		ch, err := c.locateChart(cfg, chartRef, rel.Version)
-		if err != nil {
-			return err
-		}
-		_, err = ins.RunWithContext(ctx, ch, values)
-		return err
+		return c.install(ctx, cfg, rel, chartRef, ch, values)
 	}
+	return c.upgrade(ctx, cfg, rel, chartRef, ch, values)
+}
+
+func (c *Client) install(ctx context.Context, cfg *action.Configuration, rel ReleaseRequest, chartRef string, ch *chart.Chart, values map[string]any) error {
+	ins := action.NewInstall(cfg)
+	ins.ReleaseName = rel.Name
+	ins.Namespace = rel.Namespace
+	ins.CreateNamespace = false
+	ins.Timeout = c.timeout
+	ins.WaitStrategy = waitStrategy(c.wait)
+	ins.RollbackOnFailure = c.rollback
+	ins.PostRenderer = pvcKeepRenderer()
+	ins.Labels = labels(c.deployment)
+	ins.ChartPathOptions.Version = rel.Version
+	ins.ChartPathOptions.RepoURL = chartRef
+	ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
+	if c.reg != nil {
+		ins.SetRegistryClient(c.reg)
+	}
+	_, err := ins.RunWithContext(ctx, ch, values)
+	return err
+}
+
+func (c *Client) upgrade(ctx context.Context, cfg *action.Configuration, rel ReleaseRequest, chartRef string, ch *chart.Chart, values map[string]any) error {
 	up := action.NewUpgrade(cfg)
 	up.Namespace = rel.Namespace
 	up.Timeout = c.timeout
 	up.WaitStrategy = waitStrategy(c.wait)
 	up.RollbackOnFailure = c.rollback
 	up.PostRenderer = pvcKeepRenderer()
-	up.Labels = lbl
+	up.Labels = labels(c.deployment)
 	up.MaxHistory = c.historyMax
 	up.ChartPathOptions.Version = rel.Version
 	up.ChartPathOptions.RepoURL = chartRef
@@ -241,15 +248,27 @@ func (c *Client) InstallOrUpgrade(ctx context.Context, rel ReleaseRequest, chart
 	if c.reg != nil {
 		up.SetRegistryClient(c.reg)
 	}
-	ch, err := c.locateChart(cfg, chartRef, rel.Version)
-	if err != nil {
-		return err
-	}
-	_, err = up.RunWithContext(ctx, rel.Name, ch, values)
+	_, err := up.RunWithContext(ctx, rel.Name, ch, values)
 	return err
 }
 
-func (c *Client) locateChart(cfg *action.Configuration, chartRef, version string) (any, error) {
+func (c *Client) locateChart(_ *action.Configuration, chartRef, version string) (*chart.Chart, error) {
+	b, err := c.chartArchive(chartRef, version)
+	if err != nil {
+		return nil, err
+	}
+	return loader.LoadArchive(bytes.NewReader(b))
+}
+
+// chartArchive downloads chartRef@version once per session and returns the .tgz bytes.
+func (c *Client) chartArchive(chartRef, version string) ([]byte, error) {
+	if b, ok := c.charts.get(chartRef, version); ok {
+		return b, nil
+	}
+	cfg, err := c.configFor("default")
+	if err != nil {
+		return nil, err
+	}
 	ins := action.NewInstall(cfg)
 	ins.ChartPathOptions.Version = version
 	ins.ChartPathOptions.RepoURL = chartRef
@@ -257,11 +276,16 @@ func (c *Client) locateChart(cfg *action.Configuration, chartRef, version string
 	if c.reg != nil {
 		ins.SetRegistryClient(c.reg)
 	}
-	name, err := ins.ChartPathOptions.LocateChart(chartRef, c.chartEnv)
+	path, err := ins.ChartPathOptions.LocateChart(chartRef, c.chartEnv)
 	if err != nil {
 		return nil, err
 	}
-	return loader.Load(name)
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	c.charts.put(chartRef, version, b)
+	return b, nil
 }
 
 func (c *Client) releaseExists(cfg *action.Configuration, name, ns string) (bool, error) {
@@ -300,27 +324,12 @@ func (c *Client) Uninstall(ctx context.Context, name, ns string) error {
 	return err
 }
 
-// FetchChartArchive downloads a chart and returns the .tgz bytes (for CRD upgrades).
+// FetchChartArchive returns the chart .tgz bytes (for CRD upgrades), using the session cache.
 func (c *Client) FetchChartArchive(ctx context.Context, chartRef, version string) ([]byte, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	cfg, err := c.configFor("default")
-	if err != nil {
-		return nil, err
-	}
-	ins := action.NewInstall(cfg)
-	ins.ChartPathOptions.Version = version
-	ins.ChartPathOptions.RepoURL = chartRef
-	ins.ChartPathOptions.PlainHTTP = c.regOpts.PlainHTTP
-	if c.reg != nil {
-		ins.SetRegistryClient(c.reg)
-	}
-	path, err := ins.ChartPathOptions.LocateChart(chartRef, c.chartEnv)
-	if err != nil {
-		return nil, err
-	}
-	return os.ReadFile(path)
+	return c.chartArchive(chartRef, version)
 }
 
 // PreviousDeployedRevision returns the revision to roll back to (last deployed before current).
@@ -418,8 +427,16 @@ func (c *Client) Rollback(ctx context.Context, name, ns string, rev int) error {
 	return rb.Run(name)
 }
 
-// ReleaseByName returns live release status in the given namespace.
-func (c *Client) ReleaseByName(ctx context.Context, name, ns string) (*release.Release, error) {
+// Lookup returns the latest revision of a release in ns.
+func (c *Client) Lookup(ctx context.Context, name, ns string) (*ReleaseInfo, error) {
+	r, err := c.release(ctx, name, ns)
+	if err != nil {
+		return nil, err
+	}
+	return releaseInfo(r), nil
+}
+
+func (c *Client) release(ctx context.Context, name, ns string) (*release.Release, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}

@@ -11,9 +11,23 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 )
 
+// StatusSchemaVersion is the `status -o json` document version.
+const StatusSchemaVersion = 1
+
 type statusRow struct {
-	Name, Namespace, Chart, Wanted, Deployed, Status string
-	InventoryOnly                                  bool
+	Name          string `json:"name"`
+	Namespace     string `json:"namespace"`
+	Chart         string `json:"chart"`
+	Wanted        string `json:"wanted,omitempty"`
+	Deployed      string `json:"deployed,omitempty"`
+	Status        string `json:"status,omitempty"`
+	InventoryOnly bool   `json:"inventory_only,omitempty"`
+}
+
+type statusJSON struct {
+	SchemaVersion int         `json:"schema_version"`
+	Deployment    string      `json:"deployment"`
+	Releases      []statusRow `json:"releases"`
 }
 
 // Status prints per-release wanted vs live versions.
@@ -22,16 +36,16 @@ func Status(ctx context.Context, o RunOptions) error {
 	if err != nil {
 		return err
 	}
-	doc, disc, kcfg := sess.Doc, sess.Disc, sess.Kube
+	doc := sess.Doc
 	if !o.JSONOutput {
-		PrintBanner(o.err(), doc, disc, kcfg, sess.Identity)
+		PrintBanner(o.err(), doc, sess.Disc, sess.Kube, sess.Identity)
 	}
-	deployment := DeploymentID(doc)
-	cs, err := newHelmClient(kcfg, doc, nil, o)
+	deployment := sess.DeploymentID()
+	cs, err := sess.helm(o, nil)
 	if err != nil {
 		return err
 	}
-	inv, err := inventory.Read(ctx, kcfg, deployment)
+	inv, err := inventory.Read(ctx, sess.Client, deployment)
 	if err != nil {
 		return err
 	}
@@ -40,7 +54,9 @@ func Status(ctx context.Context, o RunOptions) error {
 		return err
 	}
 	if o.JSONOutput {
-		return json.NewEncoder(o.out()).Encode(rows)
+		enc := json.NewEncoder(o.out())
+		enc.SetIndent("", "  ")
+		return enc.Encode(statusJSON{SchemaVersion: StatusSchemaVersion, Deployment: deployment, Releases: rows})
 	}
 	for _, r := range rows {
 		wanted := r.Wanted
@@ -108,7 +124,7 @@ func mergeStatusRows(doc *Document, inv []inventory.Entry, live []plan.Observed)
 	return rows
 }
 
-func buildStatusRows(ctx context.Context, cs *helmclient.Client, doc *Document, inv []inventory.Entry) ([]statusRow, error) {
+func buildStatusRows(ctx context.Context, cs helmclient.Interface, doc *Document, inv []inventory.Entry) ([]statusRow, error) {
 	live, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: statusObserveTargets(doc, inv)})
 	if err != nil {
 		return nil, err

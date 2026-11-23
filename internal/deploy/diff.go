@@ -41,26 +41,26 @@ func printManifestDiff(w io.Writer, rd *redact.Redactor, ns, name, live, planned
 }
 
 type planDiffOpts struct {
-	out, stderr         io.Writer
-	debug               bool
-	cs                  *helmclient.Client
-	doc                 *Document
-	res                 plan.Result
-	regCfg              ocireg.Registry
-	resolved            map[string]map[string]any
-	rd                  *redact.Redactor
+	out, stderr io.Writer
+	debug       bool
+	cs          helmclient.Interface
+	doc         *Document
+	res         plan.Result
+	regCfg      ocireg.Registry
+	resolved    map[string]map[string]any
+	rd          *redact.Redactor
 }
 
 func printPlanManifestDiffs(ctx context.Context, o planDiffOpts) error {
-	relByName := map[string]Release{}
+	relByKey := map[string]Release{}
 	for _, rel := range o.doc.Releases {
-		relByName[rel.Name] = rel
+		relByKey[plan.ReleaseKey(rel.Name, rel.Namespace)] = rel
 	}
 	for _, row := range o.res.Rows {
 		if row.Action != plan.ActionUpgrade && row.Action != plan.ActionInstall {
 			continue
 		}
-		rel, ok := relByName[row.Name]
+		rel, ok := relByKey[plan.ReleaseKey(row.Name, row.Namespace)]
 		if !ok {
 			continue
 		}

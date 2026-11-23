@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 const (
@@ -144,11 +144,7 @@ func Marshal(entries []Entry, now time.Time) ([]byte, error) {
 }
 
 // Read loads inventory from the cluster ConfigMap (missing CM → empty).
-func Read(ctx context.Context, kcfg kube.Config, deployment string) ([]Entry, error) {
-	cs, err := kube.Clientset(kcfg)
-	if err != nil {
-		return nil, err
-	}
+func Read(ctx context.Context, cs kubernetes.Interface, deployment string) ([]Entry, error) {
 	name := ConfigMapPrefix + deployment
 	cm, err := cs.CoreV1().ConfigMaps(SystemNS).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
@@ -161,11 +157,7 @@ func Read(ctx context.Context, kcfg kube.Config, deployment string) ([]Entry, er
 }
 
 // Write stores the full inventory snapshot as schema v2.
-func Write(ctx context.Context, kcfg kube.Config, deployment string, entries []Entry) error {
-	cs, err := kube.Clientset(kcfg)
-	if err != nil {
-		return err
-	}
+func Write(ctx context.Context, cs kubernetes.Interface, deployment string, entries []Entry) error {
 	b, err := Marshal(entries, time.Now())
 	if err != nil {
 		return err

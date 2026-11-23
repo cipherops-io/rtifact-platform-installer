@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/cluster"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
@@ -101,7 +102,11 @@ func e2eK8sCfg() kube.Config {
 func e2eInventory(t *testing.T, file string) []inventory.Entry {
 	t.Helper()
 	doc := e2eDoc(t, file)
-	inv, err := inventory.Read(context.Background(), e2eK8sCfg(), deploy.DeploymentID(doc))
+	cs, err := cluster.New(e2eK8sCfg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	inv, err := inventory.Read(context.Background(), cs, deploy.DeploymentID(doc))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,16 +154,16 @@ func e2eHelmRevision(t *testing.T, release, ns string) int {
 
 func e2eHelmReleaseInfo(t *testing.T, release, ns string) (revision int, status string, err error) {
 	t.Helper()
-	rel, err := e2eHelmClient(t).ReleaseByName(context.Background(), release, ns)
+	rel, err := e2eHelmClient(t).Lookup(context.Background(), release, ns)
 	if err != nil {
 		return 0, "", err
 	}
-	return rel.Version, rel.Info.Status.String(), nil
+	return rel.Revision, rel.Status, nil
 }
 
 func e2eHelmReleaseMissing(t *testing.T, release, ns string) {
 	t.Helper()
-	_, err := e2eHelmClient(t).ReleaseByName(context.Background(), release, ns)
+	_, err := e2eHelmClient(t).Lookup(context.Background(), release, ns)
 	if err == nil {
 		t.Fatalf("expected helm release %s/%s to be absent", ns, release)
 	}

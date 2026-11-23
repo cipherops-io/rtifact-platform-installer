@@ -45,12 +45,16 @@ type planSummary struct {
 	Stuck     int `json:"stuck"`
 }
 
+// PlanSchemaVersion is the `plan -o json` document version.
+const PlanSchemaVersion = 1
+
 type planJSONOut struct {
-	HasChange  bool          `json:"has_change"`
-	HasRefused bool          `json:"has_refused"`
-	Summary    planSummary   `json:"summary"`
-	Rows       []planJSONRow `json:"rows"`
-	Removals   []planJSONRow `json:"removals"`
+	SchemaVersion int           `json:"schema_version"`
+	HasChange     bool          `json:"has_change"`
+	HasRefused    bool          `json:"has_refused"`
+	Summary       planSummary   `json:"summary"`
+	Rows          []planJSONRow `json:"rows"`
+	Removals      []planJSONRow `json:"removals"`
 }
 
 func rowToJSON(r plan.Row) planJSONRow {
@@ -100,7 +104,8 @@ func summarizePlan(res plan.Result) planSummary {
 func PrintPlan(w io.Writer, rd *redact.Redactor, res plan.Result, asJSON bool) error {
 	if asJSON {
 		out := planJSONOut{
-			HasChange: res.HasChange, HasRefused: planHasRefused(res),
+			SchemaVersion: PlanSchemaVersion,
+			HasChange:     res.HasChange, HasRefused: planHasRefused(res),
 			Summary: summarizePlan(res),
 		}
 		for _, row := range res.Rows {
