@@ -5,7 +5,6 @@ package deploy_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"os"
 	"os/exec"
@@ -15,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
 	"k8s.io/client-go/dynamic"
@@ -58,8 +58,11 @@ func isolateFixture(t *testing.T, doc *deploy.Document) {
 func e2eCleanupDeploy(t *testing.T, file string, o deploy.RunOptions) {
 	t.Helper()
 	t.Cleanup(func() {
-		if err := deploy.Destroy(context.Background(), o); err != nil {
-			t.Logf("cleanup destroy: %v", err)
+		co := o
+		co.AllowDestroy = true
+		co.Yes = true
+		if err := deploy.Destroy(context.Background(), co); err != nil {
+			t.Errorf("cleanup destroy: %v", err)
 		}
 	})
 }
@@ -126,32 +129,59 @@ func e2eAssertInventory(t *testing.T, file string, names ...string) {
 	}
 }
 
+func e2eHelmClient(t *testing.T) *helmclient.Client {
+	t.Helper()
+	cs, err := helmclient.New(helmclient.Options{Kube: e2eK8sCfg()})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return cs
+}
+
 func e2eHelmRevision(t *testing.T, release, ns string) int {
 	t.Helper()
-	cmd := exec.Command("helm", "history", release, "-n", ns, "-o", "json",
-		"--kubeconfig", e2eKubeconfig(t), "--max", "128")
-	out, err := cmd.Output()
+	rev, _, err := e2eHelmReleaseInfo(t, release, ns)
 	if err != nil {
-		t.Fatalf("helm history %s/%s: %v", ns, release, err)
+		t.Fatal(err)
 	}
-	var rows []struct {
-		Revision int `json:"revision"`
+	return rev
+}
+
+func e2eHelmReleaseInfo(t *testing.T, release, ns string) (revision int, status string, err error) {
+	t.Helper()
+	rel, err := e2eHelmClient(t).ReleaseByName(context.Background(), release, ns)
+	if err != nil {
+		return 0, "", err
 	}
-	if err := json.Unmarshal(out, &rows); err != nil {
-		t.Fatalf("helm history json: %v", err)
-	}
-	if len(rows) == 0 {
-		t.Fatalf("no helm history for %s/%s", ns, release)
-	}
-	return rows[len(rows)-1].Revision
+	return rel.Version, rel.Info.Status.String(), nil
 }
 
 func e2eHelmReleaseMissing(t *testing.T, release, ns string) {
 	t.Helper()
-	cmd := exec.Command("helm", "status", release, "-n", ns, "--kubeconfig", e2eKubeconfig(t))
-	if err := cmd.Run(); err == nil {
+	_, err := e2eHelmClient(t).ReleaseByName(context.Background(), release, ns)
+	if err == nil {
 		t.Fatalf("expected helm release %s/%s to be absent", ns, release)
 	}
+}
+
+// e2ePlanExpect runs Plan; expected refusal errors do not fail the test when allowErr is true.
+func e2ePlanExpect(t *testing.T, o deploy.RunOptions, wantCode int, allowErr bool) (code int, stdout string, err error) {
+	t.Helper()
+	var buf bytes.Buffer
+	oo := o
+	if oo.Stdout == nil {
+		oo.Stdout = &buf
+	} else {
+		oo.Stdout = ioMultiWriter{o.Stdout, &buf}
+	}
+	code, err = deploy.Plan(context.Background(), oo)
+	if err != nil && !allowErr {
+		t.Fatalf("plan: code=%d err=%v\n%s", code, err, buf.String())
+	}
+	if code != wantCode {
+		t.Fatalf("plan exit: got %d want %d (err=%v)\n%s", code, wantCode, err, buf.String())
+	}
+	return code, buf.String(), err
 }
 
 func e2ePlan(t *testing.T, o deploy.RunOptions) (code int, stdout string) {
@@ -165,7 +195,7 @@ func e2ePlan(t *testing.T, o deploy.RunOptions) (code int, stdout string) {
 	}
 	code, err := deploy.Plan(context.Background(), oo)
 	if err != nil {
-		t.Fatalf("plan: code=%d err=%v", code, err)
+		t.Fatalf("plan: code=%d err=%v\n%s", code, err, buf.String())
 	}
 	return code, buf.String()
 }

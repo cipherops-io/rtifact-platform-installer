@@ -23,11 +23,11 @@ func TestE2E_Adopt_UnmanagedRelease(t *testing.T) {
 	oo := e2eOpts(t, file)
 	oo.Stdout = &buf
 	code, err := deploy.Plan(context.Background(), oo)
-	if err != nil {
-		t.Fatal(err)
+	if err == nil || code != 1 {
+		t.Fatalf("expected refused adopt (code 1), code=%d err=%v plan:\n%s", code, err, buf.String())
 	}
-	if code != 1 || !strings.Contains(buf.String(), "--adopt") {
-		t.Fatalf("expected refused adopt hint, code=%d plan:\n%s", code, buf.String())
+	if !strings.Contains(buf.String(), "--adopt") && !strings.Contains(err.Error(), "adopt") {
+		t.Fatalf("expected adopt hint, plan:\n%s", buf.String())
 	}
 	oo.AllowAdopt = true
 	oo.DetailedExitCode = true

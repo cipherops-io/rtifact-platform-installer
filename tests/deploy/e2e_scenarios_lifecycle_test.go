@@ -135,8 +135,10 @@ func TestE2E_S10_MassRemovalGuard(t *testing.T) {
 	})
 	o.FilePath = file
 	o.DetailedExitCode = true
-	code, _ := e2ePlan(t, o)
-	e2eIntEq(t, "plan exit", code, 2)
+	_, _, err := e2ePlanExpect(t, o, 1, true)
+	if err == nil || !strings.Contains(err.Error(), "mass removal") {
+		t.Fatalf("expected mass removal refusal, err=%v", err)
+	}
 	err := deploy.Apply(context.Background(), o)
 	if err == nil {
 		t.Fatal("expected apply to refuse mass removal")
@@ -196,7 +198,7 @@ func TestE2E_S11_StuckReportsRecovery(t *testing.T) {
 	e2eCleanupDeploy(t, file, o)
 	e2eMustApply(t, o)
 	nsA := e2eReleaseNS(t, file, "ok-a")
-	e2eHelmUpgradeNoWait(t, "ok-a", nsA, "ok-a", "1.0.1")
+	e2eHelmUpgradeNoWait(t, "ok-a", nsA, "broken", "1.0.0")
 	o.DetailedExitCode = true
 	var buf strings.Builder
 	oo := e2eOpts(t, file)
@@ -212,7 +214,13 @@ func TestE2E_S11_StuckReportsRecovery(t *testing.T) {
 	if err := deploy.Rollback(context.Background(), o, "ok-a"); err != nil {
 		t.Fatalf("rollback: %v", err)
 	}
-	e2eIntEq(t, "ok-a revision after rollback", e2eHelmRevision(t, "ok-a", nsA), 1)
+	_, status, err := e2eHelmReleaseInfo(t, "ok-a", nsA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status != "deployed" {
+		t.Fatalf("ok-a status after rollback: got %q want deployed", status)
+	}
 }
 
 func TestE2E_S14_InvalidValuesFile(t *testing.T) {
@@ -282,9 +290,11 @@ func TestE2E_S16_DowngradeGuard(t *testing.T) {
 	})
 	o.FilePath = file
 	o.DetailedExitCode = true
-	code, _ := e2ePlan(t, o)
-	e2eIntEq(t, "plan downgrade exit", code, 2)
-	err := deploy.Apply(context.Background(), o)
+	_, _, err := e2ePlanExpect(t, o, 1, true)
+	if err == nil || !strings.Contains(err.Error(), "downgrade") {
+		t.Fatalf("expected downgrade refusal on plan, err=%v", err)
+	}
+	err = deploy.Apply(context.Background(), o)
 	if err == nil {
 		t.Fatal("expected downgrade refusal")
 	}

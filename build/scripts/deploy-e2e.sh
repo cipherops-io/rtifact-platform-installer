@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 LOG="/tmp/rtifact-deploy-e2e.log"
 ZOT_LOG="/tmp/zot-deploy-e2e.log"
 
-ZOT_VERSION="${ZOT_VERSION:-2.1.0}"
+ZOT_VERSION="${ZOT_VERSION:-2.1.23}"
 HELM_VERSION="${HELM_VERSION:-3.16.4}"
 REG_PORT="${DEPLOY_E2E_REG_PORT:-5000}"
 REG_HOST="127.0.0.1:${REG_PORT}"
@@ -41,6 +41,7 @@ export RTIFACT_REGISTRY_PASSWORD="$REG_PASS"
 
 command -v docker >/dev/null
 command -v curl >/dev/null
+command -v kubectl >/dev/null
 
 if ! command -v kind >/dev/null; then
   echo "kind not found on PATH"
@@ -80,8 +81,9 @@ cat >"$ZOT_CONFIG" <<EOF
 {
   "distSpecVersion": "1.1.1",
   "storage": { "rootDirectory": "/var/lib/registry" },
-  "http": { "address": "0.0.0.0", "port": "5000" },
-  "extensions": {
+  "http": {
+    "address": "0.0.0.0",
+    "port": "5000",
     "auth": {
       "htpasswd": { "path": "/etc/zot/htpasswd" }
     }
@@ -98,9 +100,15 @@ docker run -d --name rtifact-deploy-zot -p "${REG_PORT}:5000" \
   -v "$ZOT_HTPASSWD:/etc/zot/htpasswd:ro" \
   "ghcr.io/project-zot/zot:v${ZOT_VERSION}-minimal" >/dev/null
 
+anon_code="$(curl -s -o /dev/null -w '%{http_code}' "http://${REG_HOST}/v2/")"
+if [ "$anon_code" != "401" ]; then
+  echo "expected HTTP 401 without registry credentials, got ${anon_code}"
+  exit 1
+fi
+
 for i in $(seq 1 60); do
   if curl -sf -u "${REG_USER}:${REG_PASS}" "http://${REG_HOST}/v2/" >/dev/null; then
-  echo "zot ready"
+    echo "zot ready"
     break
   fi
   if [ "$i" -eq 60 ]; then
@@ -130,7 +138,6 @@ if kind get clusters 2>/dev/null | grep -qx "$CLUSTER_NAME"; then
   kind delete cluster --name "$CLUSTER_NAME" >/dev/null 2>&1
 fi
 kind create cluster --name "$CLUSTER_NAME" --config "$KIND_CONFIG"
-export KIND_PID=1
 kind get kubeconfig --name "$CLUSTER_NAME" >"$KUBECONFIG"
 chmod 600 "$KUBECONFIG"
 
