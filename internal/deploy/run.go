@@ -87,11 +87,11 @@ func Plan(ctx context.Context, o RunOptions) (int, error) {
 	if err != nil {
 		return 1, err
 	}
-	observed, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: want})
+	inv, err := inventory.Read(ctx, kcfg, DeploymentID(doc))
 	if err != nil {
 		return 1, err
 	}
-	inv, err := inventory.Read(ctx, kcfg, DeploymentID(doc))
+	observed, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: observeTargets(want, inv)})
 	if err != nil {
 		return 1, err
 	}
@@ -212,18 +212,49 @@ func ensureNamespace(ctx context.Context, kcfg kube.Config, name string, labels 
 	if err != nil {
 		return err
 	}
-	_, err = cs.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	existing, err := cs.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 	if err == nil {
-		return nil
+		merged := mergeNamespaceLabels(existing.Labels, labels)
+		if labelsEqual(merged, existing.Labels) {
+			return nil
+		}
+		existing.Labels = merged
+		_, err = cs.CoreV1().Namespaces().Update(ctx, existing, metav1.UpdateOptions{})
+		return err
 	}
 	if !apierrors.IsNotFound(err) {
 		return err
 	}
+	createLabels := mergeNamespaceLabels(nil, labels)
+	createLabels[LabelNamespaceCreatedBy] = LabelNamespaceCreatedByValue
 	obj := &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{Name: name, Labels: labels},
+		ObjectMeta: metav1.ObjectMeta{Name: name, Labels: createLabels},
 	}
 	_, err = cs.CoreV1().Namespaces().Create(ctx, obj, metav1.CreateOptions{})
 	return err
+}
+
+func mergeNamespaceLabels(base, extra map[string]string) map[string]string {
+	out := map[string]string{}
+	for k, v := range base {
+		out[k] = v
+	}
+	for k, v := range extra {
+		out[k] = v
+	}
+	return out
+}
+
+func labelsEqual(a, b map[string]string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, v := range a {
+		if b[k] != v {
+			return false
+		}
+	}
+	return true
 }
 
 func hostname() string {

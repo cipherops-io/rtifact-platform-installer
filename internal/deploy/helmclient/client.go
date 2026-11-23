@@ -2,6 +2,7 @@ package helmclient
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -18,6 +19,7 @@ import (
 	releasecommon "helm.sh/helm/v4/pkg/release/common"
 	release "helm.sh/helm/v4/pkg/release/v1"
 	"helm.sh/helm/v4/pkg/registry"
+	"helm.sh/helm/v4/pkg/storage/driver"
 )
 
 const helmDriver = "secret"
@@ -136,7 +138,7 @@ func (c *Client) Observe(ctx context.Context, opts ObserveOptions) ([]plan.Obser
 		get := action.NewGet(cfg)
 		rel, err := get.Run(w.Name)
 		if err != nil {
-			if strings.Contains(err.Error(), "not found") {
+			if errors.Is(err, driver.ErrReleaseNotFound) || strings.Contains(err.Error(), "not found") {
 				continue
 			}
 			return nil, err
@@ -239,7 +241,7 @@ func (c *Client) releaseExists(cfg *action.Configuration, name, ns string) (bool
 	get.Version = 0
 	rel, err := get.Run(name)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if errors.Is(err, driver.ErrReleaseNotFound) || strings.Contains(err.Error(), "not found") {
 			return false, nil
 		}
 		return false, err
@@ -264,6 +266,9 @@ func (c *Client) Uninstall(ctx context.Context, name, ns string) error {
 	un.WaitStrategy = waitStrategy(true)
 	un.Timeout = c.timeout
 	_, err = un.Run(name)
+	if err != nil && (errors.Is(err, driver.ErrReleaseNotFound) || strings.Contains(err.Error(), "not found")) {
+		return nil
+	}
 	return err
 }
 

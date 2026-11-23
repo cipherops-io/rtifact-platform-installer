@@ -58,25 +58,11 @@ func Status(ctx context.Context, o RunOptions) error {
 }
 
 func statusObserveTargets(doc *Document, inv []inventory.Entry) []plan.Wanted {
-	var observe []plan.Wanted
-	seen := map[string]bool{}
+	want := make([]plan.Wanted, 0, len(doc.Releases))
 	for _, r := range doc.Releases {
-		k := entryKey(r.Name, r.Namespace)
-		if seen[k] {
-			continue
-		}
-		seen[k] = true
-		observe = append(observe, plan.Wanted{Name: r.Name, Namespace: r.Namespace})
+		want = append(want, plan.Wanted{Name: r.Name, Namespace: r.Namespace})
 	}
-	for _, e := range inv {
-		k := entryKey(e.Name, e.Namespace)
-		if seen[k] {
-			continue
-		}
-		seen[k] = true
-		observe = append(observe, plan.Wanted{Name: e.Name, Namespace: e.Namespace})
-	}
-	return observe
+	return observeTargets(want, inv)
 }
 
 func mergeStatusRows(doc *Document, inv []inventory.Entry, live []plan.Observed) []statusRow {

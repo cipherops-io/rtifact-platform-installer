@@ -51,6 +51,18 @@ func ConfirmDeployDestroy(yes bool, deployment string) error {
 	return readTypedDeployment(deployment)
 }
 
+// ConfirmDeployPurge gates --purge deletes after the purge list is printed.
+func ConfirmDeployPurge(yes bool) error {
+	if yes {
+		return nil
+	}
+	if err := requireInteractiveStdin(); err != nil {
+		return err
+	}
+	fmt.Fprint(os.Stderr, "Delete the PVCs and namespaces listed above? [y/N]: ")
+	return readYesNo()
+}
+
 // ConfirmDeployRollback gates rollback.
 func ConfirmDeployRollback(yes bool, release string) error {
 	if yes {

@@ -60,13 +60,21 @@ func Destroy(ctx context.Context, o RunOptions) error {
 	}
 	for _, e := range order {
 		fmt.Fprintf(o.out(), "  uninstall %s/%s\n", e.Namespace, e.Name)
+		manifest, err := fetchReleaseManifest(ctx, cs, e.Name, e.Namespace)
+		if err != nil {
+			return err
+		}
 		if err := cs.Uninstall(ctx, e.Name, e.Namespace); err != nil {
 			return err
 		}
 		delete(remaining, entryKey(e.Name, e.Namespace))
-		if err := reportOrPurgeRemovalData(ctx, kcfg, doc, remaining, e.Namespace, o.Purge, o.out()); err != nil {
+		if err := inventory.Write(ctx, kcfg, deployment, inventoryFromMap(remaining)); err != nil {
+			return err
+		}
+		opt := purgeRemovalOpts{ReleaseName: e.Name, ReleaseNS: e.Namespace, Manifest: manifest}
+		if err := reportOrPurgeRemovalData(ctx, kcfg, doc, remaining, opt, o.Purge, o.out()); err != nil {
 			return err
 		}
 	}
-	return inventory.Write(ctx, kcfg, deployment, nil)
+	return nil
 }

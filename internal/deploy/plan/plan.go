@@ -352,9 +352,9 @@ func decideRemovals(in Input, opts Options, wantedKeys map[string]bool, obsByKey
 
 func dataNote(purge bool) string {
 	if purge {
-		return "--purge: PVCs, CRDs and namespaces will be deleted"
+		return "--purge: release PVCs and deploy-created namespaces may be deleted"
 	}
-	return "PVCs, CRDs and namespaces are kept (use --purge to delete)"
+	return "release PVCs and namespaces are kept (use --purge to delete release PVCs)"
 }
 
 // RemovalOrder orders inventory entries for uninstall (dependents before requirements).
@@ -412,6 +412,9 @@ func RollbackCommand(file, release string) string {
 	}
 	return fmt.Sprintf("rtifact deploy rollback %s %s", file, release)
 }
+
+// ReleaseKey uniquely identifies a release within a deployment (name + namespace).
+func ReleaseKey(name, ns string) string { return key(name, ns) }
 
 func key(name, ns string) string { return name + "\x00" + ns }
 

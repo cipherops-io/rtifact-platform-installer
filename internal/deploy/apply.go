@@ -109,6 +109,11 @@ func Apply(ctx context.Context, o RunOptions) error {
 			return AsInterrupted(err)
 		}
 	}
+	if o.Purge && len(removals) > 0 {
+		if err := confirmPurgeRemovals(ctx, ar, removals); err != nil {
+			return AsInterrupted(err)
+		}
+	}
 	if err := ensureSystemNS(ctx, ar.kcfg); err != nil {
 		return AsInterrupted(err)
 	}
@@ -160,11 +165,11 @@ func prepareApplyRun(ctx context.Context, o RunOptions) (*applyRun, error) {
 	if err != nil {
 		return nil, err
 	}
-	observed, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: want})
+	inv, err := inventory.Read(ctx, kcfg, DeploymentID(doc))
 	if err != nil {
 		return nil, err
 	}
-	inv, err := inventory.Read(ctx, kcfg, DeploymentID(doc))
+	observed, err := cs.Observe(ctx, helmclient.ObserveOptions{Wanted: observeTargets(want, inv)})
 	if err != nil {
 		return nil, err
 	}
@@ -254,12 +259,13 @@ func (ar *applyRun) stepReleases() engine.Step {
 		if err != nil {
 			return err
 		}
-		rowByName := map[string]plan.Row{}
+		rowByKey := map[string]plan.Row{}
 		for _, row := range ar.res.Rows {
-			rowByName[row.Name] = row
+			rowByKey[plan.ReleaseKey(row.Name, row.Namespace)] = row
 		}
 		for _, name := range order {
-			row, ok := rowByName[name]
+			rel := ar.relByName[name]
+			row, ok := rowByKey[plan.ReleaseKey(rel.Name, rel.Namespace)]
 			if !ok {
 				continue
 			}
@@ -273,7 +279,6 @@ func (ar *applyRun) stepReleases() engine.Step {
 			if ar.o.Only != "" && !ar.closure[name] {
 				continue
 			}
-			rel := ar.relByName[name]
 			w := wantByName(ar.want, name)
 			if w == nil {
 				return fmt.Errorf("release %q missing from wanted set", name)
@@ -335,6 +340,10 @@ func (ar *applyRun) stepRemovals() engine.Step {
 					}
 				}
 			}
+			manifest, err := fetchReleaseManifest(ctx, ar.helm, row.Name, ns)
+			if err != nil {
+				return err
+			}
 			if err := ar.helm.Uninstall(ctx, row.Name, ns); err != nil {
 				return err
 			}
@@ -342,7 +351,8 @@ func (ar *applyRun) stepRemovals() engine.Step {
 			if err := ar.writeInventory(); err != nil {
 				return err
 			}
-			if err := reportOrPurgeRemovalData(ctx, ar.kcfg, ar.doc, ar.entries, ns, ar.o.Purge, ar.o.out()); err != nil {
+			opt := purgeRemovalOpts{ReleaseName: row.Name, ReleaseNS: ns, Manifest: manifest}
+			if err := reportOrPurgeRemovalData(ctx, ar.kcfg, ar.doc, ar.entries, opt, ar.o.Purge, ar.o.out()); err != nil {
 				return err
 			}
 		}
