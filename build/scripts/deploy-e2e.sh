@@ -98,7 +98,7 @@ fi
 docker run -d --name rtifact-deploy-zot -p "${REG_PORT}:5000" \
   -v "$ZOT_CONFIG:/etc/zot/config.json:ro" \
   -v "$ZOT_HTPASSWD:/etc/zot/htpasswd:ro" \
-  "ghcr.io/project-zot/zot:v${ZOT_VERSION}-minimal" >/dev/null
+  "ghcr.io/project-zot/zot-minimal:v${ZOT_VERSION}" >/dev/null
 
 anon_code="$(curl -s -o /dev/null -w '%{http_code}' "http://${REG_HOST}/v2/")"
 if [ "$anon_code" != "401" ]; then
