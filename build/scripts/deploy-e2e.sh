@@ -3,7 +3,6 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 LOG="/tmp/rtifact-deploy-e2e.log"
-ZOT_LOG="/tmp/zot-deploy-e2e.log"
 
 ZOT_VERSION="${ZOT_VERSION:-2.1.23}"
 HELM_VERSION="${HELM_VERSION:-3.16.4}"
@@ -100,12 +99,6 @@ docker run -d --name rtifact-deploy-zot -p "${REG_PORT}:5000" \
   -v "$ZOT_HTPASSWD:/etc/zot/htpasswd:ro" \
   "ghcr.io/project-zot/zot-minimal:v${ZOT_VERSION}" >/dev/null
 
-anon_code="$(curl -s -o /dev/null -w '%{http_code}' "http://${REG_HOST}/v2/")"
-if [ "$anon_code" != "401" ]; then
-  echo "expected HTTP 401 without registry credentials, got ${anon_code}"
-  exit 1
-fi
-
 for i in $(seq 1 60); do
   if curl -sf -u "${REG_USER}:${REG_PASS}" "http://${REG_HOST}/v2/" >/dev/null; then
     echo "zot ready"
@@ -114,12 +107,18 @@ for i in $(seq 1 60); do
   if [ "$i" -eq 60 ]; then
     echo "zot failed to become ready"
     if docker inspect rtifact-deploy-zot >/dev/null 2>&1; then
-      docker logs rtifact-deploy-zot 2>"$ZOT_LOG"
+      docker logs rtifact-deploy-zot 2>&1 | tail -50
     fi
     exit 1
   fi
   sleep 1
 done
+
+anon_code="$(curl -s -o /dev/null -w '%{http_code}' "http://${REG_HOST}/v2/")"
+if [ "$anon_code" != "401" ]; then
+  echo "expected HTTP 401 without registry credentials, got ${anon_code}"
+  exit 1
+fi
 
 KIND_CONFIG="$(mktemp /tmp/kind-deploy-e2e.XXXX.yaml)"
 cat >"$KIND_CONFIG" <<EOF
