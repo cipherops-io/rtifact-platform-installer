@@ -1,5 +1,6 @@
 locals {
-  need_name_suffix = var.features.storage_account || var.features.container_registry
+  base_name        = trim(substr(replace(lower(var.name_prefix), "_", "-"), 0, 34), "-")
+  need_name_suffix = var.features.object_storage || var.features.container_registry
 }
 
 resource "random_string" "suffix" {

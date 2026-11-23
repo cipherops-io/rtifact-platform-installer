@@ -19,16 +19,14 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| location | n/a | `string` | n/a | yes |
+| deletion_window_days | n/a | `number` | `30` | no |
 | name_prefix | n/a | `string` | n/a | yes |
-| scope_name | n/a | `string` | n/a | yes |
-| sku | n/a | `string` | `"standard"` | no |
 | tags | n/a | `map(string)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| key_vault_id | n/a |
-| key_vault_uri | n/a |
+| kms_key_arn | n/a |
+| kms_key_id | n/a |
 <!-- END_TF_DOCS -->

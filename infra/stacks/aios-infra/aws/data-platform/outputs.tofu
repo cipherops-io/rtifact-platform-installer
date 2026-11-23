@@ -1,19 +1,35 @@
-output "key_vault_id" {
-  value = length(module.security) > 0 ? module.security[0].key_vault_id : null
+output "kms_key_arn" {
+  value = one(module.security[*].kms_key_arn)
 }
 
-output "key_vault_uri" {
-  value = length(module.security) > 0 ? module.security[0].key_vault_uri : null
+output "postgresql_endpoint" {
+  value = one(module.data[*].postgresql_endpoint)
 }
 
-output "postgresql_id" {
-  value = length(module.data) > 0 ? module.data[0].postgresql_id : null
+output "postgresql_port" {
+  value = one(module.data[*].postgresql_port)
 }
 
-output "storage_account_id" {
-  value = length(module.data) > 0 ? module.data[0].storage_account_id : null
+output "postgresql_master_user_secret_arn" {
+  value = one(module.data[*].postgresql_master_user_secret_arn)
 }
 
-output "acr_id" {
-  value = length(module.data) > 0 ? module.data[0].acr_id : null
+output "redis_primary_endpoint" {
+  value = one(module.data[*].redis_primary_endpoint)
+}
+
+output "object_storage_bucket_name" {
+  value = one(module.data[*].object_storage_bucket_name)
+}
+
+output "object_storage_bucket_arn" {
+  value = one(module.data[*].object_storage_bucket_arn)
+}
+
+output "container_registry_url" {
+  value = one(module.data[*].container_registry_url)
+}
+
+output "container_registry_arn" {
+  value = one(module.data[*].container_registry_arn)
 }

@@ -1,31 +1,54 @@
-resource "random_password" "pg" {
-  count = var.features.postgresql_flexible_server ? 1 : 0
-
-  length  = 24
-  special = true
-}
-
 resource "aws_db_subnet_group" "postgresql" {
-  count = var.features.postgresql_flexible_server ? 1 : 0
+  count = var.features.postgresql ? 1 : 0
 
-  name       = "${var.name_prefix}-pg"
-  subnet_ids = distinct([var.node_subnet_id, var.private_endpoint_subnet_id])
+  name       = "${local.base_name}-pg"
+  subnet_ids = var.subnet_ids_by_tier[var.postgresql.subnet_tier]
   tags       = var.tags
 }
 
-resource "aws_db_instance" "postgresql" {
-  count = var.features.postgresql_flexible_server ? 1 : 0
+resource "aws_security_group" "postgresql" {
+  count = var.features.postgresql ? 1 : 0
 
-  identifier           = "${var.name_prefix}-pg"
-  engine               = "postgres"
-  engine_version       = var.postgresql_version
-  instance_class       = var.postgresql_sku_name
-  allocated_storage    = max(floor(var.postgresql_storage_mb / 1024), 20)
-  db_name              = "aios"
-  username             = "aiosadmin"
-  password             = random_password.pg[0].result
-  db_subnet_group_name = aws_db_subnet_group.postgresql[0].name
-  publicly_accessible  = false
-  skip_final_snapshot  = true
-  tags                 = var.tags
+  name        = "${local.base_name}-pg"
+  description = "PostgreSQL from inside the VPC"
+  vpc_id      = var.vpc_id
+  tags        = merge(var.tags, { Name = "${local.base_name}-pg" })
+}
+
+resource "aws_vpc_security_group_ingress_rule" "postgresql" {
+  for_each = var.features.postgresql ? toset(var.vpc_cidrs) : toset([])
+
+  security_group_id = aws_security_group.postgresql[0].id
+  cidr_ipv4         = each.value
+  ip_protocol       = "tcp"
+  from_port         = 5432
+  to_port           = 5432
+}
+
+resource "aws_db_instance" "postgresql" {
+  count = var.features.postgresql ? 1 : 0
+
+  identifier                    = "${local.base_name}-pg"
+  engine                        = "postgres"
+  engine_version                = var.postgresql.engine_version
+  instance_class                = var.postgresql.instance_class
+  allocated_storage             = var.postgresql.allocated_storage_gb
+  max_allocated_storage         = var.postgresql.max_allocated_storage_gb
+  storage_type                  = "gp3"
+  storage_encrypted             = true
+  kms_key_id                    = var.kms_key_arn
+  db_name                       = "aios"
+  username                      = "aiosadmin"
+  manage_master_user_password   = true
+  master_user_secret_kms_key_id = var.kms_key_arn
+  db_subnet_group_name          = aws_db_subnet_group.postgresql[0].name
+  vpc_security_group_ids        = [aws_security_group.postgresql[0].id]
+  publicly_accessible           = false
+  multi_az                      = var.postgresql.multi_az
+  backup_retention_period       = var.postgresql.backup_retention_days
+  deletion_protection           = var.postgresql.deletion_protection
+  copy_tags_to_snapshot         = true
+  skip_final_snapshot           = false
+  final_snapshot_identifier     = "${local.base_name}-pg-final"
+  tags                          = var.tags
 }

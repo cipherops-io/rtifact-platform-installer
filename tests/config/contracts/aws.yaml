@@ -21,3 +21,13 @@ network-edge:
   - dns_zone_id
   - dns_name_servers
   - certificate_regional_arn
+data-platform:
+  - kms_key_arn
+  - postgresql_endpoint
+  - postgresql_port
+  - postgresql_master_user_secret_arn
+  - redis_primary_endpoint
+  - object_storage_bucket_name
+  - object_storage_bucket_arn
+  - container_registry_url
+  - container_registry_arn

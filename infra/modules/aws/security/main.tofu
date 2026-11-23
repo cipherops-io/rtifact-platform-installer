@@ -1,6 +1,6 @@
 resource "aws_kms_key" "main" {
-  description             = "${var.name_prefix} workload encryption key"
-  deletion_window_in_days = 7
+  description             = "${var.name_prefix} data services encryption key"
+  deletion_window_in_days = var.deletion_window_days
   enable_key_rotation     = true
   tags                    = var.tags
 }
