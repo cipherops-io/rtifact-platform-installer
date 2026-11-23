@@ -40,6 +40,7 @@ Plan exit codes: `0` no changes, `1` refusal or error (a refusal always wins), `
 - AWS modules declare `opentofu/aws` explicitly, so module resources use the pinned provider instead of an unpinned `hashicorp/aws`. The unused AWS `compute` module is removed (the `bastion` module replaced it).
 - Mocked `tofu test` suites (`infra/modules/*/*/tests`) check that defaults match the old literals and cover the bastion key and SSH outputs; `go test ./tests/config` runs them when `tofu` is on `PATH`.
 - `make tofu-docs` finds modules again (boilerplates fix); module READMEs are regenerated.
+- `examples/azure/full.yaml`, `examples/aws/full.yaml` and `examples/gcp/full.yaml` set every key the schemas and stacks accept, with the allowed values in comments. `tests/config/full_examples_test.go` fails when a schema key is missing from them and is not skipped with a reason.
 
 ### Bastion and kubeconfig outputs
 

@@ -1,5 +1,5 @@
 # Azure E2E: workflow_dispatch with plan / validate / apply / full lifecycle / destroy.
-# OIDC auth; config from examples/github-e2e-azure.yaml (Commotion-shaped, isolated CIDRs).
+# OIDC auth; config from examples/azure/github-e2e-azure.yaml (Commotion-shaped, isolated CIDRs).
 
 name: azure-e2e
 

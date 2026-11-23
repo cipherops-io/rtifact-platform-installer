@@ -1,0 +1,277 @@
+# Reference config: every setting the Azure stacks read, with the default as the value.
+# Copy what you need; anything left out keeps the default shown here.
+# Allowed values are listed in comments and enforced by schemas/azure.schema.json and the module validations.
+schema_version: 1
+cloud: azure
+profile: aios-infra
+tier: prod # sandbox | uat | prod (tier presets apply first, this file overrides them)
+
+customer:
+  name: Example Corp
+  code: exc
+
+account:
+  subscription_id: "00000000-0000-0000-0000-000000000000"
+  tenant_id: "00000000-0000-0000-0000-000000000000"
+  region: centralindia
+  environment: public # public | usgovernment | china
+  auth:
+    use_msi: false
+
+workload:
+  name: aios
+  name_prefix: exc-aios-prod
+  environment: prod
+
+tags:
+  owner: platform-team
+  cost-center: "1234"
+
+state:
+  backend: azurerm # local | azurerm
+  bootstrap: true
+  air_gapped: false
+  storage_account:
+    account_tier: Standard # Standard | Premium
+    account_replication_type: LRS # LRS | GRS | RAGRS | ZRS | GZRS | RAGZRS (Premium: LRS or ZRS)
+
+backend:
+  type: azurerm
+  resource_group_name: exc-aios-prod-tfstate-rg
+  storage_account_name: excaiosprodtfstate
+  container_name: tfstate
+  key: aios-infra/exc-aios-prod
+
+features:
+  resource_group: true
+  virtual_network: true
+  key_vault: true
+  key_vault_private_endpoint: true
+  postgresql_flexible_server: true
+  container_registry: true
+  storage_account: true
+  redis_cache: false # Azure Cache for Redis; use azure_managed_redis for new deployments
+  azure_managed_redis: true
+  azure_files_share: true
+  communication_email: true
+  mongodb_atlas: false
+  ai_foundry: true
+  kubernetes_cluster: true
+  azure_bastion: true
+  private_dns_zones: true
+  azure_firewall: true
+  azure_vpn_gateway: true
+  azure_express_route_gateway: false # at most one of azure_vpn_gateway / azure_express_route_gateway
+  private_dns_resolver: true
+  public_dns_zone: true
+  application_gateway: true
+  disk_encryption_set: true
+
+network:
+  vnet_cidr: "10.0.0.0/20"
+  node_subnet_cidr: "10.0.0.0/22"
+  load_balancer_subnet_cidr: "10.0.4.0/24"
+  private_endpoint_subnet_cidr: "10.0.5.0/24"
+  management_subnet_cidr: "10.0.6.0/27"
+  azure_firewall_subnet_cidr: "10.0.7.0/26" # /26 or larger
+  azure_bastion_subnet_cidr: "10.0.8.0/26" # /26 or larger (Azure Bastion)
+  gateway_subnet_cidr: "10.0.8.64/27" # VPN and ExpressRoute gateways share it
+  dns_resolver_inbound_subnet_cidr: "10.0.9.0/28"
+  dns_resolver_outbound_subnet_cidr: "10.0.9.16/28"
+  pod_cidr: "10.244.0.0/16"
+  service_cidr: "172.20.0.0/16"
+  dns_service_ip: "172.20.0.10"
+  nat:
+    sku_name: Standard # Standard | StandardV2
+    public_ip:
+      sku: Standard # must match nat.sku_name
+      allocation_method: Static
+  private_endpoint:
+    is_manual_connection: false
+    request_message: "" # only with is_manual_connection: true (max 140 chars)
+
+kubernetes_cluster:
+  kubernetes_version: "1.30"
+  availability_zones: ["1", "2", "3"] # [] for a regional (unpinned) cluster
+  sku_tier: Standard # Free | Standard | Premium
+  os_disk_type: Managed # Managed | Ephemeral
+  oidc_issuer_enabled: true
+  workload_identity_enabled: true # requires oidc_issuer_enabled
+  node_provisioning_mode: Manual # Manual | Auto (node auto-provisioning)
+  system_pool: # used when node_pools has no "system" entry
+    name: system
+    vm_size: Standard_D4s_v5
+    node_count: 3
+    os_disk_size_gb: 128
+  node_pools:
+    user_microservices:
+      name: apps # ^[a-z][a-z0-9]{0,11}$; defaults to the map key
+      vm_size: Standard_D16s_v5
+      node_count: 3
+      os_disk_size_gb: 128 # 30-2048
+      mode: User # User | System
+  api_server:
+    private_cluster_enabled: true
+    private_dns_zone_id: System # System | None | <private DNS zone resource ID>
+    authorized_ip_ranges: [] # public clusters only (private_cluster_enabled: false)
+  network_profile:
+    network_plugin: azure # azure | kubenet | none
+    network_plugin_mode: overlay # overlay | none (overlay needs network_plugin azure)
+    outbound_type: userAssignedNATGateway # loadBalancer | userDefinedRouting | managedNATGateway | userAssignedNATGateway
+
+# Bastion VM. After apply rtifact writes <name_prefix>-bastion.pem and prints the ssh command.
+bastion:
+  access: azure_bastion # private | public_ip | azure_bastion
+  allowed_ssh_cidrs: ["203.0.113.0/24"] # required for public_ip; 0.0.0.0/0 is rejected
+  vm_size: Standard_D4s_v5
+  os_disk_size_gb: 100 # 30-4095
+  os_disk_type: Premium_LRS # Standard_LRS | StandardSSD_LRS | Premium_LRS | StandardSSD_ZRS | Premium_ZRS
+  os_disk_caching: ReadWrite # None | ReadOnly | ReadWrite
+  admin_username: azureuser
+  image:
+    publisher: Canonical
+    offer: 0001-com-ubuntu-server-jammy
+    sku: 22_04-lts-gen2
+    version: latest
+  ssh_key:
+    algorithm: RSA # RSA | ED25519
+    rsa_bits: 4096 # 2048 | 3072 | 4096 (RSA only)
+  private_ip:
+    allocation_method: Static # Dynamic (default) | Static
+    address: 10.0.6.4 # Static only; inside network.management_subnet_cidr
+  azure_bastion: # access: azure_bastion only
+    sku: Standard # Basic | Standard | Premium (tunnelling needs Standard or Premium)
+    scale_units: 2 # 2-50
+    tunneling_enabled: true
+    copy_paste_enabled: true
+    file_copy_enabled: false
+    ip_connect_enabled: false
+
+key_vault:
+  sku: premium # standard | premium
+  soft_delete_retention_days: 7 # 7-90
+  purge_protection_enabled: true # required by disk_encryption_set
+  rbac_authorization_enabled: true # required by disk_encryption_set
+  foundry: # Key Vault for AI Foundry (features.ai_foundry)
+    sku: premium
+    soft_delete_retention_days: 7
+    purge_protection_enabled: true
+    grant_deployer_contributor: true
+    deployer_key_permissions: [Backup, Create, Delete, Get, Import, List, Purge, Recover, Restore, Update, GetRotationPolicy, SetRotationPolicy, Rotate]
+    deployer_secret_permissions: [Backup, Delete, Get, List, Purge, Recover, Restore, Set]
+    deployer_certificate_permissions: [Create, Delete, Get, Import, List, ManageContacts, ManageIssuers, SetIssuers, Update]
+
+disk_encryption_set:
+  rotation_to_latest_version: false
+  key:
+    key_type: RSA # RSA | RSA-HSM (RSA-HSM needs key_vault.sku premium)
+    key_size: 3072 # 2048 | 3072 | 4096
+
+postgresql_flexible_server:
+  sku_name: GP_Standard_D8ds_v5 # B_*, GP_*, MO_*
+  version: "16" # 11-18
+  storage_mb: 1048576
+  iops: 5000 # omit for the storage size default
+  backup_retention_days: 7 # 7-35
+  high_availability:
+    enabled: true
+    mode: ZoneRedundant # ZoneRedundant | SameZone
+  read_replica:
+    enabled: false
+  administrator_login: aiosadmin
+  zone: "1"
+  read_replica_zone: "2"
+  extensions: [CITEXT, UUID-OSSP] # [] to skip the azure.extensions setting
+  public_network_access_enabled: false
+  password_length: 24
+  password_special: true
+
+azure_managed_redis:
+  sku_name: Balanced_B3
+  public_network_access: Disabled # Enabled | Disabled
+  client_protocol: Encrypted # Encrypted | Plaintext
+  eviction_policy: AllKeysLRU
+
+redis_cache: # features.redis_cache
+  sku_name: Premium # Basic | Standard | Premium
+  family: P # C for Basic/Standard, P for Premium
+  capacity: 1
+  minimum_tls_version: "1.2"
+  public_network_access_enabled: false
+
+storage_account:
+  corpus_gb: 250
+  backup_gb: 250
+  account_tier: Premium # Standard | Premium
+  account_replication_type: LRS
+  account_kind: BlockBlobStorage # StorageV2 | BlockBlobStorage | FileStorage | BlobStorage | Storage
+  public_network_access: Disabled # Enabled | Disabled | SecuredByPerimeter
+  is_hns_enabled: true
+  delete_retention_days: 30
+
+azure_files:
+  share_name: aios-shared
+  quota_gb: 1024 # 100-102400
+  zone_redundant: true
+  public_network_access: Disabled
+  enabled_protocol: NFS # NFS | SMB
+
+container_registry:
+  sku: Premium # Basic | Standard | Premium (private endpoint needs Premium)
+  admin_enabled: false
+  public_network_access_enabled: false # false needs Premium; defaults to true below Premium
+
+ai_foundry:
+  public_network_access: Disabled # Enabled | Disabled
+  storage:
+    account_tier: Standard
+    account_replication_type: LRS
+    public_network_access: Disabled
+
+communication_services:
+  data_location: India
+
+azure_firewall:
+  sku_tier: Standard # Basic | Standard | Premium
+
+azure_vpn:
+  sku: VpnGw2
+  gateway_type: Vpn
+  vpn_type: RouteBased # RouteBased | PolicyBased (PolicyBased needs sku Basic)
+  active_active: false
+
+azure_express_route: # used when features.azure_express_route_gateway is true
+  sku: ErGw2AZ
+  express_route_circuit_id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/er-rg/providers/Microsoft.Network/expressRouteCircuits/er-circuit
+  routing_weight: 0 # 0-32000
+
+private_dns_resolver:
+  inbound_endpoint_enabled: true
+  outbound_endpoint_enabled: true
+  inbound_private_ip_allocation_method: Static # Dynamic (default) | Static
+  inbound_private_ip_address: 10.0.9.4 # Static only; inside network.dns_resolver_inbound_subnet_cidr
+
+public_dns:
+  zones:
+    - name: aios.example.com
+      records:
+        - name: www
+          type: CNAME
+          ttl: 300
+          record: aios.example.net
+
+application_gateway:
+  sku_name: WAF_v2 # Basic | Standard_v2 | WAF_v2
+  sku_tier: WAF_v2 # must equal sku_name
+  capacity: 2 # 1-2 for Basic, 1-125 for v2
+  ssl_policy:
+    policy_type: Predefined
+    policy_name: AppGwSslPolicy20170401S # AppGwSslPolicy20150501 | AppGwSslPolicy20170401 | AppGwSslPolicy20170401S | AppGwSslPolicy20220101 | AppGwSslPolicy20220101S
+  frontend_port: 80
+  backend_http_settings:
+    port: 80
+    protocol: Http # Http | Https
+    path: /
+    cookie_based_affinity: Disabled # Enabled | Disabled
+    request_timeout: 30 # 1-86400
+  routing_rule_priority: 1 # 1-20000

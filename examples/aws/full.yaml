@@ -1,0 +1,260 @@
+# Reference config: every setting the AWS stacks read, with the default as the value.
+# Copy what you need; anything left out keeps the default shown here.
+# Allowed values are listed in comments and enforced by schemas/aws.schema.json and the module validations.
+schema_version: 1
+cloud: aws
+profile: aios-infra
+tier: sandbox # AWS ships a sandbox tier preset; this file overrides it
+
+customer:
+  name: Example Corp
+  code: exc
+
+account:
+  account_id: "123456789012"
+  region: ap-south-1
+
+workload:
+  name: aios
+  name_prefix: exc-aios-prod
+  environment: prod
+
+tags:
+  Environment: prod
+  ManagedBy: rtifact
+
+state:
+  backend: s3 # local | s3
+  bootstrap: true
+  air_gapped: false
+  bucket_name: exc-aios-prod-tfstate-123456789012
+  encryption: AES256 # AES256 | aws:kms | aws:kms:dsse
+  versioning: true
+  lock_table:
+    billing_mode: PAY_PER_REQUEST # PAY_PER_REQUEST | PROVISIONED
+    read_capacity: 5 # PROVISIONED only
+    write_capacity: 5 # PROVISIONED only
+
+features:
+  network: true
+  bastion: true
+  kubernetes_cluster: true
+  karpenter: true
+  pod_identities: true
+  public_dns: true
+  certificates: true
+  kms: true
+  postgresql: true
+  redis: true
+  object_storage: true
+  container_registry: true
+
+network:
+  vpc_cidr: 10.20.0.0/16
+  secondary_cidrs: [100.72.0.0/16]
+  availability_zones: [ap-south-1a, ap-south-1b]
+  nat_gateway: single # single | per_az | none
+  gateway_endpoints: [s3, dynamodb]
+  flow_logs: false
+  enable_dns_support: true # must stay true with kubernetes_cluster
+  enable_dns_hostnames: true # must stay true with kubernetes_cluster
+  subnets: # tier name -> subnets; cidrs need one entry per availability zone
+    public:
+      cidrs: [10.20.0.0/19, 10.20.32.0/19]
+      route: internet # internet | nat | isolated
+      public_ip_on_launch: true
+    private:
+      cidrs: [10.20.64.0/19, 10.20.96.0/19]
+      route: nat
+    datastore:
+      cidrs: [10.20.128.0/19, 10.20.160.0/19]
+      route: isolated
+    node:
+      cidrs: [100.72.0.0/20, 100.72.16.0/20]
+      route: nat
+      roles: [cluster, nodes, internal_lb, karpenter]
+    cluster_private:
+      cidrs: [100.72.64.0/20, 100.72.80.0/20]
+      route: nat
+      roles: [cluster, internal_lb]
+    cluster_public:
+      cidrs: [100.72.128.0/20, 100.72.144.0/20]
+      route: internet
+      roles: [public_lb]
+
+kubernetes_cluster:
+  name: exc-aios-prod-eks
+  kubernetes_version: "1.33"
+  support_type: STANDARD # STANDARD | EXTENDED
+  endpoint:
+    public: false
+    private: true
+    public_access_cidrs: [] # required when public: true
+  authentication_mode: API_AND_CONFIG_MAP # API | API_AND_CONFIG_MAP
+  bootstrap_cluster_creator_admin_permissions: false
+  admin_principal_arns:
+    - arn:aws:iam::123456789012:role/platform-admins
+  admin_access:
+    policy: AmazonEKSClusterAdminPolicy # AmazonEKSClusterAdminPolicy | AmazonEKSAdminPolicy | AmazonEKSEditPolicy | AmazonEKSViewPolicy
+    scope: cluster # cluster | namespace (namespace needs namespaces)
+    namespaces: []
+  cluster_role_policies: [AmazonEKSClusterPolicy, AmazonEKSVPCResourceController]
+  service_cidr: 172.20.0.0/16
+  log_types: [api, audit, authenticator] # api | audit | authenticator | controllerManager | scheduler
+  secrets_encryption:
+    mode: kms # none | kms
+    kms_key_arn: arn:aws:kms:ap-south-1:123456789012:key/00000000-0000-0000-0000-000000000000
+  deletion_protection: true
+  service_security_groups: # extra security groups for load balancers; "vpc" expands to the VPC CIDRs
+    internal: { ports: [80, 443], cidrs: [vpc] }
+  addons:
+    vpc-cni:
+      version: v1.20.0-eksbuild.1 # omit for the default version
+      resolve_conflicts_on_create: OVERWRITE # NONE | OVERWRITE
+      resolve_conflicts_on_update: OVERWRITE # NONE | OVERWRITE | PRESERVE
+    coredns: {}
+    kube-proxy: {}
+    eks-pod-identity-agent: {}
+    aws-ebs-csi-driver:
+      configuration:
+        controller:
+          nodeSelector:
+            rtfc/node-type: initial
+  node_role_policies:
+    - AmazonEKSWorkerNodePolicy
+    - AmazonEKS_CNI_Policy
+    - AmazonEC2ContainerRegistryReadOnly
+    - AmazonSSMManagedInstanceCore
+    - AmazonEBSCSIDriverPolicy
+  node_groups:
+    initial:
+      instance_types: [m6a.xlarge]
+      capacity_type: ON_DEMAND # ON_DEMAND | SPOT
+      ami_type: AL2023_x86_64_STANDARD # any EKS AMI type (AL2023_*, BOTTLEROCKET_*, WINDOWS_*, CUSTOM)
+      min_size: 2
+      desired_size: 2
+      max_size: 3
+      max_unavailable: 1
+      subnet_tier: node
+      disk:
+        size_gb: 100
+        type: gp3 # standard | gp2 | gp3 | io1 | io2 | sc1 | st1
+        encrypted: true
+        delete_on_termination: true
+        device_name: /dev/xvda
+      metadata:
+        http_endpoint: enabled # enabled | disabled
+        http_tokens: required # optional | required
+        hop_limit: 2 # 1-64
+      labels: { karpenter.sh/controller: "true", rtfc/node-type: initial }
+      taints:
+        - key: CriticalAddonsOnly
+          value: "true"
+          effect: NO_SCHEDULE # NO_SCHEDULE | NO_EXECUTE | PREFER_NO_SCHEDULE
+  pod_identities: # each needs exactly one of policy, policy_arns, policy_json, policy_json_file
+    - name: external-dns
+      namespace: external-dns
+      service_account: external-dns
+      policy: external-dns
+    - name: reports
+      namespace: reports
+      service_account: reports
+      policy_arns: [arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess]
+    - name: queue-worker
+      namespace: workers
+      service_account: queue-worker
+      policy_json: '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["sqs:ReceiveMessage","sqs:DeleteMessage"],"Resource":"*"}]}'
+    - name: exports
+      namespace: reports
+      service_account: exports
+      policy_json_file: policies/exports-bucket.json # relative to this file
+  karpenter:
+    namespace: karpenter
+    service_account: karpenter
+    queue_retention_seconds: 300 # 60-1209600
+    queue_managed_sse_enabled: true
+    node_role_policies:
+      - AmazonEKSWorkerNodePolicy
+      - AmazonEKS_CNI_Policy
+      - AmazonEC2ContainerRegistryReadOnly
+      - AmazonSSMManagedInstanceCore
+
+# Bastion host. After apply rtifact writes <name_prefix>-bastion.pem (access: ssh, no ssh_public_key)
+# and prints the ssh or SSM command.
+bastion:
+  access: ssh # ssm | ssh
+  instance_type: t3.medium
+  subnet_tier: public
+  public_ip: true
+  allowed_cidrs: [203.0.113.0/24] # required for ssh; 0.0.0.0/0 is rejected
+  ssh_port: 22
+  ssh_public_key: "" # empty: rtifact generates the key pair
+  ssh_key:
+    algorithm: RSA # RSA | ED25519
+    rsa_bits: 4096 # 2048 | 3072 | 4096 (RSA only)
+  admin_username: ec2-user # login user of the AMI
+  architecture: x86_64 # x86_64 | arm64
+  ami_id: "" # empty: latest Amazon Linux 2023
+  iam_policy_arns: [arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore]
+  metadata:
+    http_endpoint: enabled # enabled | disabled (ssm needs enabled)
+    http_tokens: required # optional | required
+    hop_limit: 2 # 1-64
+  disk:
+    size_gb: 100 # 8-16384
+    type: gp3
+    encrypted: true
+    delete_on_termination: true
+
+public_dns:
+  zone_name: aios.example.com
+  parent_zone_id: "" # set to create the NS delegation in a parent Route 53 zone
+  delegated: false
+  delegation_ttl: 300
+
+certificates:
+  names: [aios.example.com, "*.aios.example.com"]
+  key_algorithm: RSA_2048 # RSA_1024 | RSA_2048 | RSA_3072 | RSA_4096 | EC_prime256v1 | EC_secp384r1 | EC_secp521r1
+  cloudfront: true # also issue a us-east-1 certificate
+  validation_record_ttl: 60
+
+kms:
+  deletion_window_days: 30 # 7-30
+  enable_key_rotation: true
+  rotation_period_in_days: 365 # 90-2560, needs enable_key_rotation
+
+postgresql:
+  engine_version: "16"
+  instance_class: db.t4g.medium
+  allocated_storage_gb: 100 # 20-65536
+  max_allocated_storage_gb: 500 # 0 turns storage autoscaling off
+  storage_type: gp3 # standard | gp2 | gp3 | io1 | io2
+  multi_az: true
+  backup_retention_days: 7 # 0-35
+  deletion_protection: true
+  subnet_tier: datastore # must span two zones
+  port: 5432 # 1150-65535
+  db_name: aios
+  username: aiosadmin
+  publicly_accessible: false
+  copy_tags_to_snapshot: true
+  skip_final_snapshot: false
+
+redis:
+  engine: redis # redis | valkey
+  engine_version: "7.1"
+  node_type: cache.t4g.small
+  num_cache_clusters: 2 # 1-6; more than 1 turns on failover and Multi-AZ
+  subnet_tier: datastore
+  port: 6379
+  at_rest_encryption_enabled: true
+  transit_encryption_enabled: true
+
+object_storage:
+  versioning: true
+  object_ownership: BucketOwnerEnforced # BucketOwnerEnforced | BucketOwnerPreferred | ObjectWriter
+  block_public_access: true
+
+container_registry:
+  image_tag_mutability: IMMUTABLE # MUTABLE | IMMUTABLE | IMMUTABLE_WITH_EXCLUSION | MUTABLE_WITH_EXCLUSION
+  scan_on_push: true

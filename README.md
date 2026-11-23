@@ -8,7 +8,7 @@ Go CLI **`rtifact`** embeds OpenTofu and deploys layered **aios-infra** stacks o
 make build-dev
 INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/azure/sandbox.yaml --check-quota=false
 INSTALLER_CONTENT_ROOT=. ./dist/rtifact plan examples/azure/sandbox.yaml --stack core-network --yes
-INSTALLER_CONTENT_ROOT=. ./dist/rtifact bootstrap examples/sandbox.yaml --yes
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact bootstrap examples/azure/sandbox.yaml --yes
 ```
 
 Layers: `state-backend` (via `bootstrap`), then `core-network`, `data-platform`, `app-platform`, `network-edge`, `ai-integrations` (`--stack all`).

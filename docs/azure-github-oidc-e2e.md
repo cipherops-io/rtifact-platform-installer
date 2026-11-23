@@ -17,7 +17,7 @@ AWS/GCP deploy automation is **not enabled** in Actions yet; smoke tests remain 
 
 Apply order for `--stack all`: `core-network` → `data-platform` → `app-platform` → `network-edge` → `ai-integrations` (state-backend via bootstrap when using remote state). Destroy reverses that order.
 
-Default E2E config: [`examples/github-e2e-azure.yaml`](../examples/github-e2e-azure.yaml) (Commotion-shaped sandbox with isolated `10.21.0.0/20` CIDRs and `gh-rtifact-e2e-sbx` prefix). Subscription and tenant IDs are injected in CI via `scripts/github-e2e-prepare-config.sh`.
+Default E2E config: [`examples/azure/github-e2e-azure.yaml`](../examples/azure/github-e2e-azure.yaml) (Commotion-shaped sandbox with isolated `10.21.0.0/20` CIDRs and `gh-rtifact-e2e-sbx` prefix). Subscription and tenant IDs are injected in CI via `scripts/github-e2e-prepare-config.sh`.
 
 Workflow **azure-e2e** (`workflow_dispatch` actions): **validate**, **plan**, **apply** (bootstrap + state-backend + stack), **bootstrap-apply-destroy** (full lifecycle), **destroy-all** (workloads then state-backend).
 
@@ -40,7 +40,7 @@ go test -tags=e2e -timeout=180m ./tests/e2e/ -run TestAzureStackAction -count=1
 Smoke only (no plan/apply):
 
 ```bash
-export E2E_AZURE_CONFIG=examples/sandbox.yaml
+export E2E_AZURE_CONFIG=examples/azure/sandbox.yaml
 make e2e-azure-smoke
 ```
 

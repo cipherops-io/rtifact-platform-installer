@@ -1,15 +1,15 @@
 # AWS infrastructure (rtifact installer)
 
-Reference customer: [`examples/aws-sbx2.yaml`](../examples/aws-sbx2.yaml) — second sandbox in account `635702036154`, `ap-south-1`, prefix `rtfc-sbx2`.
+Reference customer: [`examples/aws/aws-sbx2.yaml`](../examples/aws/aws-sbx2.yaml) — second sandbox in account `635702036154`, `ap-south-1`, prefix `rtfc-sbx2`.
 
 ## Quick start
 
 ```bash
 make build-dev
-INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/aws-sbx2.yaml
-INSTALLER_CONTENT_ROOT=. ./dist/rtifact preflight examples/aws-sbx2.yaml
-INSTALLER_CONTENT_ROOT=. ./dist/rtifact bootstrap examples/aws-sbx2.yaml --yes
-INSTALLER_CONTENT_ROOT=. ./dist/rtifact apply examples/aws-sbx2.yaml --stack all --accept-preview --yes
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate examples/aws/aws-sbx2.yaml
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact preflight examples/aws/aws-sbx2.yaml
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact bootstrap examples/aws/aws-sbx2.yaml --yes
+INSTALLER_CONTENT_ROOT=. ./dist/rtifact apply examples/aws/aws-sbx2.yaml --stack all --accept-preview --yes
 ```
 
 AWS apply is **preview**: pass `--accept-preview`.
