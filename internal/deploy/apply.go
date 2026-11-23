@@ -67,12 +67,12 @@ func newApplyRun(o RunOptions, sess *Session, pr *planRun) *applyRun {
 func (ar *applyRun) run(ctx context.Context) error {
 	o := ar.o
 	debugf(o, ar.rd, "deployment=%s purge=%v timeout=%s", ar.sess.DeploymentID(), o.Purge, helmDefaults(o, ar.sess.Doc).Timeout)
+	if err := refusedBlocking(ar.res); err != nil {
+		return err
+	}
 	if !ar.res.HasChange {
 		fmt.Fprintln(o.out(), "No changes.")
 		return nil
-	}
-	if err := refusedBlocking(ar.res); err != nil {
-		return err
 	}
 	if err := ar.confirm(ctx); err != nil {
 		return err
