@@ -125,7 +125,7 @@ resource "aws_sqs_queue_policy" "karpenter" {
 resource "aws_cloudwatch_event_rule" "instance_state_change" {
   name = "${var.name_prefix}-karpenter-instance-state"
   event_pattern = jsonencode({
-    source      = ["aws.ec2"]
+    source        = ["aws.ec2"]
     "detail-type" = ["EC2 Instance State-change Notification"]
   })
 }
@@ -139,7 +139,7 @@ resource "aws_cloudwatch_event_target" "instance_state_change" {
 resource "aws_cloudwatch_event_rule" "rebalance" {
   name = "${var.name_prefix}-karpenter-rebalance"
   event_pattern = jsonencode({
-    source      = ["aws.ec2"]
+    source        = ["aws.ec2"]
     "detail-type" = ["EC2 Instance Rebalance Recommendation"]
   })
 }
@@ -153,7 +153,7 @@ resource "aws_cloudwatch_event_target" "rebalance" {
 resource "aws_cloudwatch_event_rule" "scheduled_change" {
   name = "${var.name_prefix}-karpenter-scheduled-change"
   event_pattern = jsonencode({
-    source      = ["aws.health"]
+    source        = ["aws.health"]
     "detail-type" = ["AWS Health Event"]
   })
 }
@@ -167,7 +167,7 @@ resource "aws_cloudwatch_event_target" "scheduled_change" {
 resource "aws_cloudwatch_event_rule" "spot_interruption" {
   name = "${var.name_prefix}-karpenter-spot"
   event_pattern = jsonencode({
-    source      = ["aws.ec2"]
+    source        = ["aws.ec2"]
     "detail-type" = ["EC2 Spot Instance Interruption Warning"]
   })
 }

@@ -7,9 +7,9 @@ module "naming" {
 }
 
 locals {
-  base_tags   = try(var.tags, {})
-  net_tags    = var.features.network ? merge(local.base_tags, module.naming[0].tags) : local.base_tags
-  cluster_name = try(var.kubernetes_cluster.name, "${var.name_prefix}-eks")
+  base_tags          = try(var.tags, {})
+  net_tags           = var.features.network ? merge(local.base_tags, module.naming[0].tags) : local.base_tags
+  cluster_name       = try(var.kubernetes_cluster.name, "${var.name_prefix}-eks")
   public_subnet_tier = try(var.bastion.subnet_tier, "public")
 }
 

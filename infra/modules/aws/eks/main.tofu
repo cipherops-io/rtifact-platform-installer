@@ -1,12 +1,12 @@
 locals {
-  cfg       = var.kubernetes_cluster
-  name      = try(local.cfg.name, "${var.name_prefix}-eks")
-  endpoint  = try(local.cfg.endpoint, {})
+  cfg      = var.kubernetes_cluster
+  name     = try(local.cfg.name, "${var.name_prefix}-eks")
+  endpoint = try(local.cfg.endpoint, {})
   cluster_subnet_ids = distinct(flatten([
     for tier in ["node", "cluster_private"] : try(var.subnet_ids_by_tier[tier], [])
   ]))
-  node_subnet_ids   = try(var.subnet_ids_by_tier[try(local.cfg.node_groups.initial.subnet_tier, "node")], local.cluster_subnet_ids)
-  vpc_cidr_strings  = var.vpc_cidrs
+  node_subnet_ids  = try(var.subnet_ids_by_tier[try(local.cfg.node_groups.initial.subnet_tier, "node")], local.cluster_subnet_ids)
+  vpc_cidr_strings = var.vpc_cidrs
 }
 
 resource "aws_iam_role" "cluster" {
@@ -25,7 +25,7 @@ resource "aws_iam_role" "cluster" {
 }
 
 resource "aws_iam_role_policy_attachment" "cluster" {
-  for_each = toset(["AmazonEKSClusterPolicy", "AmazonEKSVPCResourceController"])
+  for_each   = toset(["AmazonEKSClusterPolicy", "AmazonEKSVPCResourceController"])
   role       = aws_iam_role.cluster.name
   policy_arn = "arn:aws:iam::aws:policy/${each.value}"
 }
@@ -209,8 +209,8 @@ resource "aws_eks_node_group" "pool" {
   node_group_name = each.key
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = try(var.subnet_ids_by_tier[each.value.subnet_tier], local.node_subnet_ids)
-  capacity_type  = each.value.capacity_type
-  instance_types = each.value.instance_types
+  capacity_type   = each.value.capacity_type
+  instance_types  = each.value.instance_types
   labels          = try(each.value.labels, {})
   tags            = var.tags
 

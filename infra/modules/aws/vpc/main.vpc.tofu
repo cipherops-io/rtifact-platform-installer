@@ -16,11 +16,11 @@ locals {
   ])
 
   role_tag_pairs = {
-    cluster      = { "kubernetes.io/cluster/${var.cluster_name}" = "owned" }
-    nodes        = { "kubernetes.io/role/internal-elb" = "1" }
-    internal_lb  = { "kubernetes.io/role/internal-elb" = "1" }
-    public_lb    = { "kubernetes.io/role/elb" = "1" }
-    karpenter    = { "karpenter.sh/discovery" = var.cluster_name }
+    cluster     = { "kubernetes.io/cluster/${var.cluster_name}" = "owned" }
+    nodes       = { "kubernetes.io/role/internal-elb" = "1" }
+    internal_lb = { "kubernetes.io/role/internal-elb" = "1" }
+    public_lb   = { "kubernetes.io/role/elb" = "1" }
+    karpenter   = { "karpenter.sh/discovery" = var.cluster_name }
   }
 
   subnet_route = { for s in local.subnet_specs : s.key => s.route }
@@ -98,7 +98,7 @@ resource "aws_nat_gateway" "main" {
   subnet_id = aws_subnet.tier[
     var.network.nat_gateway == "per_az" ? local.public_subnet_by_az[local.azs[count.index]] : local.public_subnet_by_az[local.first_public_az]
   ].id
-  tags          = merge(var.tags, { Name = "${var.name_prefix}-nat-${count.index}" })
+  tags = merge(var.tags, { Name = "${var.name_prefix}-nat-${count.index}" })
 
   depends_on = [aws_internet_gateway.main]
 }

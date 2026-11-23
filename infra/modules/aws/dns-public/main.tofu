@@ -3,8 +3,8 @@ locals {
 }
 
 resource "aws_route53_zone" "main" {
-  name  = local.cfg.zone_name
-  tags  = merge(var.tags, { Name = local.cfg.zone_name })
+  name = local.cfg.zone_name
+  tags = merge(var.tags, { Name = local.cfg.zone_name })
 }
 
 resource "aws_route53_record" "delegation" {
