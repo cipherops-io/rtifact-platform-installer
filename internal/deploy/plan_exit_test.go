@@ -3,9 +3,11 @@ package deploy
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient/helmfake"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/ocireg"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/plan"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -72,6 +74,29 @@ func TestApply_noChangeStillRefreshesPullSecret(t *testing.T) {
 	t.Setenv("T_REG_PASS", "rotated")
 	if after := apply(); bytes.Equal(before, after) {
 		t.Fatal("pull secret not refreshed after credential rotation")
+	}
+}
+
+func TestPlanPrint_jsonIsSingleDocument(t *testing.T) {
+	res := plan.Build(plan.Input{
+		Wanted: []plan.Wanted{{Name: "x", Namespace: "ns", Chart: "x", Version: "1.0.0", ValuesDigest: "d"}},
+	}, plan.Options{})
+	var out bytes.Buffer
+	pr := &planRun{
+		res: res, helm: helmfake.New(),
+		regCfg:   ocireg.Registry{Host: "reg.example", ChartsPath: "charts"},
+		resolved: map[string]map[string]any{"x": {}},
+	}
+	deployDoc := &Document{Releases: []Release{{Name: "x", Namespace: "ns", Chart: "x", Version: "1.0.0"}}}
+	if err := pr.print(context.Background(), &Session{Doc: deployDoc}, RunOptions{Stdout: &out, JSONOutput: true}); err != nil {
+		t.Fatal(err)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(out.Bytes(), &got); err != nil {
+		t.Fatalf("plan -o json stdout is not one JSON document: %v\n%s", err, out.String())
+	}
+	if got["schema_version"] != float64(PlanSchemaVersion) {
+		t.Fatalf("schema_version = %v", got["schema_version"])
 	}
 }
 

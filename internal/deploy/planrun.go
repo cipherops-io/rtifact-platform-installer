@@ -75,6 +75,9 @@ func (pr *planRun) print(ctx context.Context, sess *Session, o RunOptions) error
 	if err := PrintPlan(o.out(), pr.rd, pr.res, o.JSONOutput); err != nil {
 		return err
 	}
+	if o.JSONOutput {
+		return nil
+	}
 	return printPlanManifestDiffs(ctx, planDiffOpts{
 		out: o.out(), stderr: o.err(), debug: o.Debug,
 		cs: pr.helm, doc: sess.Doc, res: pr.res, regCfg: pr.regCfg,
