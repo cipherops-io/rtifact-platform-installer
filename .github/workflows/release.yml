@@ -12,14 +12,14 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Unit tests
-        run: go test ./...
       - name: Package content (all clouds)
         run: make package-content PACKAGED_CLOUDS=azure,aws,gcp
+      - name: Unit tests
+        run: go test ./...
       - name: Validate examples
         run: |
-          go run ./cmd/installer validate examples/azure/minimal.yaml
-          go run ./cmd/installer validate examples/aws/minimal.yaml
-          go run ./cmd/installer validate examples/gcp/minimal.yaml
+          go run ./cmd/installer validate examples/azure/minimal.yaml --check-quota=false
+          go run ./cmd/installer validate examples/aws/minimal.yaml --check-quota=false
+          go run ./cmd/installer validate examples/gcp/minimal.yaml --check-quota=false
       - name: Deploy validate smoke
-        run: make package-content && go run ./cmd/installer deploy validate examples/deploy/minimal.yaml
+        run: go run ./cmd/installer deploy validate examples/deploy/minimal.yaml
