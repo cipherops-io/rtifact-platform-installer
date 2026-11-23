@@ -15,6 +15,7 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func k8s(t *testing.T) kube.Config {
@@ -74,7 +75,7 @@ func TestE2E_S6_CRDUpgrade(t *testing.T) {
 	o.FilePath = file
 	e2eMustApply(t, o)
 	cs := e2eDynamicClient(t, k8s(t))
-	u, err := cs.Resource(metav1.GroupVersionResource{
+	u, err := cs.Resource(schema.GroupVersionResource{
 		Group: "apiextensions.k8s.io", Version: "v1", Resource: "customresourcedefinitions",
 	}).Get(context.Background(), "widgets.deploytests.rtifact.ai", metav1.GetOptions{})
 	if err != nil {
@@ -139,7 +140,7 @@ func TestE2E_S10_MassRemovalGuard(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "mass removal") {
 		t.Fatalf("expected mass removal refusal, err=%v", err)
 	}
-	err := deploy.Apply(context.Background(), o)
+	err = deploy.Apply(context.Background(), o)
 	if err == nil {
 		t.Fatal("expected apply to refuse mass removal")
 	}
