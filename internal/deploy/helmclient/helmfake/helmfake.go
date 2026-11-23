@@ -27,6 +27,8 @@ type Client struct {
 	releases map[string]*Release
 	// FailUninstall makes Uninstall fail for the named release (namespace/name).
 	FailUninstall map[string]error
+	// PreviousRevision is the rollback target per release (namespace/name); absent means none.
+	PreviousRevision map[string]int
 	// Calls lists operations in order, e.g. "uninstall ns/name".
 	Calls []string
 }
@@ -35,7 +37,7 @@ var _ helmclient.Interface = (*Client)(nil)
 
 // New returns a fake seeded with releases.
 func New(rels ...Release) *Client {
-	c := &Client{releases: map[string]*Release{}, FailUninstall: map[string]error{}}
+	c := &Client{releases: map[string]*Release{}, FailUninstall: map[string]error{}, PreviousRevision: map[string]int{}}
 	for i := range rels {
 		r := rels[i]
 		c.releases[key(r.Namespace, r.Name)] = &r
@@ -136,7 +138,12 @@ func (c *Client) Lookup(_ context.Context, name, ns string) (*helmclient.Release
 	}, nil
 }
 
-func (c *Client) PreviousDeployedRevision(context.Context, string, string) (int, error) {
+func (c *Client) PreviousDeployedRevision(_ context.Context, name, ns string) (int, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if rev, ok := c.PreviousRevision[key(ns, name)]; ok {
+		return rev, nil
+	}
 	return 0, helmclient.ErrNoPreviousDeployedRevision
 }
 

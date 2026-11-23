@@ -20,6 +20,9 @@ func ActiveRedactor() *redact.Redactor {
 	return activeRedactor.Load()
 }
 
+// redactingWriter masks each Write independently, so a secret split across two
+// writes is not caught; deploy output goes through fmt.Fprint* and json.Encoder,
+// which write each formatted value in one call.
 type redactingWriter struct {
 	w  io.Writer
 	rd *redact.Redactor

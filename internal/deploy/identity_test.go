@@ -7,14 +7,24 @@ import (
 )
 
 func TestNormalizeServer(t *testing.T) {
-	if normalizeServer(" https://a/ ") != "https://a" {
-		t.Fatalf("normalize failed")
+	cases := map[string]string{
+		" https://a/ ":                 "https://a",
+		"https://EXAMPLE.COM:443":      "https://example.com",
+		"HTTPS://example.com":          "https://example.com",
+		"http://Host:80":               "http://host",
+		"https://api.example.com:6443": "https://api.example.com:6443",
+		"https://127.0.0.1:6443/":      "https://127.0.0.1:6443",
+		"https://[::1]:6443":           "https://[::1]:6443",
+		"https://[::1]:443":            "https://[::1]",
+		"not a url":                    "not a url",
 	}
-	if normalizeServer("https://EXAMPLE.COM:443") != "https://example.com" {
-		t.Fatalf("host case-fold and default https port")
+	for in, want := range cases {
+		if got := normalizeServer(in); got != want {
+			t.Errorf("normalizeServer(%q) = %q, want %q", in, got, want)
+		}
 	}
-	if normalizeServer("http://Host:80") != "http://host" {
-		t.Fatalf("default http port")
+	if normalizeServer("https://Kind:443") != normalizeServer("https://kind/") {
+		t.Fatal("equivalent URLs must compare equal for the identity guard")
 	}
 }
 

@@ -8,12 +8,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/cluster"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/lock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -150,46 +151,27 @@ func TestE2E_S10_MassRemovalGuard(t *testing.T) {
 
 func TestE2E_S12_DeployLock(t *testing.T) {
 	dir := t.TempDir()
-	file := writeFixture(t, dir, func(doc *deploy.Document) {
-		doc.Defaults.Timeout = "5m"
-	})
+	file := writeFixture(t, dir, func(*deploy.Document) {})
 	o := e2eOpts(t, file)
 	e2eCleanupDeploy(t, file, o)
+	ctx := context.Background()
+	cs := e2eClientset(t)
+	if err := cluster.EnsureNamespace(ctx, cs, inventory.SystemNS, nil); err != nil {
+		t.Fatal(err)
+	}
+	held, err := lock.Acquire(ctx, cs, deploy.DeploymentID(e2eDoc(t, file)), "other-operator@ci 1+held", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = deploy.Apply(ctx, o)
+	e2eLockHeldInErr(t, err)
+	e2eAssertErrContains(t, err, "other-operator@ci")
+	e2eHelmReleaseMissing(t, "ok-a", e2eReleaseNS(t, file, "ok-a"))
+	if err := held.Release(ctx, cs); err != nil {
+		t.Fatal(err)
+	}
 	e2eMustApply(t, o)
-	file = writeFixture(t, dir, func(doc *deploy.Document) {
-		for i := range doc.Releases {
-			if doc.Releases[i].Name == "ok-a" {
-				doc.Releases[i].Version = "1.0.1"
-			}
-		}
-	})
-	oo1 := e2eOpts(t, file)
-	oo1.FilePath = file
-	oo2 := e2eOpts(t, file)
-	oo2.FilePath = file
-	var wg sync.WaitGroup
-	errCh := make(chan error, 2)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		errCh <- deploy.Apply(context.Background(), oo1)
-	}()
-	time.Sleep(400 * time.Millisecond)
-	errCh <- deploy.Apply(context.Background(), oo2)
-	wg.Wait()
-	close(errCh)
-	var first, second error
-	for e := range errCh {
-		if first == nil {
-			first = e
-		} else {
-			second = e
-		}
-	}
-	if first != nil {
-		t.Fatalf("first concurrent apply: %v", first)
-	}
-	e2eLockHeldInErr(t, second)
+	e2eAssertLockFree(t, file)
 }
 
 func TestE2E_S11_StuckReportsRecovery(t *testing.T) {

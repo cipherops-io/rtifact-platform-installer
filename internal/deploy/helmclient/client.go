@@ -305,7 +305,7 @@ func (c *Client) releaseExists(cfg *action.Configuration, name, ns string) (bool
 	return true, nil
 }
 
-// Uninstall removes a release (PVC keep handled via post-render in C4).
+// Uninstall removes a release; PVCs survive via the keep post-renderer.
 func (c *Client) Uninstall(ctx context.Context, name, ns string) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -332,7 +332,9 @@ func (c *Client) FetchChartArchive(ctx context.Context, chartRef, version string
 	return c.chartArchive(chartRef, version)
 }
 
-// PreviousDeployedRevision returns the revision to roll back to (last deployed before current).
+// PreviousDeployedRevision returns the newest revision before the current one that
+// was successfully deployed. Helm marks a deployed revision superseded once a later
+// upgrade succeeds, so both statuses count (as in Helm's own rollback-on-failure).
 func (c *Client) PreviousDeployedRevision(ctx context.Context, name, ns string) (int, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, err
@@ -367,7 +369,7 @@ func (c *Client) PreviousDeployedRevision(ctx context.Context, name, ns string) 
 		if r.Version >= cur.Version {
 			continue
 		}
-		if r.Info.Status == releasecommon.StatusDeployed {
+		if r.Info.Status == releasecommon.StatusDeployed || r.Info.Status == releasecommon.StatusSuperseded {
 			target = r.Version
 			break
 		}

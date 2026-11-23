@@ -71,9 +71,9 @@ release-aws:
 release-gcp:
 	$(MAKE) release PACKAGED_CLOUDS=gcp
 
-# Unit-only until Level-2 scenarios (S1+) exist; do not treat as cluster e2e.
+# No cluster: fakes for Kubernetes and Helm. Cluster scenarios are deploy-e2e.
 deploy-unit:
-	go test ./internal/deploy/... ./tests/deploy/...
+	go test ./internal/deploy/... ./internal/archtest/... ./internal/cli/... ./tests/deploy/...
 
 deploy-e2e:
 	@chmod +x build/scripts/deploy-e2e.sh tests/deploy/rehearsal.sh 2>/dev/null || true

@@ -1,2 +1,2 @@
-replicas: 2
-message: reference-example
+# Keys read by tests/deploy/charts/ok-b.
+peer: reference-example

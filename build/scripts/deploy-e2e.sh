@@ -167,9 +167,9 @@ push_chart "${ROOT}/tests/deploy/charts/crd-2" "2.0.0"
 cd "$ROOT"
 go test -tags e2e -count=1 ./tests/deploy/...
 
-if [ -x "${ROOT}/tests/deploy/rehearsal.sh" ]; then
-  echo "==> rehearsal.sh"
-  "${ROOT}/tests/deploy/rehearsal.sh"
-fi
+echo "==> rehearsal.sh (built binary)"
+REHEARSAL_BIN="/tmp/rtifact-deploy-e2e-bin"
+go build -o "$REHEARSAL_BIN" ./cmd/rtifact
+RTIFACT_BIN="$REHEARSAL_BIN" bash "${ROOT}/tests/deploy/rehearsal.sh"
 
 echo "deploy-e2e OK"

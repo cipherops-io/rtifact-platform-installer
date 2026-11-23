@@ -3,6 +3,7 @@ package deploy
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -97,7 +98,10 @@ func normalizeServer(raw string) string {
 		}
 	}
 	if (scheme == "https" && port == "443") || (scheme == "http" && port == "80") {
+		if strings.Contains(host, ":") {
+			host = "[" + host + "]"
+		}
 		return scheme + "://" + host
 	}
-	return scheme + "://" + host + ":" + port
+	return scheme + "://" + net.JoinHostPort(host, port)
 }

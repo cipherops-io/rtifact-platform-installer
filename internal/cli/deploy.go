@@ -106,12 +106,12 @@ func addDeployGroup(root *cobra.Command) {
 		cmd.Flags().Bool("allow-downgrade", false, "Allow chart version downgrades")
 		cmd.Flags().Bool("adopt", false, "Adopt existing releases into inventory")
 		cmd.Flags().Bool("force-unlock", false, "Clear a stale deploy lock")
-		cmd.Flags().Bool("purge", false, "Delete PVCs and other retained resources on removal")
+		cmd.Flags().Bool("purge", false, "On removal, also delete the release's PVCs and deploy-created namespaces left empty")
 		cmd.Flags().Bool("debug", false, "Verbose deploy diagnostics (secrets redacted)")
 	}
 
 	addOutputFlag := func(cmd *cobra.Command) {
-		cmd.Flags().StringP("output", "o", "", "Output format (json)")
+		cmd.Flags().VarP(new(outputFormat), "output", "o", "Output format: text or json")
 	}
 
 	planCmd := &cobra.Command{
@@ -201,14 +201,30 @@ func addDeployGroup(root *cobra.Command) {
 		},
 	}
 	rollbackCmd.Flags().Bool("yes", false, "Skip confirmation prompts")
+	rollbackCmd.Flags().Duration("timeout", 0, "Override default release timeout")
+	rollbackCmd.Flags().Bool("force-unlock", false, "Clear a stale deploy lock")
 	grp.AddCommand(rollbackCmd)
 
 	root.AddCommand(grp)
 }
 
+// outputFormat is the -o flag; pflag rejects anything but text or json at parse time.
+type outputFormat string
+
+func (f *outputFormat) String() string { return string(*f) }
+func (f *outputFormat) Type() string   { return "format" }
+func (f *outputFormat) Set(v string) error {
+	switch v {
+	case "text", "json":
+		*f = outputFormat(v)
+		return nil
+	}
+	return fmt.Errorf("must be text or json")
+}
+
 func outputJSON(cmd *cobra.Command) bool {
-	o, _ := cmd.Flags().GetString("output")
-	return o == "json"
+	fl := cmd.Flags().Lookup("output")
+	return fl != nil && fl.Value.String() == "json"
 }
 
 func mustBool(cmd *cobra.Command, name string) bool {

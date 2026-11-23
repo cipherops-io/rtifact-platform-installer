@@ -15,9 +15,13 @@
 
 | Package | Role |
 |---------|------|
+| `deploy` (root) | Orchestration: session, plan, apply, destroy, rollback, status; no client-go |
 | `plan` | Decisions only; no Helm/Kubernetes imports |
-| `apply` | Lock, namespaces, CRDs, releases, inventory |
-| `helmclient` | Only importer of `helm.sh/helm/v4` |
+| `model` | Deploy file types; standard library only |
+| `cluster` | Namespaces, PVCs, pull secrets on the session clientset |
+| `helmclient` | Only importer of `helm.sh/helm/v4`; `helmclient/helmfake` for unit tests |
 | `kube`, `ocireg`, `crds`, `inventory`, `lock`, `redact` | As named |
 
-`internal/archtest` enforces: `plan` has no `helm.sh`/`k8s.io`; only `helmclient` imports Helm; deploy must not import `internal/runner`, `internal/config`, or `internal/cloud`.
+`internal/archtest` enforces: `plan` has no `helm.sh`/`k8s.io`; only `helmclient` imports Helm; only `kube`, `cluster`, `lock`, `inventory`, `crds` and `helmclient` import `k8s.io`; `model` imports only the standard library; deploy must not import `internal/runner`, `internal/config`, or `internal/cloud`.
+
+Tests: unit tests use `k8s.io/client-go/kubernetes/fake` and `helmfake`; cluster scenarios are `make deploy-e2e` (see `tests/deploy/README.md`).

@@ -4,9 +4,9 @@
 
 **Re-tagged release.** The first **v0.0.1** cut shipped deploy layout and docs before cluster behaviour was implemented; do not use that tag for production clusters. This tag marks the F0–F11 remediation on `main`, aligned with **boilerplates [v0.0.1](https://github.com/cipherops-io/boilerplates/releases/tag/v0.0.1)**.
 
-### Deploy engine (proven on cluster)
+### Deploy engine
 
-`make deploy-e2e` (kind + Zot) exercises the scenarios in `tests/deploy/README.md`:
+`make deploy-e2e` (kind + Zot) exercises the scenarios in `tests/deploy/README.md`; the `deploy-e2e` CI job is the pass record:
 
 - **S1–S4** — fresh apply, no-op re-apply, semver bump, value-only change
 - **S5–S6** — failed release rollback, CRD upgrade (`crds: upgrade`)

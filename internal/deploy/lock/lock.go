@@ -61,12 +61,15 @@ func (h *Handle) renewFailed(err error) {
 	fmt.Fprintf(os.Stderr, "deploy lock renewal failed: %v\n", err)
 }
 
+// LeaseName is the Lease in inventory.SystemNS that serialises runs for deployment.
+func LeaseName(deployment string) string { return "rtifact-deploy-lock-" + deployment }
+
 // Acquire takes the deployment Lease; second holder is refused (S12).
 func Acquire(ctx context.Context, cs kubernetes.Interface, deployment, holder string, force bool) (*Handle, error) {
 	if holder == "" {
 		holder = "unknown"
 	}
-	name := "rtifact-deploy-lock-" + deployment
+	name := LeaseName(deployment)
 	leases := cs.CoordinationV1().Leases(inventory.SystemNS)
 	existing, err := leases.Get(ctx, name, metav1.GetOptions{})
 	switch {

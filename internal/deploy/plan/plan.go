@@ -28,6 +28,7 @@ const (
 // Helm release statuses the planner distinguishes.
 const (
 	StatusDeployed     = "deployed"
+	StatusFailed       = "failed"
 	StatusUninstalling = "uninstalling"
 )
 

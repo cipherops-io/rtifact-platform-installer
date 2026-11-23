@@ -18,6 +18,9 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/helmclient"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/inventory"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/kube"
+	"github.com/cipherops-io/rtifact-platform-installer/internal/deploy/lock"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 )
 
@@ -38,6 +41,9 @@ func isolateFixture(t *testing.T, doc *deploy.Document) {
 	t.Helper()
 	p := deploymentPrefix(t)
 	doc.NamePrefix = p
+	// DeploymentID is customer.code-environment; a per-test environment gives each
+	// test its own inventory ConfigMap and lock Lease.
+	doc.Environment = p
 	repl := map[string]string{
 		"deploy-a": p + "-ns-a",
 		"deploy-b": p + "-ns-b",
@@ -99,14 +105,33 @@ func e2eK8sCfg() kube.Config {
 	return kube.Config{Kubeconfig: os.Getenv("DEPLOY_E2E_KUBECONFIG")}
 }
 
-func e2eInventory(t *testing.T, file string) []inventory.Entry {
+func e2eClientset(t *testing.T) cluster.Client {
 	t.Helper()
-	doc := e2eDoc(t, file)
 	cs, err := cluster.New(e2eK8sCfg())
 	if err != nil {
 		t.Fatal(err)
 	}
-	inv, err := inventory.Read(context.Background(), cs, deploy.DeploymentID(doc))
+	return cs
+}
+
+// e2eAssertLockFree fails if the deploy Lease for file's deployment still exists.
+func e2eAssertLockFree(t *testing.T, file string) {
+	t.Helper()
+	name := lock.LeaseName(deploy.DeploymentID(e2eDoc(t, file)))
+	l, err := e2eClientset(t).CoordinationV1().Leases(inventory.SystemNS).Get(context.Background(), name, metav1.GetOptions{})
+	if apierrors.IsNotFound(err) {
+		return
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Fatalf("deploy lock %s still held by %q", name, *l.Spec.HolderIdentity)
+}
+
+func e2eInventory(t *testing.T, file string) []inventory.Entry {
+	t.Helper()
+	doc := e2eDoc(t, file)
+	inv, err := inventory.Read(context.Background(), e2eClientset(t), deploy.DeploymentID(doc))
 	if err != nil {
 		t.Fatal(err)
 	}
