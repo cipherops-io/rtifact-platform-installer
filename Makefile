@@ -5,18 +5,25 @@ GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 PACKAGED_CLOUDS ?= azure,aws,gcp
 VERSION ?= 0.0.1-dev
-CUSTOMER ?= internal
 GIT_COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
-LDFLAGS := -s -w \
+LDFLAGS = -s -w \
   -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Release=true \
   -X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS) \
   -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Version=$(VERSION) \
   -X github.com/cipherops-io/rtifact-platform-installer/internal/version.GitCommit=$(GIT_COMMIT) \
-  -X github.com/cipherops-io/rtifact-platform-installer/internal/version.Customer=$(CUSTOMER)
+  -X github.com/cipherops-io/rtifact-platform-installer/internal/version.TofuVersion=$(TOFU_VERSION)
 
 include boilerplate.mk
 
-.PHONY: deps build build-dev embed mirror-tofu fetch-tofu release test fmt package-content
+HOST_GOOS := $(shell go env GOHOSTOS)
+HOST_GOARCH := $(shell go env GOHOSTARCH)
+HOST_TOFU := build/.tools/tofu-$(TOFU_VERSION)-$(HOST_GOOS)_$(HOST_GOARCH)/tofu
+comma := ,
+MIRROR_CACHE := build/.mirror/$(subst $(comma),-,$(PACKAGED_CLOUDS))_$(GOOS)_$(GOARCH)
+# Smallest release binary (MiB) that can hold OpenTofu plus one cloud's providers.
+MIN_BINARY_MB ?= 100
+
+.PHONY: deps build build-dev embed embed-clean host-tofu mirror-tofu fetch-tofu release check-release test fmt package-content
 .PHONY: release-all release-azure release-aws release-gcp validate-examples e2e-sandbox e2e-azure-smoke e2e-azure-deploy deploy-unit deploy-e2e
 
 validate-examples:
@@ -46,18 +53,36 @@ build-dev: package-content
 	@mkdir -p dist
 	go build -ldflags "-X github.com/cipherops-io/rtifact-platform-installer/internal/version.PackagedClouds=$(PACKAGED_CLOUDS)" -o $(DIST) ./cmd/rtifact
 
+embed-clean:
+	@rm -rf build/embed/tofu build/embed/mirror
+
 embed: fetch-tofu mirror-tofu
-	@echo "embed artifacts ready under build/embed/"
+	@echo "embed artifacts ready under build/embed/ ($(GOOS)_$(GOARCH))"
 
 fetch-tofu:
-	@./build/scripts/fetch-tofu.sh $(TOFU_VERSION) $(GOOS) $(GOARCH)
+	@./build/scripts/fetch-tofu.sh $(TOFU_VERSION) $(GOOS) $(GOARCH) build/embed/tofu/$(GOOS)_$(GOARCH)
 
-mirror-tofu:
-	@TOFU_BIN="$(TOFU_BIN)" PACKAGED_CLOUDS="$(PACKAGED_CLOUDS)" ./build/scripts/mirror-providers.sh
+host-tofu: $(HOST_TOFU)
 
-release: package-content embed
+$(HOST_TOFU):
+	@./build/scripts/fetch-tofu.sh $(TOFU_VERSION) $(HOST_GOOS) $(HOST_GOARCH) $(dir $@)
+
+mirror-tofu: host-tofu
+	@TOFU_BIN="$(abspath $(HOST_TOFU))" GOOS=$(GOOS) GOARCH=$(GOARCH) PACKAGED_CLOUDS="$(PACKAGED_CLOUDS)" \
+	  MIRROR="$(MIRROR_CACHE)" ./build/scripts/mirror-providers.sh
+	@mkdir -p build/embed/mirror && rsync -a "$(MIRROR_CACHE)/" build/embed/mirror/
+
+# Order matters: the package is copied only after OpenTofu and the providers for GOOS/GOARCH are in build/embed.
+release:
+	@$(MAKE) --no-print-directory embed-clean
+	@$(MAKE) --no-print-directory embed
+	@$(MAKE) --no-print-directory package-content
 	@mkdir -p dist
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="$(LDFLAGS)" -o $(DIST) ./cmd/rtifact
+	@$(MAKE) --no-print-directory check-release
+
+check-release:
+	@./build/scripts/check-release.sh $(DIST) $(GOOS) $(GOARCH) "$(PACKAGED_CLOUDS)" $(MIN_BINARY_MB)
 
 release-all:
 	$(MAKE) release PACKAGED_CLOUDS=azure,aws,gcp

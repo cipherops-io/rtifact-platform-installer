@@ -18,7 +18,6 @@ import (
 	"github.com/cipherops-io/rtifact-platform-installer/internal/stacks"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/status"
 	"github.com/cipherops-io/rtifact-platform-installer/internal/usererr"
-	"github.com/cipherops-io/rtifact-platform-installer/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -163,14 +162,7 @@ func NewRoot() *cobra.Command {
 	initCfg.PersistentFlags().String("out", "config.yaml", "output path")
 	root.AddCommand(initCfg)
 
-	root.AddCommand(&cobra.Command{
-		Use:   "version",
-		Short: "Print version",
-		Run: func(_ *cobra.Command, _ []string) {
-			fmt.Printf("rtifact %s (commit %s) customer=%s clouds=%s\n", version.Version, version.GitCommit, version.Customer, version.PackagedClouds)
-			fmt.Println(version.DeployEngineLine())
-		},
-	})
+	root.AddCommand(newVersionCmd(), newDoctorCmd())
 
 	return root
 }

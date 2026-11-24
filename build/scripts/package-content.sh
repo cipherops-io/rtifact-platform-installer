@@ -11,8 +11,8 @@ profile_stack_id() {
   awk -F: '/^[[:space:]]*stack_id:/{gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); gsub(/"/, "", $2); print $2; exit}' "$1"
 }
 
-rm -rf "$PKG/profiles" "$PKG/infra" "$PKG/schemas"
-mkdir -p "$PKG"
+rm -rf "$PKG/profiles" "$PKG/infra" "$PKG/schemas" "$PKG/examples"
+mkdir -p "$PKG/examples"
 
 for profile_dir in "$ROOT/profiles"/*/; do
   [ -d "$profile_dir" ] || continue

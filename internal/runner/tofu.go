@@ -40,6 +40,17 @@ func resolveTofu(contentRoot string) (tofuPath, mirrorDir string, cleanup func()
 	return "", "", nil, fmt.Errorf("OpenTofu (tofu) not found on PATH; install https://opentofu.org/docs/intro/install/ or run make fetch-tofu")
 }
 
+// ResolveTofu returns the OpenTofu binary and provider mirror that stack runs use.
+func ResolveTofu(contentRoot string) (tofuPath, mirrorDir string, err error) {
+	tofuPath, mirrorDir, _, err = resolveTofu(contentRoot)
+	return tofuPath, mirrorDir, err
+}
+
+// WriteProviderRC writes a CLI config that installs providers only from mirror.
+func WriteProviderRC(path, mirror string) error {
+	return writeProviderRC(path, mirror)
+}
+
 // providerMirrorDir returns the filesystem provider mirror path when populated (release/offline).
 func providerMirrorDir(contentRoot string) string {
 	p := filepath.Join(contentRoot, "build", "embed", "mirror")

@@ -3,6 +3,8 @@
 /build/embed/tofu/
 /build/embed/mirror/
 /build/.plugin-cache/
+/build/.tools/
+/build/.mirror/
 /internal/packaged/build/embed/tofu/
 /internal/packaged/build/embed/mirror/
 **/installer.auto.tfvars.json
