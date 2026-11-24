@@ -120,4 +120,47 @@ jobs:
       - run: go test ./tests/config/...
       - run: make tofu-validate
       - run: make build-dev
-      - run: ./dist/rtifact validate --check-quota=false "examples/${{ matrix.cloud }}/minimal.yaml"
+      - name: Validate examples
+        run: |
+          # *e2e* examples carry placeholders that CI substitutes before use.
+          for f in examples/${{ matrix.cloud }}/*.yaml; do
+            case "$f" in *e2e*) continue ;; esac
+            echo "==> $f"
+            INSTALLER_CONTENT_ROOT=. ./dist/rtifact validate --check-quota=false "$f"
+          done
+  fresh-clone:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build from committed files only
+        run: |
+          dir="${RUNNER_TEMP}/fresh"
+          mkdir -p "$dir"
+          git archive HEAD | tar -x -C "$dir"
+          cd "$dir"
+          make package-content build-dev
+          ./dist/rtifact version
+  release-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/cache@v4
+        with:
+          path: |
+            build/.mirror
+            build/.tools
+          key: providers-azure-linux-amd64-${{ hashFiles('build/provider-versions.yml', 'tooling.mk', 'infra/stacks/**/.terraform.lock.hcl') }}
+      - run: make release PACKAGED_CLOUDS=azure GOOS=linux GOARCH=amd64 VERSION=ci
+      - name: Bundled binary works outside the repository without the provider registry
+        run: |
+          dir=$(mktemp -d)
+          cp dist/rtifact "$dir/"
+          cd "$dir"
+          ./rtifact version -o json
+          ./rtifact doctor --deep

@@ -1,11 +1,13 @@
 Variables:
     AirGapped: true
-    ArtifactRegistryHost: ""
+    ArtifactRegistryHost: zot.prod.rtifact.ai
     BoilerplateCliVersion: 0.17.0
     BoilerplatesRef: v0.0.1
     BuildTargets:
         - linux/amd64
+        - linux/arm64
         - darwin/arm64
+        - darwin/amd64
     CliNames:
         aws: aws
         azure: az
@@ -18,9 +20,11 @@ Variables:
         - azure
         - aws
         - gcp
+    CosignVersion: v3.1.4
     GitHubOwner: cipherops-io
     GitHubRepo: rtifact-platform-installer
     GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+    InstallerRepository: rtifact-installer
     KindVersion: 0.26.0
     LayerMeta:
         ai-integrations:
@@ -144,6 +148,7 @@ Variables:
             - app-platform/gke
             - app-platform/compute
     OpenTofuVersion: 1.13.9
+    OrasVersion: 1.4.0
     ProductName: rtifact
     ProfileID: aios-infra
     Profiles:
@@ -152,23 +157,30 @@ Variables:
         aws: opentofu/aws
         azure: opentofu/azurerm
         gcp: opentofu/google
+    SmokeRunners:
+        darwin/amd64: macos-15-intel
+        darwin/arm64: macos-latest
+        linux/amd64: ubuntu-latest
+        linux/arm64: ubuntu-24.04-arm
     TerraformDocsVersion: 0.20.0
 SchemaVersion: https://boilerplate.gruntwork.io/schemas/manifest/v2/schema.json
-Timestamp: "2026-11-23T16:34:13Z"
-TemplateURL: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=3e269f3dd5bc01cb40117dd44878e1af16dfdbc2
+Timestamp: "2026-11-24T04:08:47Z"
+TemplateURL: github.com/cipherops-io/boilerplates//devops-templates/rtifact-product?ref=3efe399bb805a1a4a2a4091d6470efa743ebbe2b
 BoilerplateVersion: v0.17.0
-SourceChecksum: git-sha1:3e269f3dd5bc01cb40117dd44878e1af16dfdbc2
+SourceChecksum: git-sha1:3efe399bb805a1a4a2a4091d6470efa743ebbe2b
 OutputDir: .
 Dependencies:
     - Variables:
         __each__: azure
         AirGapped: true
-        ArtifactRegistryHost: ""
+        ArtifactRegistryHost: zot.prod.rtifact.ai
         BoilerplateCliVersion: 0.17.0
         BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
+            - linux/arm64
             - darwin/arm64
+            - darwin/amd64
         CliNames:
             aws: aws
             azure: az
@@ -182,9 +194,11 @@ Dependencies:
             - azure
             - aws
             - gcp
+        CosignVersion: v3.1.4
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        InstallerRepository: rtifact-installer
         KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
@@ -308,6 +322,7 @@ Dependencies:
                 - app-platform/gke
                 - app-platform/compute
         OpenTofuVersion: 1.13.9
+        OrasVersion: 1.4.0
         ProductName: rtifact
         ProfileID: aios-infra
         Profiles:
@@ -316,6 +331,11 @@ Dependencies:
             aws: opentofu/aws
             azure: opentofu/azurerm
             gcp: opentofu/google
+        SmokeRunners:
+            darwin/amd64: macos-15-intel
+            darwin/arm64: macos-latest
+            linux/amd64: ubuntu-latest
+            linux/arm64: ubuntu-24.04-arm
         TerraformDocsVersion: 0.20.0
       Name: module-guides
       TemplateURL: ../rtifact-module-agents-cloud
@@ -330,12 +350,14 @@ Dependencies:
     - Variables:
         __each__: aws
         AirGapped: true
-        ArtifactRegistryHost: ""
+        ArtifactRegistryHost: zot.prod.rtifact.ai
         BoilerplateCliVersion: 0.17.0
         BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
+            - linux/arm64
             - darwin/arm64
+            - darwin/amd64
         CliNames:
             aws: aws
             azure: az
@@ -349,9 +371,11 @@ Dependencies:
             - azure
             - aws
             - gcp
+        CosignVersion: v3.1.4
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        InstallerRepository: rtifact-installer
         KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
@@ -475,6 +499,7 @@ Dependencies:
                 - app-platform/gke
                 - app-platform/compute
         OpenTofuVersion: 1.13.9
+        OrasVersion: 1.4.0
         ProductName: rtifact
         ProfileID: aios-infra
         Profiles:
@@ -483,6 +508,11 @@ Dependencies:
             aws: opentofu/aws
             azure: opentofu/azurerm
             gcp: opentofu/google
+        SmokeRunners:
+            darwin/amd64: macos-15-intel
+            darwin/arm64: macos-latest
+            linux/amd64: ubuntu-latest
+            linux/arm64: ubuntu-24.04-arm
         TerraformDocsVersion: 0.20.0
       Name: module-guides
       TemplateURL: ../rtifact-module-agents-cloud
@@ -497,12 +527,14 @@ Dependencies:
     - Variables:
         __each__: gcp
         AirGapped: true
-        ArtifactRegistryHost: ""
+        ArtifactRegistryHost: zot.prod.rtifact.ai
         BoilerplateCliVersion: 0.17.0
         BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
+            - linux/arm64
             - darwin/arm64
+            - darwin/amd64
         CliNames:
             aws: aws
             azure: az
@@ -516,9 +548,11 @@ Dependencies:
             - azure
             - aws
             - gcp
+        CosignVersion: v3.1.4
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        InstallerRepository: rtifact-installer
         KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
@@ -642,6 +676,7 @@ Dependencies:
                 - app-platform/gke
                 - app-platform/compute
         OpenTofuVersion: 1.13.9
+        OrasVersion: 1.4.0
         ProductName: rtifact
         ProfileID: aios-infra
         Profiles:
@@ -650,6 +685,11 @@ Dependencies:
             aws: opentofu/aws
             azure: opentofu/azurerm
             gcp: opentofu/google
+        SmokeRunners:
+            darwin/amd64: macos-15-intel
+            darwin/arm64: macos-latest
+            linux/amd64: ubuntu-latest
+            linux/arm64: ubuntu-24.04-arm
         TerraformDocsVersion: 0.20.0
       Name: module-guides
       TemplateURL: ../rtifact-module-agents-cloud
@@ -664,12 +704,14 @@ Dependencies:
     - Variables:
         __each__: azure
         AirGapped: true
-        ArtifactRegistryHost: ""
+        ArtifactRegistryHost: zot.prod.rtifact.ai
         BoilerplateCliVersion: 0.17.0
         BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
+            - linux/arm64
             - darwin/arm64
+            - darwin/amd64
         CliNames:
             aws: aws
             azure: az
@@ -683,9 +725,11 @@ Dependencies:
             - azure
             - aws
             - gcp
+        CosignVersion: v3.1.4
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        InstallerRepository: rtifact-installer
         KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
@@ -809,6 +853,7 @@ Dependencies:
                 - app-platform/gke
                 - app-platform/compute
         OpenTofuVersion: 1.13.9
+        OrasVersion: 1.4.0
         ProductName: rtifact
         ProfileID: aios-infra
         Profiles:
@@ -817,6 +862,11 @@ Dependencies:
             aws: opentofu/aws
             azure: opentofu/azurerm
             gcp: opentofu/google
+        SmokeRunners:
+            darwin/amd64: macos-15-intel
+            darwin/arm64: macos-latest
+            linux/amd64: ubuntu-latest
+            linux/arm64: ubuntu-24.04-arm
         TerraformDocsVersion: 0.20.0
       Name: layer-guides
       TemplateURL: ../rtifact-layer-agents-pack
@@ -829,12 +879,14 @@ Dependencies:
         - Variables:
             __each__: azure
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -848,9 +900,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: state-backend
             LayerMeta:
@@ -975,6 +1029,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -983,6 +1038,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -997,12 +1057,14 @@ Dependencies:
         - Variables:
             __each__: azure
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -1016,9 +1078,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: core-network
             LayerMeta:
@@ -1143,6 +1207,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -1151,6 +1216,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -1165,12 +1235,14 @@ Dependencies:
         - Variables:
             __each__: azure
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -1184,9 +1256,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: data-platform
             LayerMeta:
@@ -1311,6 +1385,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -1319,6 +1394,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -1333,12 +1413,14 @@ Dependencies:
         - Variables:
             __each__: azure
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -1352,9 +1434,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: app-platform
             LayerMeta:
@@ -1479,6 +1563,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -1487,6 +1572,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -1501,12 +1591,14 @@ Dependencies:
         - Variables:
             __each__: azure
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -1520,9 +1612,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: network-edge
             LayerMeta:
@@ -1647,6 +1741,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -1655,6 +1750,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -1669,12 +1769,14 @@ Dependencies:
         - Variables:
             __each__: azure
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -1688,9 +1790,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: ai-integrations
             LayerMeta:
@@ -1815,6 +1919,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -1823,6 +1928,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -1837,12 +1947,14 @@ Dependencies:
     - Variables:
         __each__: aws
         AirGapped: true
-        ArtifactRegistryHost: ""
+        ArtifactRegistryHost: zot.prod.rtifact.ai
         BoilerplateCliVersion: 0.17.0
         BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
+            - linux/arm64
             - darwin/arm64
+            - darwin/amd64
         CliNames:
             aws: aws
             azure: az
@@ -1856,9 +1968,11 @@ Dependencies:
             - azure
             - aws
             - gcp
+        CosignVersion: v3.1.4
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        InstallerRepository: rtifact-installer
         KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
@@ -1982,6 +2096,7 @@ Dependencies:
                 - app-platform/gke
                 - app-platform/compute
         OpenTofuVersion: 1.13.9
+        OrasVersion: 1.4.0
         ProductName: rtifact
         ProfileID: aios-infra
         Profiles:
@@ -1990,6 +2105,11 @@ Dependencies:
             aws: opentofu/aws
             azure: opentofu/azurerm
             gcp: opentofu/google
+        SmokeRunners:
+            darwin/amd64: macos-15-intel
+            darwin/arm64: macos-latest
+            linux/amd64: ubuntu-latest
+            linux/arm64: ubuntu-24.04-arm
         TerraformDocsVersion: 0.20.0
       Name: layer-guides
       TemplateURL: ../rtifact-layer-agents-pack
@@ -2002,12 +2122,14 @@ Dependencies:
         - Variables:
             __each__: aws
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -2021,9 +2143,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: state-backend
             LayerMeta:
@@ -2148,6 +2272,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -2156,6 +2281,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -2170,12 +2300,14 @@ Dependencies:
         - Variables:
             __each__: aws
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -2189,9 +2321,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: core-network
             LayerMeta:
@@ -2316,6 +2450,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -2324,6 +2459,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -2338,12 +2478,14 @@ Dependencies:
         - Variables:
             __each__: aws
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -2357,9 +2499,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: data-platform
             LayerMeta:
@@ -2484,6 +2628,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -2492,6 +2637,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -2506,12 +2656,14 @@ Dependencies:
         - Variables:
             __each__: aws
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -2525,9 +2677,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: app-platform
             LayerMeta:
@@ -2652,6 +2806,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -2660,6 +2815,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -2674,12 +2834,14 @@ Dependencies:
         - Variables:
             __each__: aws
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -2693,9 +2855,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: network-edge
             LayerMeta:
@@ -2820,6 +2984,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -2828,6 +2993,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -2842,12 +3012,14 @@ Dependencies:
         - Variables:
             __each__: aws
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -2861,9 +3033,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: ai-integrations
             LayerMeta:
@@ -2988,6 +3162,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -2996,6 +3171,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -3010,12 +3190,14 @@ Dependencies:
     - Variables:
         __each__: gcp
         AirGapped: true
-        ArtifactRegistryHost: ""
+        ArtifactRegistryHost: zot.prod.rtifact.ai
         BoilerplateCliVersion: 0.17.0
         BoilerplatesRef: v0.0.1
         BuildTargets:
             - linux/amd64
+            - linux/arm64
             - darwin/arm64
+            - darwin/amd64
         CliNames:
             aws: aws
             azure: az
@@ -3029,9 +3211,11 @@ Dependencies:
             - azure
             - aws
             - gcp
+        CosignVersion: v3.1.4
         GitHubOwner: cipherops-io
         GitHubRepo: rtifact-platform-installer
         GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+        InstallerRepository: rtifact-installer
         KindVersion: 0.26.0
         LayerMeta:
             ai-integrations:
@@ -3155,6 +3339,7 @@ Dependencies:
                 - app-platform/gke
                 - app-platform/compute
         OpenTofuVersion: 1.13.9
+        OrasVersion: 1.4.0
         ProductName: rtifact
         ProfileID: aios-infra
         Profiles:
@@ -3163,6 +3348,11 @@ Dependencies:
             aws: opentofu/aws
             azure: opentofu/azurerm
             gcp: opentofu/google
+        SmokeRunners:
+            darwin/amd64: macos-15-intel
+            darwin/arm64: macos-latest
+            linux/amd64: ubuntu-latest
+            linux/arm64: ubuntu-24.04-arm
         TerraformDocsVersion: 0.20.0
       Name: layer-guides
       TemplateURL: ../rtifact-layer-agents-pack
@@ -3175,12 +3365,14 @@ Dependencies:
         - Variables:
             __each__: gcp
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -3194,9 +3386,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: state-backend
             LayerMeta:
@@ -3321,6 +3515,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -3329,6 +3524,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -3343,12 +3543,14 @@ Dependencies:
         - Variables:
             __each__: gcp
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -3362,9 +3564,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: core-network
             LayerMeta:
@@ -3489,6 +3693,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -3497,6 +3702,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -3511,12 +3721,14 @@ Dependencies:
         - Variables:
             __each__: gcp
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -3530,9 +3742,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: data-platform
             LayerMeta:
@@ -3657,6 +3871,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -3665,6 +3880,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -3679,12 +3899,14 @@ Dependencies:
         - Variables:
             __each__: gcp
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -3698,9 +3920,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: app-platform
             LayerMeta:
@@ -3825,6 +4049,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -3833,6 +4058,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -3847,12 +4077,14 @@ Dependencies:
         - Variables:
             __each__: gcp
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -3866,9 +4098,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: network-edge
             LayerMeta:
@@ -3993,6 +4227,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -4001,6 +4236,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -4015,12 +4255,14 @@ Dependencies:
         - Variables:
             __each__: gcp
             AirGapped: true
-            ArtifactRegistryHost: ""
+            ArtifactRegistryHost: zot.prod.rtifact.ai
             BoilerplateCliVersion: 0.17.0
             BoilerplatesRef: v0.0.1
             BuildTargets:
                 - linux/amd64
+                - linux/arm64
                 - darwin/arm64
+                - darwin/amd64
             CliNames:
                 aws: aws
                 azure: az
@@ -4034,9 +4276,11 @@ Dependencies:
                 - azure
                 - aws
                 - gcp
+            CosignVersion: v3.1.4
             GitHubOwner: cipherops-io
             GitHubRepo: rtifact-platform-installer
             GoModulePath: github.com/cipherops-io/rtifact-platform-installer
+            InstallerRepository: rtifact-installer
             KindVersion: 0.26.0
             Layer: ai-integrations
             LayerMeta:
@@ -4161,6 +4405,7 @@ Dependencies:
                     - app-platform/gke
                     - app-platform/compute
             OpenTofuVersion: 1.13.9
+            OrasVersion: 1.4.0
             ProductName: rtifact
             ProfileID: aios-infra
             Profiles:
@@ -4169,6 +4414,11 @@ Dependencies:
                 aws: opentofu/aws
                 azure: opentofu/azurerm
                 gcp: opentofu/google
+            SmokeRunners:
+                darwin/amd64: macos-15-intel
+                darwin/arm64: macos-latest
+                linux/amd64: ubuntu-latest
+                linux/arm64: ubuntu-24.04-arm
             TerraformDocsVersion: 0.20.0
           Name: layer-agents
           TemplateURL: ../rtifact-layer-agents
@@ -4183,10 +4433,10 @@ Dependencies:
 Files:
     - Path: .github/pull_request_template.md
       Checksum: sha256:cc6698fcfd3c326e04625bba5bc8cbce8691f7993b82c62cbca6a46ecf7271a2
-    - Path: .github/workflows/build-binary.yml
-      Checksum: sha256:cdb54dd92cf7f0501569629f278c035059d10f089db5cb5658daf64ebd3a7ef8
     - Path: .github/workflows/ci.yml
-      Checksum: sha256:4b74def0ef3d5bd6d7a56c60094f0436fead2cb7e95eacc352d7db9608fd4066
+      Checksum: sha256:2d01bbc4cdd8c05820196eeb36a892373681727fa522b320339aab17a960dc2d
+    - Path: .github/workflows/release.yml
+      Checksum: sha256:69bb9fff4cc11f47d7154bf335402b12b92d1ea7bc7bdf19763f269e496f598e
     - Path: .terraform-docs.gen.yml
       Checksum: sha256:7cba1689f7c088a1b9e208dfd0aeef31535f4dd321584f8e3a0e847365f584d0
     - Path: .terraform-docs.yml
@@ -4196,13 +4446,13 @@ Files:
     - Path: CLAUDE.md
       Checksum: sha256:a695d559cdc2e9e42ff21477bc97db4111eb0fd88a756ce232cc69d0d0a6ff7e
     - Path: boilerplate.mk
-      Checksum: sha256:cb04d52b1e064a5832680f8dec0d23ba3717eb60eb6a7c23e3fdedece948c826
+      Checksum: sha256:300cc9b0eb7065af76904e6ab9386db6d08591a6c3dcdf76d83173ce075de4c5
     - Path: build/scripts/terraform-docs-module.sh
       Checksum: sha256:edf53e942fd1e54c1ebcb1610e1dba7e36223d67c14bdfe6af14ad46ae777395
     - Path: deploy/AGENTS.md
       Checksum: sha256:a0f8625f0ef178668ecfc5e8e1ddb993b820fe297b3158b8ba4cdffbdb439b2c
     - Path: docs/BOILERPLATE.md
-      Checksum: sha256:0f3ee834e94641c86154aa1ea7ba412ca446e5bf0c4a9316bf7c6144163dd10d
+      Checksum: sha256:0859c3b67977efb20f85866982dbc4350140f42b01ac3c69106494e45d85c590
     - Path: infra/AGENTS.md
       Checksum: sha256:483d3ddc0f18a2cd11197f74bedc3f2fc41ddbf16f6637c0e826c388befe35fb
     - Path: infra/modules/AGENTS.md

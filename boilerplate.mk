@@ -14,7 +14,7 @@ REPO_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 endif
 
 .PHONY: boilerplate-update boilerplate-verify check-template-source print-tool-versions
-.PHONY: record-boilerplate-source verify-boilerplate-source
+.PHONY: record-boilerplate-source verify-boilerplate-source check-managed-orphans
 
 boilerplate-update:
 	@command -v boilerplate >/dev/null || (echo "boilerplate CLI required (https://boilerplate.gruntwork.io)" && exit 1)
@@ -90,7 +90,27 @@ boilerplate-verify:
 	@set -e; \
 	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) verify-boilerplate-source; \
 	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) boilerplate-update; \
-	git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'
+	git diff --exit-code -- . ':(exclude)boilerplate-manifest.yaml'; \
+	$(MAKE) -f $(firstword $(MAKEFILE_LIST)) check-managed-orphans
+
+# Boilerplate never deletes a file that left the template: fail on tracked files that still carry
+# the managed header but are not in boilerplate-manifest.yaml. Removed files: docs/BOILERPLATE.md.
+check-managed-orphans:
+	@set -e; \
+	[ -f boilerplate-manifest.yaml ] || { echo "missing boilerplate-manifest.yaml"; exit 1; }; \
+	listed=$$(mktemp); \
+	awk 'match($$0, /^ *OutputFolder: /) { ind = RLENGTH - length("OutputFolder: "); folder[ind] = substr($$0, RLENGTH + 1); next } \
+	  match($$0, /^ *Files:/) { ind = RLENGTH - length("Files:"); cur = (ind == 0) ? "." : folder[ind]; next } \
+	  match($$0, /^ *- Path: /) { p = substr($$0, RLENGTH + 1); print (cur == "." ? p : cur "/" p) }' \
+	  boilerplate-manifest.yaml | sort -u > "$$listed"; \
+	orphans=$$(git grep -l -F "DO NOT EDIT — managed by cipherops-io/boilerplates" | grep -vxF -f "$$listed" | grep -vx 'boilerplate-source.yaml' || true); \
+	rm -f "$$listed"; \
+	if [ -n "$$orphans" ]; then \
+	  echo "managed files that left the template (delete them, see docs/BOILERPLATE.md):"; \
+	  echo "$$orphans" | sed 's/^/  /'; \
+	  exit 1; \
+	fi; \
+	echo "check-managed-orphans: OK"
 
 check-template-source:
 	@case "$(BOILERPLATES_TEMPLATE_URL)" in \

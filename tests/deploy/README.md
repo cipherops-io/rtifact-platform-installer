@@ -39,7 +39,7 @@ Helm assertions use the deploy Helm SDK client (`helmclient.Client.Lookup`), not
 | S16 | Downgrade guard | `TestE2E_S16_DowngradeGuard` | Plan exit 1 (refusal); apply refused; `--allow-downgrade` applies |
 | S17 | Bad registry password | `TestE2E_S17_BadRegistryPassword` | Error names registry; no Helm releases |
 | S18 | Destroy keeps PVC | `TestE2E_S18_DestroyKeepsPVC` | Release removed; PVC remains |
-| S19 | Single-cloud binary | `TestDeployValidateExample` / `build-binary` workflow | `deploy validate` on examples in CI smoke |
+| S19 | Single-cloud binary | `TestDeployValidateExample` / `release` workflow smoke | `deploy validate` on examples in CI smoke |
 
 ### Extras
 

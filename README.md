@@ -15,6 +15,10 @@ Layers: `state-backend` (via `bootstrap`), then `core-network`, `data-platform`,
 
 ## Release binaries
 
+Pushing a `v*` tag publishes one binary per cloud and platform to `zot.prod.rtifact.ai/rtifact-installer`, signed with cosign. See [docs/release.md](docs/release.md) for the tags and for `scripts/install.sh`.
+
+Local builds embed OpenTofu and every provider for one platform:
+
 | Target | `PACKAGED_CLOUDS` |
 |--------|-------------------|
 | `make release-all` | azure,aws,gcp |
@@ -22,7 +26,7 @@ Layers: `state-backend` (via `bootstrap`), then `core-network`, `data-platform`,
 | `make release-aws` | aws |
 | `make release-gcp` | gcp |
 
-All artifacts are named `dist/rtifact`; `cloud:` in customer YAML selects the target (build with `PACKAGED_CLOUDS` for smaller binaries).
+Add `GOOS=linux GOARCH=arm64` to cross-build. The output is always `dist/rtifact`; check it with `./dist/rtifact doctor --deep`.
 
 Module: `github.com/cipherops-io/rtifact-platform-installer`
 

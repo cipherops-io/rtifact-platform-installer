@@ -78,11 +78,24 @@ release:
 	@$(MAKE) --no-print-directory embed
 	@$(MAKE) --no-print-directory package-content
 	@mkdir -p dist
-	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags="$(LDFLAGS)" -o $(DIST) ./cmd/rtifact
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -trimpath -ldflags="$(LDFLAGS)" -o $(DIST) ./cmd/rtifact
 	@$(MAKE) --no-print-directory check-release
 
 check-release:
 	@./build/scripts/check-release.sh $(DIST) $(GOOS) $(GOARCH) "$(PACKAGED_CLOUDS)" $(MIN_BINARY_MB)
+
+# Push <PUBLISH_DIR>/rtifact-<cloud>-<goos>-<goarch> to the registry (oras login first).
+# REPLACE_EXISTING, SIGN, COSIGN_PRIVATE_KEY, COSIGN_PASSWORD, SOURCE_REPO, SUMMARY_FILE come from the environment.
+PUBLISH_DIR ?= out
+REGISTRY ?= zot.prod.rtifact.ai
+REGISTRY_REPOSITORY ?= rtifact-installer
+PUBLISH_PLATFORMS ?= linux/amd64,linux/arm64,darwin/arm64,darwin/amd64
+
+.PHONY: publish
+publish:
+	@DIST_DIR="$(PUBLISH_DIR)" REGISTRY="$(REGISTRY)" REPOSITORY="$(REGISTRY_REPOSITORY)" VERSION="$(VERSION)" \
+	  CLOUDS="$(PACKAGED_CLOUDS)" PLATFORMS="$(PUBLISH_PLATFORMS)" PRODUCT="$(BINARY)" \
+	  GIT_COMMIT="$(GIT_COMMIT)" TOFU_VERSION="$(TOFU_VERSION)" ./build/scripts/publish-zot.sh
 
 release-all:
 	$(MAKE) release PACKAGED_CLOUDS=azure,aws,gcp
