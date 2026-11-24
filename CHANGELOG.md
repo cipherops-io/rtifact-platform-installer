@@ -2,7 +2,7 @@
 
 ## [0.0.1] - 2026-11-23
 
-First public release, paired with **boilerplates [v0.0.1](https://github.com/cipherops-io/boilerplates/releases/tag/v0.0.1)** (`3e269f3` in `boilerplate-source.yaml`). Earlier internal version numbers (0.2–0.4.x) were pre-release builds and are folded into this entry. An earlier `v0.0.1` tag pointed at a build whose deploy commands did not reach the cluster; this tag replaces it.
+First public release, paired with **boilerplates [v0.0.1](https://github.com/cipherops-io/boilerplates/releases/tag/v0.0.1)** (`3efe399` in `boilerplate-source.yaml`). Earlier internal version numbers (0.2–0.4.x) were pre-release builds and are folded into this entry. An earlier `v0.0.1` tag pointed at a build whose deploy commands did not reach the cluster; this tag replaces it.
 
 ### Deploy engine
 
@@ -22,6 +22,10 @@ Plan exit codes: `0` no changes, `1` refusal or error (a refusal always wins), `
 
 ### Build
 
+- One build per version for every customer. `release.yml` builds `rtifact` for each cloud (azure, aws, gcp) × platform (linux/amd64, linux/arm64, darwin/arm64, darwin/amd64). Each binary embeds OpenTofu 1.13.9 and every layer's providers for its platform. The workflow smoke-tests each binary on its own runner with `doctor --deep` and publishes to `zot.prod.rtifact.ai/rtifact-installer` as `vX-<cloud>-<os>-<arch>`, `vX-<cloud>` (index), `vX-checksums` and `latest-<cloud>`, all signed with cosign ([docs/release.md](docs/release.md)). The dry run from `main` was green for all 12 builds and 4 smokes ([run 45325418730](https://github.com/cipherops-io/rtifact-platform-installer/actions/runs/45325418730)).
+- `rtifact version -o json` reports mode, platform and OpenTofu version. `rtifact doctor` checks the embedded OpenTofu and provider mirror, and `--deep` runs an offline `tofu init` of every layer.
+- `scripts/install.sh` installs the right binary for the machine (oras or curl), checks its digest and optionally its cosign signature.
+- Removed the per-customer `build-binary.yml` and `CUSTOMER` build variable, the old `release.yml` and `mirror-and-test.yml`.
 - `package-content` always syncs a `build/embed` stub so `make build-dev` works after `make release` or when `build/embed/placeholder.txt` was removed.
 
 ### Infrastructure
